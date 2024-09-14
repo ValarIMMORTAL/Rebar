@@ -1,0 +1,750 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="_ustation.cpp">
+      <Filter>Precompiled</Filter>
+    </ClCompile>
+    <ClCompile Include="GalleryIntelligentRebar.cpp">
+      <Filter>Utility Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonFile.cpp">
+      <Filter>Utility Files\CommonFile</Filter>
+    </ClCompile>
+    <ClCompile Include="CWallRebarDlg.cpp">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CWallMainRebarDlg.cpp">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CWallRebarEndTypeDlg.cpp">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="WallRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="SetParam.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="PITACCRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="PITRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CWallRebarAssociatedComponentDlg.cpp">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrlEx.cpp">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="CListCtrlBtn.cpp">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="CListCtrlCheckBox.cpp">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="CWallRebarListCtrl.cpp">
+      <Filter>MFC Classes\墙配筋\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="PITRebarCurve.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CSlabRebarDlg.cpp">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="MySlabRebarAssembly.cpp">
+      <Filter>Helper Classes\板配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlHelper.cpp">
+      <Filter>Helper Classes\xml</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlManager.cpp">
+      <Filter>Helper Classes\xml</Filter>
+    </ClCompile>
+    <ClCompile Include="CBreakEllipseWallDlg.cpp">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="AssociatedComponent.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CACCDataSetDlg.cpp">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="CRebarEndPointSetDlg.cpp">
+      <Filter>MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CTieRebarSetDlg.cpp">
+      <Filter>MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CTwinBarSetDlg.cpp">
+      <Filter>MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CSlabMainRebarDlg.cpp">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CSlabRebarAssociatedComponent.cpp">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CSlabRebarEndType.cpp">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrlCellEx.cpp">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="PITRebarEndType.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="TieRebar.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="PITArcSegment.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ACCRebarMaker.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleRebarAssembly.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="GallerySettingsMainRebarPage.cpp">
+      <Filter>Functions\参数设置\MFC Classes\Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="TabController.cpp">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="PickElementTool.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="GallerySettingsDialog.cpp">
+      <Filter>Functions\参数设置\MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="GallerySettings.cpp">
+      <Filter>Functions\参数设置\Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CmdGallerySingleWall.cpp">
+      <Filter>Functions\单独墙配筋\Cmd</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralFaceRebarAssembly.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="OBB.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="WallHelper.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="SlabHelper.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonHelper.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="LDSlabRebarAssembly.cpp">
+      <Filter>MFC Classes\板配筋\板分层配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="RebarRexFactory.cpp">
+      <Filter>Utility Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CmdGalleryWallAndSlab.cpp">
+      <Filter>Functions\墙板联合配筋\Cmd</Filter>
+    </ClCompile>
+    <ClCompile Include="CSetLaeAndLa0Dlg.cpp">
+      <Filter>MFC Classes\搭接与锚固界面</Filter>
+    </ClCompile>
+    <ClCompile Include="CSetLa0.cpp">
+      <Filter>MFC Classes\搭接与锚固界面\搭接界面</Filter>
+    </ClCompile>
+    <ClCompile Include="CSetLae.cpp">
+      <Filter>MFC Classes\搭接与锚固界面\锚固界面</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseRebarAssembly.cpp">
+      <Filter>Functions\支墩配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseRebarDlg.cpp">
+      <Filter>Functions\支墩配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CmdGallerySettings.cpp">
+      <Filter>Functions\参数设置\Cmd</Filter>
+    </ClCompile>
+    <ClCompile Include="StirrupRebar.cpp">
+      <Filter>Functions\支墩配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesMainRebarDlg.cpp">
+      <Filter>MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesRebarDlg.cpp">
+      <Filter>MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesRebarEndTypeDlg.cpp">
+      <Filter>MFC Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="PITBimMSCEConvert.cpp">
+      <Filter>Utility Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FacesRebarAssembly.cpp">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="TieRebarFaceDlg.cpp">
+      <Filter>MFC Classes\拉筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CFaceTieRebarToolAssembly.cpp">
+      <Filter>Functions\按面拉筋</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectRebarTool.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CEdgeLineRebarDlg.cpp">
+      <Filter>MFC Classes\沿边加强筋</Filter>
+    </ClCompile>
+    <ClCompile Include="EdgeRebarAssembly.cpp">
+      <Filter>Helper Classes\沿边加强筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CStarisRebarDlog.cpp">
+      <Filter>MFC Classes\楼梯配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="StairsRebarAssembly.cpp">
+      <Filter>Helper Classes\楼梯配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="C_RebarTemplate.cpp">
+      <Filter>MFC Classes\参数模板界面</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebar_ReinforcingDlg.cpp">
+      <Filter>MFC Classes\孔洞加强筋界面</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebarListCtrl.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="HoleRebarAssembly.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebar_AddUnionHoleDlg.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebar_StructualDlg.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="CDoorHoleDlg.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="DoorHoleRebarAssembly.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="URebar.cpp">
+      <Filter>Helper Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="MakeRebarHelper.cpp">
+      <Filter>Helper Classes\配筋函数</Filter>
+    </ClCompile>
+    <ClCompile Include="CUniteMainRebarDlg.cpp">
+      <Filter>MFC Classes\联合配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CUniteRebarDlg.cpp">
+      <Filter>MFC Classes\联合配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CatchpitMainRebarDlg.cpp" />
+    <ClCompile Include="CatchpitRebarDlg.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Make Files">
+      <UniqueIdentifier>{fc2b1b7d-e63c-4cb8-a618-3ce7e15b39f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mdl Resources">
+      <UniqueIdentifier>{55edd858-ee52-4395-976b-ca80c7b0e1ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Resources">
+      <UniqueIdentifier>{6ea6615a-8a90-495c-a0fb-0a031b3bc8d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Precompiled">
+      <UniqueIdentifier>{73429dc9-cee1-4332-800f-ec9a8d281fe1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Resources\Images">
+      <UniqueIdentifier>{9eb4ca24-3568-4cf0-b7fb-72bfd5a8611d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility Files">
+      <UniqueIdentifier>{9ee8dafd-0085-4758-b169-e2408f53b6e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility Files\CommonFile">
+      <UniqueIdentifier>{117c44e5-3653-4a93-92bf-8c966d038a8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes">
+      <UniqueIdentifier>{4992aed6-621a-48d7-a63d-34e265ce0455}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\墙配筋">
+      <UniqueIdentifier>{28b905f9-68d4-4ba8-bd43-731f539bed80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes">
+      <UniqueIdentifier>{0622015a-f1be-46b6-bbf4-6003df16a948}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\墙配筋">
+      <UniqueIdentifier>{b664d113-5a37-4d8f-bff4-5cf3de8a425c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\Controls">
+      <UniqueIdentifier>{485fb7b1-b0e4-4553-b29c-af508ad24bd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\墙配筋\Controls">
+      <UniqueIdentifier>{33ab228d-913b-41b2-9728-38099e6f5802}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\板配筋">
+      <UniqueIdentifier>{aff89010-9baf-4fc7-bbca-519447094636}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\板配筋">
+      <UniqueIdentifier>{1af295aa-3029-45d8-9cd0-27ee65ce48fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\xml">
+      <UniqueIdentifier>{23537cfd-a53a-4aa3-9a58-ddda6c576df3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions">
+      <UniqueIdentifier>{8bd2c613-731d-44f1-a5d3-7505f1891c8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\参数设置">
+      <UniqueIdentifier>{0e85b5a8-ae7d-4054-b67d-084630019477}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\参数设置\MFC Classes">
+      <UniqueIdentifier>{0a943271-9120-4179-a705-d81f2c6cf018}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\参数设置\MFC Classes\Pages">
+      <UniqueIdentifier>{22f5f859-0238-4b20-90c1-5ec2033ca33a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\参数设置\Helper Classes">
+      <UniqueIdentifier>{f86788d4-df7f-4172-9076-f025bc0c7fcb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\参数设置\Cmd">
+      <UniqueIdentifier>{030d9f5c-f5a0-4251-b9cc-aec59873b362}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\单独墙配筋">
+      <UniqueIdentifier>{e0c7b8fa-dc27-438d-b689-00be2266db93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\单独墙配筋\Cmd">
+      <UniqueIdentifier>{9c1bd88d-8edf-4c7d-8e08-c021bdece235}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\单独墙配筋\Helper Classes">
+      <UniqueIdentifier>{4e9f19fd-238d-43fc-9a2d-ebd8b6a17337}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\板配筋\板分层配筋">
+      <UniqueIdentifier>{3c14ebe3-89c1-4db5-88ba-b6f9cf38d740}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\墙板联合配筋">
+      <UniqueIdentifier>{52c8fa3e-4072-473f-b656-f0eb023c21f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\墙板联合配筋\Cmd">
+      <UniqueIdentifier>{6f74c2bc-b69b-4caa-8bc1-46dc5fd3104b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CommonId">
+      <UniqueIdentifier>{bfbb2154-b58c-4817-8993-c26eca350c52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\搭接与锚固界面">
+      <UniqueIdentifier>{623901c7-d41b-4a11-8b86-002d985d5adc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\搭接与锚固界面\搭接界面">
+      <UniqueIdentifier>{08a12048-0be7-45dd-abb5-98885b97f549}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\搭接与锚固界面\锚固界面">
+      <UniqueIdentifier>{82aea880-1aa6-4b80-a4f7-a04ef54ef5dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\支墩配筋">
+      <UniqueIdentifier>{71128705-8f1f-49d0-99f1-eb3cfcef343c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\支墩配筋\Cmd">
+      <UniqueIdentifier>{3c5812d2-03c3-4d62-86b7-49d82d88dfd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\面配筋">
+      <UniqueIdentifier>{4e575f77-3534-478d-9a6f-74391a8e4dcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\拉筋">
+      <UniqueIdentifier>{83b6a9d6-7101-49a6-a315-97278389acc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Functions\按面拉筋">
+      <UniqueIdentifier>{1b01cf53-95dd-442c-be4f-db86c1462f05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\沿边加强筋">
+      <UniqueIdentifier>{4c0f14d1-3335-4c5c-8978-c0300f06e911}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\沿边加强筋">
+      <UniqueIdentifier>{e9091293-2b1a-41a4-a7c9-bb66f316c987}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\楼梯配筋">
+      <UniqueIdentifier>{86298119-0d18-4a81-9e2f-feb0c82103f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\楼梯配筋">
+      <UniqueIdentifier>{597dd6a6-e49b-46f6-926a-b7d4ab191912}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\参数模板界面">
+      <UniqueIdentifier>{703e5478-8bde-403e-bc7b-1d602193fba6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\孔洞加强筋界面">
+      <UniqueIdentifier>{709d837a-c7f9-479f-b2b4-989446132f75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\联合配筋">
+      <UniqueIdentifier>{dc94f438-f0c2-4e1f-8df9-5a512631b2b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\配筋函数">
+      <UniqueIdentifier>{b7d8e506-7e29-46db-b412-ebc2b2b40c00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\集水坑配筋">
+      <UniqueIdentifier>{d4d883bb-36c6-45b1-bf8f-3aaeb54356db}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GalleryIntelligentRebar.mke">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="GalleryIntelligentRebarcmd.r">
+      <Filter>Mdl Resources</Filter>
+    </None>
+    <None Include="WallRebarDlg.r">
+      <Filter>Mdl Resources</Filter>
+    </None>
+    <None Include="english\GalleryIntelligentRebar.r" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="DebugFormat.natvis">
+      <Filter>Make Files</Filter>
+    </Natvis>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GalleryIntelligentRebar.rc">
+      <Filter>MFC Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="rsc\HoreReinforcing1.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring1.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring2.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring3.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring4.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring5.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring6.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring7.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring8.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring9.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring10.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring11.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring12.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Anchoring13.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend_90.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend_135.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend_180.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend_Custom.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend_hook.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Bend_no.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\BrokenLine.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\Lae.bmp">
+      <Filter>MFC Resources\Images</Filter>
+    </Image>
+    <Image Include="rsc\bitmap23.bmp" />
+    <Image Include="rsc\bitmap24.bmp" />
+    <Image Include="rsc\galleryRebar1.bmp" />
+    <Image Include="rsc\galleryRebar2.bmp" />
+    <Image Include="rsc\galleryRebar3.bmp" />
+    <Image Include="rsc\galleryRebar4.bmp" />
+    <Image Include="rsc\galleryRebar.bmp" />
+    <Image Include="rsc\icon1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>MFC Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="GalleryIntelligentRebar.h">
+      <Filter>Utility Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GalleryIntelligentRebarcmd.h">
+      <Filter>Utility Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GalleryIntelligentRebarids.h">
+      <Filter>Utility Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonFile.h">
+      <Filter>Utility Files\CommonFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CWallRebarDlg.h">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CWallMainRebarDlg.h">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CWallRebarEndTypeDlg.h">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="WallRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="SetParam.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="PITACCRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="PITRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CWallRebarAssociatedComponentDlg.h">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantsDef.h">
+      <Filter>Utility Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrlEx.h">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="CListCtrlBtn.h">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="CListCtrlCheckBox.h">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="CWallRebarListCtrl.h">
+      <Filter>MFC Classes\墙配筋\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="PITRebarCurve.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CSlabRebarDlg.h">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="MySlabRebarAssembly.h">
+      <Filter>Helper Classes\板配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="XmlManager.h">
+      <Filter>Helper Classes\xml</Filter>
+    </ClInclude>
+    <ClInclude Include="XmlHelper.h">
+      <Filter>Helper Classes\xml</Filter>
+    </ClInclude>
+    <ClInclude Include="CBreakEllipseWallDlg.h">
+      <Filter>MFC Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="AssociatedComponent.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CACCDataSetDlg.h">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="CRebarEndPointSetDlg.h">
+      <Filter>MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CTieRebarSetDlg.h">
+      <Filter>MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CTwinBarSetDlg.h">
+      <Filter>MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CSlabMainRebarDlg.h">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CSlabRebarAssociatedComponent.h">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CSlabRebarEndType.h">
+      <Filter>MFC Classes\板配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrlCellEx.h">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="PITRebarEndType.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="TieRebar.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="PITArcSegment.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ACCRebarMaker.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="SingleRebarAssembly.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="GallerySettingsMainRebarPage.h">
+      <Filter>Functions\参数设置\MFC Classes\Pages</Filter>
+    </ClInclude>
+    <ClInclude Include="TabController.h">
+      <Filter>MFC Classes\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="PickElementTool.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="GallerySettingsDialog.h">
+      <Filter>Functions\参数设置\MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="GallerySettings.h">
+      <Filter>Functions\参数设置\Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CmdGallerySettings.h">
+      <Filter>Functions\参数设置\Cmd</Filter>
+    </ClInclude>
+    <ClInclude Include="CmdGallerySingleWall.h">
+      <Filter>Functions\单独墙配筋\Cmd</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralFaceRebarAssembly.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="OBB.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="WallHelper.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="SlabHelper.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonHelper.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="LDSlabRebarAssembly.h">
+      <Filter>MFC Classes\板配筋\板分层配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="RebarRexFactory.h">
+      <Filter>Utility Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CmdGalleryWallAndSlab.h">
+      <Filter>Functions\墙板联合配筋\Cmd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CommonId\AllCommonDependencyId.h">
+      <Filter>CommonId</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CommonId\AllCommonXAttribute.h">
+      <Filter>CommonId</Filter>
+    </ClInclude>
+    <ClInclude Include="CSetLaeAndLa0Dlg.h">
+      <Filter>MFC Classes\搭接与锚固界面</Filter>
+    </ClInclude>
+    <ClInclude Include="CSetLa0.h">
+      <Filter>MFC Classes\搭接与锚固界面\搭接界面</Filter>
+    </ClInclude>
+    <ClInclude Include="CSetLae.h">
+      <Filter>MFC Classes\搭接与锚固界面\锚固界面</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseRebarAssembly.h">
+      <Filter>Functions\支墩配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseRebarDlg.h">
+      <Filter>Functions\支墩配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="StirrupRebar.h">
+      <Filter>Functions\支墩配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesMainRebarDlg.h">
+      <Filter>MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesRebarDlg.h">
+      <Filter>MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesRebarEndTypeDlg.h">
+      <Filter>MFC Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="PITBimMSCEConvert.h">
+      <Filter>Utility Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectFaceTool.h">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="FacesRebarAssembly.h">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="TieRebarFaceDlg.h">
+      <Filter>MFC Classes\拉筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CFaceTieRebarToolAssembly.h">
+      <Filter>Functions\按面拉筋</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectRebarTool.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CEdgeLineRebarDlg.h">
+      <Filter>MFC Classes\沿边加强筋</Filter>
+    </ClInclude>
+    <ClInclude Include="EdgeRebarAssembly.h">
+      <Filter>Helper Classes\沿边加强筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CStarisRebarDlog.h">
+      <Filter>MFC Classes\楼梯配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="StairsRebarAssembly.h">
+      <Filter>Helper Classes\楼梯配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="C_RebarTemplate.h">
+      <Filter>MFC Classes\参数模板界面</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebar_ReinforcingDlg.h">
+      <Filter>MFC Classes\孔洞加强筋界面</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebarListCtrl.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="HoleRebarAssembly.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebar_AddUnionHoleDlg.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebar_StructualDlg.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="CDoorHoleDlg.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="DoorHoleRebarAssembly.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="URebar.h">
+      <Filter>Helper Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="MakeRebarHelper.h">
+      <Filter>Helper Classes\配筋函数</Filter>
+    </ClInclude>
+    <ClInclude Include="CUniteMainRebarDlg.h">
+      <Filter>MFC Classes\联合配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CUniteRebarDlg.h">
+      <Filter>MFC Classes\联合配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CatchpitMainRebarDlg.h" />
+    <ClInclude Include="CatchpitRebarDlg.h" />
+  </ItemGroup>
+</Project>

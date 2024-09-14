@@ -1,0 +1,414 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{488D3FA9-72E3-47EF-BDDC-38EA42F38974}</ProjectGuid>
+    <AppName>rebarSDKExample</AppName>
+    <RootNamespace>rebarSDKExample</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>
+    </ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$([System.IO.Path]::GetFullPath('$(GalleryIntelligentRebar_IntDir)'))</IntDir>
+    <OutDir>$([System.IO.Path]::GetFullPath('$(GalleryIntelligentRebar_OutDir)'))</OutDir>
+    <LinkDelaySign>false</LinkDelaySign>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$([System.IO.Path]::GetFullPath('$(GalleryIntelligentRebar_IntDir)'))</IntDir>
+    <OutDir>$([System.IO.Path]::GetFullPath('$(GalleryIntelligentRebar_OutDir)'))</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+    <LinkDelaySign>false</LinkDelaySign>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files\Bentley\MicroStationCONNECTSDK\include;C:\Program Files\Bentley\ProStructuresSDK\include;D:\廊道配筋出图项目\02代码\PITGraphFunction\include;C:\Program Files\Bentley\ProStructuresSDK\include\Rebar;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TypeLibraryName>GalleryIntelligentRebar.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/Zm512 /bigobj</AdditionalOptions>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\example\english;$(GalleryIntelligentRebar_INCLUDE)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_AFXDLL;USTN_TYPEDEFS;USING_LICCLIENT_10;winNT;_REBARMA_DLL;SELECT_DLL;BE_MEMCONTROL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeaderFile>_ustation.h</PrecompiledHeaderFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <UndefinePreprocessorDefinitions>__EDG__</UndefinePreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>mspsolid.lib;SmartConnectorsCore.lib;SmartFeature.lib;PSolidCore.lib;sqlite3.lib;rebar.lib;rebarma.lib;delayimp.lib;mfcs140u.lib;RPCRT4.lib;ole32.lib;Bentley.lib;BentleyAllocator.lib;BentleyGeom.lib;BentleyGeomSerialization.lib;ECObjects.lib;DgnPlatform.lib;mdlbltin.lib;rmgrtools.lib;mdlxmltools.lib;DgnView.lib;splindlm.lib;mstntoolsubs.lib;VisEdgesLib.lib;Advapi32.lib;nativewindow.lib;nativewinmfc.lib;Shlwapi.lib;kernel32.lib;PITGraphFunction.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(GalleryIntelligentRebar_LIBS);$(SDKLIB)Rebar</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+    <Bscmake>
+      <OutputFile>$(IntDir)$(ProjectName).bsc</OutputFile>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TypeLibraryName>GalleryIntelligentRebar.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/Zm512 /bigobj</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\example\english;$(GalleryIntelligentRebar_INCLUDE);Sqlite3\include;..\PITGraphFunction\include;..\CommonId</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_AFXDLL;USTN_TYPEDEFS;USING_LICCLIENT_10;winNT;_REBARMA_DLL;SELECT_DLL;BE_MEMCONTROL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeaderFile>_ustation.h</PrecompiledHeaderFile>
+      <AssemblerListingLocation>.\Lib\</AssemblerListingLocation>
+      <ObjectFileName>.\Lib\</ObjectFileName>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName)._ustation</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <XMLDocumentationFileName>.\Lib\</XMLDocumentationFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Bentley.lib;BentleyAllocator.lib;BentleyGeom.lib;BentleyGeomSerialization.lib;ECObjects.lib;DgnPlatform.lib;mdlbltin.lib;rmgrtools.lib;mdlxmltools.lib;DgnView.lib;splindlm.lib;mstntoolsubs.lib;mspsolid.lib;VisEdgesLib.lib;Advapi32.lib;nativewindow.lib;nativewinmfc.lib;Shlwapi.lib;kernel32.lib;rebar.lib;rebarma.lib;delayimp.lib;mfcs140u.lib;RPCRT4.lib;ole32.lib;SmartConnectorsCore.lib;SmartFeature.lib;PSolidCore.lib;sqlite3.lib;PITGraphFunctionld.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>C:\Program Files\Bentley\ProStructuresSDK\library;$(GalleryIntelligentRebar_LIBS);$(SDKLIB)Rebar;../PITGraphFunction/Lib</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
+    </Link>
+    <Bscmake>
+      <OutputFile>$(IntDir)$(ProjectName).bsc</OutputFile>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ACCRebarMaker.cpp" />
+    <ClCompile Include="AssociatedComponent.cpp" />
+    <ClCompile Include="BaseRebarAssembly.cpp" />
+    <ClCompile Include="BaseRebarDlg.cpp" />
+    <ClCompile Include="CACCDataSetDlg.cpp" />
+    <ClCompile Include="CatchpitMainRebarDlg.cpp" />
+    <ClCompile Include="CatchpitRebarDlg.cpp" />
+    <ClCompile Include="CBreakEllipseWallDlg.cpp" />
+    <ClCompile Include="CDoorHoleDlg.cpp" />
+    <ClCompile Include="CEdgeLineRebarDlg.cpp" />
+    <ClCompile Include="CFacesMainRebarDlg.cpp" />
+    <ClCompile Include="CFacesRebarDlg.cpp" />
+    <ClCompile Include="CFacesRebarEndTypeDlg.cpp" />
+    <ClCompile Include="CFaceTieRebarToolAssembly.cpp" />
+    <ClCompile Include="CHoleRebarListCtrl.cpp" />
+    <ClCompile Include="CHoleRebar_AddUnionHoleDlg.cpp" />
+    <ClCompile Include="CHoleRebar_ReinforcingDlg.cpp" />
+    <ClCompile Include="CHoleRebar_StructualDlg.cpp" />
+    <ClCompile Include="CListCtrlBtn.cpp" />
+    <ClCompile Include="CListCtrlCheckBox.cpp" />
+    <ClCompile Include="CmdGallerySettings.cpp" />
+    <ClCompile Include="CmdGallerySingleWall.cpp" />
+    <ClCompile Include="CmdGalleryWallAndSlab.cpp" />
+    <ClCompile Include="CommonFile.cpp" />
+    <ClCompile Include="CRebarEndPointSetDlg.cpp" />
+    <ClCompile Include="CSetLa0.cpp" />
+    <ClCompile Include="CSetLae.cpp" />
+    <ClCompile Include="CSetLaeAndLa0Dlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CSlabMainRebarDlg.cpp" />
+    <ClCompile Include="CSlabRebarAssociatedComponent.cpp" />
+    <ClCompile Include="CSlabRebarDlg.cpp" />
+    <ClCompile Include="CSlabRebarEndType.cpp" />
+    <ClCompile Include="CStarisRebarDlog.cpp" />
+    <ClCompile Include="CTieRebarSetDlg.cpp" />
+    <ClCompile Include="CTwinBarSetDlg.cpp" />
+    <ClCompile Include="CUniteMainRebarDlg.cpp" />
+    <ClCompile Include="CUniteRebarDlg.cpp" />
+    <ClCompile Include="CWallMainRebarDlg.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CWallRebarAssociatedComponentDlg.cpp" />
+    <ClCompile Include="CWallRebarDlg.cpp" />
+    <ClCompile Include="CWallRebarEndTypeDlg.cpp" />
+    <ClCompile Include="CWallRebarListCtrl.cpp" />
+    <ClCompile Include="DoorHoleRebarAssembly.cpp" />
+    <ClCompile Include="EdgeRebarAssembly.cpp" />
+    <ClCompile Include="C_RebarTemplate.cpp" />
+    <ClCompile Include="FacesRebarAssembly.cpp" />
+    <ClCompile Include="GallerySettings.cpp" />
+    <ClCompile Include="GallerySettingsDialog.cpp" />
+    <ClCompile Include="GallerySettingsMainRebarPage.cpp" />
+    <ClCompile Include="GalleryIntelligentRebar.cpp" />
+    <ClCompile Include="GeneralFaceRebarAssembly.cpp" />
+    <ClCompile Include="HoleRebarAssembly.cpp" />
+    <ClCompile Include="LDSlabRebarAssembly.cpp" />
+    <ClCompile Include="ListCtrlCellEx.cpp" />
+    <ClCompile Include="ListCtrlEx.cpp" />
+    <ClCompile Include="MakeRebarHelper.cpp" />
+    <ClCompile Include="MySlabRebarAssembly.cpp" />
+    <ClCompile Include="OBB.cpp" />
+    <ClCompile Include="PITACCRebarAssembly.cpp" />
+    <ClCompile Include="PITArcSegment.cpp" />
+    <ClCompile Include="PITBimMSCEConvert.cpp" />
+    <ClCompile Include="PITRebarAssembly.cpp" />
+    <ClCompile Include="PITRebarCurve.cpp" />
+    <ClCompile Include="PITRebarEndType.cpp" />
+    <ClCompile Include="PickElementTool.cpp" />
+    <ClCompile Include="PolygonHelper.cpp" />
+    <ClCompile Include="RebarRexFactory.cpp" />
+    <ClCompile Include="SelectRebarTool.cpp" />
+    <ClCompile Include="SetParam.cpp" />
+    <ClCompile Include="SingleRebarAssembly.cpp" />
+    <ClCompile Include="SlabHelper.cpp" />
+    <ClCompile Include="StairsRebarAssembly.cpp" />
+    <ClCompile Include="StirrupRebar.cpp" />
+    <ClCompile Include="TabController.cpp" />
+    <ClCompile Include="TieRebar.cpp" />
+    <ClCompile Include="TieRebarFaceDlg.cpp" />
+    <ClCompile Include="URebar.cpp" />
+    <ClCompile Include="WallHelper.cpp" />
+    <ClCompile Include="WallRebarAssembly.cpp" />
+    <ClCompile Include="XmlHelper.cpp" />
+    <ClCompile Include="XmlManager.cpp" />
+    <ClCompile Include="_ustation.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="WallRebarDlg.r" />
+    <None Include="english\GalleryIntelligentRebar.r" />
+    <None Include="GalleryIntelligentRebar.mke" />
+    <None Include="GalleryIntelligentRebarcmd.r" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="DebugFormat.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GalleryIntelligentRebar.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="rsc\Anchoring1.bmp" />
+    <Image Include="rsc\Anchoring10.bmp" />
+    <Image Include="rsc\Anchoring11.bmp" />
+    <Image Include="rsc\Anchoring12.bmp" />
+    <Image Include="rsc\Anchoring13.bmp" />
+    <Image Include="rsc\Anchoring2.bmp" />
+    <Image Include="rsc\Anchoring3.bmp" />
+    <Image Include="rsc\Anchoring4.bmp" />
+    <Image Include="rsc\Anchoring5.bmp" />
+    <Image Include="rsc\Anchoring6.bmp" />
+    <Image Include="rsc\Anchoring7.bmp" />
+    <Image Include="rsc\Anchoring8.bmp" />
+    <Image Include="rsc\Anchoring9.bmp" />
+    <Image Include="rsc\Bend.bmp" />
+    <Image Include="rsc\Bend_135.bmp" />
+    <Image Include="rsc\Bend_180.bmp" />
+    <Image Include="rsc\Bend_90.bmp" />
+    <Image Include="rsc\Bend_Custom.bmp" />
+    <Image Include="rsc\Bend_hook.bmp" />
+    <Image Include="rsc\Bend_no.bmp" />
+    <Image Include="rsc\bitmap23.bmp" />
+    <Image Include="rsc\bitmap24.bmp" />
+    <Image Include="rsc\BrokenLine.bmp" />
+    <Image Include="rsc\galleryRebar.bmp" />
+    <Image Include="rsc\galleryRebar1.bmp" />
+    <Image Include="rsc\galleryRebar2.bmp" />
+    <Image Include="rsc\galleryRebar3.bmp" />
+    <Image Include="rsc\galleryRebar4.bmp" />
+    <Image Include="rsc\HoreReinforcing1.bmp" />
+    <Image Include="rsc\icon1.ico" />
+    <Image Include="rsc\Lae.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\CommonId\AllCommonDependencyId.h" />
+    <ClInclude Include="..\CommonId\AllCommonXAttribute.h" />
+    <ClInclude Include="ACCRebarMaker.h" />
+    <ClInclude Include="AssociatedComponent.h" />
+    <ClInclude Include="BaseRebarAssembly.h" />
+    <ClInclude Include="BaseRebarDlg.h" />
+    <ClInclude Include="CACCDataSetDlg.h" />
+    <ClInclude Include="CatchpitMainRebarDlg.h" />
+    <ClInclude Include="CatchpitRebarDlg.h" />
+    <ClInclude Include="CBreakEllipseWallDlg.h" />
+    <ClInclude Include="CDoorHoleDlg.h" />
+    <ClInclude Include="CEdgeLineRebarDlg.h" />
+    <ClInclude Include="CFacesMainRebarDlg.h" />
+    <ClInclude Include="CFacesRebarDlg.h" />
+    <ClInclude Include="CFacesRebarEndTypeDlg.h" />
+    <ClInclude Include="CFaceTieRebarToolAssembly.h" />
+    <ClInclude Include="CHoleRebarListCtrl.h" />
+    <ClInclude Include="CHoleRebar_AddUnionHoleDlg.h" />
+    <ClInclude Include="CHoleRebar_ReinforcingDlg.h" />
+    <ClInclude Include="CHoleRebar_StructualDlg.h" />
+    <ClInclude Include="CListCtrlBtn.h" />
+    <ClInclude Include="CListCtrlCheckBox.h" />
+    <ClInclude Include="CmdGallerySettings.h" />
+    <ClInclude Include="CmdGallerySingleWall.h" />
+    <ClInclude Include="CmdGalleryWallAndSlab.h" />
+    <ClInclude Include="CommonFile.h" />
+    <ClInclude Include="ConstantsDef.h" />
+    <ClInclude Include="CRebarEndPointSetDlg.h" />
+    <ClInclude Include="CSetLa0.h" />
+    <ClInclude Include="CSetLae.h" />
+    <ClInclude Include="CSetLaeAndLa0Dlg.h" />
+    <ClInclude Include="CSlabMainRebarDlg.h" />
+    <ClInclude Include="CSlabRebarAssociatedComponent.h" />
+    <ClInclude Include="CSlabRebarDlg.h" />
+    <ClInclude Include="CSlabRebarEndType.h" />
+    <ClInclude Include="CStarisRebarDlog.h" />
+    <ClInclude Include="CTieRebarSetDlg.h" />
+    <ClInclude Include="CTwinBarSetDlg.h" />
+    <ClInclude Include="CUniteMainRebarDlg.h" />
+    <ClInclude Include="CUniteRebarDlg.h" />
+    <ClInclude Include="CWallMainRebarDlg.h" />
+    <ClInclude Include="CWallRebarAssociatedComponentDlg.h" />
+    <ClInclude Include="CWallRebarDlg.h" />
+    <ClInclude Include="CWallRebarEndTypeDlg.h" />
+    <ClInclude Include="CWallRebarListCtrl.h" />
+    <ClInclude Include="DoorHoleRebarAssembly.h" />
+    <ClInclude Include="EdgeRebarAssembly.h" />
+    <ClInclude Include="C_RebarTemplate.h" />
+    <ClInclude Include="FacesRebarAssembly.h" />
+    <ClInclude Include="GallerySettings.h" />
+    <ClInclude Include="GallerySettingsDialog.h" />
+    <ClInclude Include="GallerySettingsMainRebarPage.h" />
+    <ClInclude Include="GalleryIntelligentRebar.h" />
+    <ClInclude Include="GalleryIntelligentRebarcmd.h" />
+    <ClInclude Include="GalleryIntelligentRebarids.h" />
+    <ClInclude Include="GeneralFaceRebarAssembly.h" />
+    <ClInclude Include="HoleRebarAssembly.h" />
+    <ClInclude Include="LDSlabRebarAssembly.h" />
+    <ClInclude Include="ListCtrlCellEx.h" />
+    <ClInclude Include="ListCtrlEx.h" />
+    <ClInclude Include="MakeRebarHelper.h" />
+    <ClInclude Include="MySlabRebarAssembly.h" />
+    <ClInclude Include="OBB.h" />
+    <ClInclude Include="PITACCRebarAssembly.h" />
+    <ClInclude Include="PITArcSegment.h" />
+    <ClInclude Include="PITBimMSCEConvert.h" />
+    <ClInclude Include="PITRebarAssembly.h" />
+    <ClInclude Include="PITRebarCurve.h" />
+    <ClInclude Include="PITRebarEndType.h" />
+    <ClInclude Include="PolygonHelper.h" />
+    <ClInclude Include="RebarRexFactory.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="PickElementTool.h" />
+    <ClInclude Include="SelectFaceTool.h" />
+    <ClInclude Include="SelectRebarTool.h" />
+    <ClInclude Include="SetParam.h" />
+    <ClInclude Include="SingleRebarAssembly.h" />
+    <ClInclude Include="SlabHelper.h" />
+    <ClInclude Include="StairsRebarAssembly.h" />
+    <ClInclude Include="StirrupRebar.h" />
+    <ClInclude Include="TabController.h" />
+    <ClInclude Include="TieRebar.h" />
+    <ClInclude Include="TieRebarFaceDlg.h" />
+    <ClInclude Include="URebar.h" />
+    <ClInclude Include="WallHelper.h" />
+    <ClInclude Include="WallRebarAssembly.h" />
+    <ClInclude Include="XmlHelper.h" />
+    <ClInclude Include="XmlManager.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

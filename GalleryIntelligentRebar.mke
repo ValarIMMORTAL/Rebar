@@ -1,0 +1,178 @@
+#--------------------------------------------------------------------------------------
+#
+#     $Source: sdk/example/RebarSDK.mke $
+#
+#  $Copyright: (c) 2019 Bentley Systems, Incorporated. All rights reserved. $
+#
+#--------------------------------------------------------------------------------------
+PolicyFile = MicroStationPolicy.mki
+
+
+appName         = GalleryIntelligentRebar
+sAppName        = GalleryIntelligentRebar
+
+baseDir         = $(_MakeFilePath)
+privateInc      = $(baseDir)
+langSpec        = $(baseDir)english/
+
+mdlLibs = $(MSMDE)library/
+
+%include mdl.mki
+
+#----------------------------------------------------------------------
+# Add app name dir to output paths
+#----------------------------------------------------------------------
+o               = $(MSMDE_OUTPUT)objects/$(appName)/
+rscObjects      = $(MSMDE_OUTPUT)rscobj/$(appName)/
+reqdObjs        = $(MSMDE_OUTPUT)reqdobjs/$(appName)/
+
+#----------------------------------------------------------------------
+# Create needed output directories if they don't exist
+#----------------------------------------------------------------------
+always:
+    ~mkdir $(o)
+    ~mkdir $(rscObjects)
+    ~mkdir $(reqdObjs)
+    ~mkdir $(mdlapps)
+
+
+# Search in $(o) for command table resources
+dirToSearch = $(o)
+%include cincapnd.mki
+
+#----------------------------------------------------------------------
+#   The following defines the dependency list for any NON-Translatable
+#   resources used by this application. Typically this includes any
+#   command table definitions or resource type definitions. This list
+#   would also contain the completed CODE portion of the application.
+#   Typically these files are lib'd together into a file with a '.mi'
+#   extension. (Mdl Intermediate application)
+#----------------------------------------------------------------------
+appRscs = \
+    $(rscObjects)WallRebarDlg.rsc \
+    $(rscObjects)$(sAppName)cmd.rsc \
+    $(rscObjects)$(sAppName)Typ.rsc
+
+#--------------------------------------------
+#       Create command table and header file
+#--------------------------------------------
+$(baseDir)$(sAppName)cmd.h : $(baseDir)$(sAppName)cmd.r
+
+$(rscObjects)$(sAppName)cmd.rsc : $(baseDir)$(sAppName)cmd.r
+
+
+#--------------------------------------------
+#   Dialogs
+#--------------------------------------------
+$(rscObjects)WallRebarDlg.rsc: $(BaseDir)WallRebarDlg.r $(langSpec)WallRebarDlgtxt.h \
+    $(privateInc)WallRebarDlg.h  \
+
+#----------------------------------------------------------------------
+# Create & compile the application's type resource file using rsctype and rcomp
+#----------------------------------------------------------------------
+$(o)$(sAppName)Typ.r                : $(baseDir)$(sAppName)Typ.mt $(baseDir)$(appName).h
+
+$(rscObjects)$(sAppName)Typ.rsc     : $(o)$(sAppName)Typ.r
+
+
+#----------------------------------------------------------------------
+#       The following section generates the MDL Intermediate module. This
+#       module contains any non-translatable resource modules.
+#
+#       NOTE: This module MUST be placed in the directory pointed to by
+#         the 'o' macro defined in MDL.MKI. This module is
+#         shipped as part of the Foreign Language Translation Kit.
+#----------------------------------------------------------------------
+$(o)$(appName).mi    : $(appRscs)
+        $(msg)
+        > $(o)make.opt
+        -o$@
+        $(appRscs)
+        <
+        $(RLibCmd) @$(o)make.opt
+        ~time
+
+
+#-----------------------------------------------------------------------------------------
+#   Set DLL Version 
+#-----------------------------------------------------------------------------------------
+REL_V=1
+MAJ_V=0
+MIN_V=0
+SUBMIN_V=0
+
+#-----------------------------------------------------------------------
+#   Define MSBuild attributes
+#-----------------------------------------------------------------------
+ASSEMBLY_NAME                     = GalleryIntelligentRebar
+MSB-AssemblyDescriptionAttribute  = GalleryIntelligentRebar
+MSB-SignAssembly                  = false
+
+
+#-----------------------------------------------------------------------
+#   Build Application DLL
+#-----------------------------------------------------------------------
+always:
+    ~putenv GalleryIntelligentRebar_INCLUDE=$(SDKINC);$(PS_INCLUDE);$(baseDir)Sqlite3/include
+    ~putenv GalleryIntelligentRebar_LIBS=$(SDKLIB);$(PS_LIBRARY);$(baseDir)Sqlite3/Lib
+    ~putenv GalleryIntelligentRebar_IntDir=$(o)
+    ~putenv GalleryIntelligentRebar_OutDir=$(mdlapps)
+    # ~putenv GalleryIntelligentRebar_INCLUDE=$(SDKINC);$(PS_SDK)include/Rebar;$(baseDir)Sqlite3/include;$(o)
+    # ~putenv GalleryIntelligentRebar_LIBS=$(SDKLIB);$(PS_SDK)library;$(baseDir)Sqlite3/Lib
+    # ~putenv GalleryIntelligentRebar_IntDir=$(o)
+    # ~putenv GalleryIntelligentRebar_OutDir=$(mdlapps)
+
+%warn $(SDKINC)
+%warn $(SDKLIB)
+MsBuildExeAction = Rebuild  # Force a 'rebuild' when launched from .mke file 
+
+MSBUILD_PROJECT_PATH = $(_MakeFilePath)$(sAppName).vcxproj
+%include vcxprojbuild.mki
+
+
+#----------------------------------------------------------------------
+#   The following defines the dependency list for translatable
+#   resources used by this application. Typically this includes any
+#   dialog definitions or message list resources.
+#   Typically these files are lib'd together into a file with a '.ma'
+#   extension. (Mdl Application)
+#
+#   NOTE: Dialog box resources should NOT contain literal strings for
+#         any type of label. Instead, ALL literal strings should be
+#         replaced by a definition found in an include file located
+#         in a directory pointed to by 'langSpec'.
+#----------------------------------------------------------------------
+maRscs = \
+    $(o)$(appName).mi \
+    $(rscObjects)$(sAppName)msg.rsc
+
+
+#----------------------------------------------------------------------
+#       The following section builds any translatable resource modules for
+#   the application.
+#----------------------------------------------------------------------
+$(rscObjects)$(sAppName)msg.rsc     : $(basedir)english\$(sAppName)msg.r \
+                                      $(basedir)$(sAppName)Ids.h
+
+#----------------------------------------------------------------------
+# Link the MA
+#----------------------------------------------------------------------
+MA_NAME         = $(appName)
+MA_DEST         = $(mdlapps)
+MA_RSC_FILES    = $(maRscs)
+MA_EXT          = .ma
+
+cmdFile = $(o)$(MA_NAME)link.cmd
+
+#--------------------------------------------------------------------------------------
+#  Link and sign the MA
+#--------------------------------------------------------------------------------------
+"$(MA_DEST)$(MA_NAME)$(MA_EXT)"     : $(MA_RSC_FILES)
+    $(msg)
+    > $(cmdFile)
+    -o$@
+    $(MA_SPECIAL_LINKOPT)
+    $(MA_RSC_FILES)
+    <
+    $(RLibCmd) @$(cmdFile)
+    ~time

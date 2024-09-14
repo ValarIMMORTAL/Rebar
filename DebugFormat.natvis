@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <!--ProStructures Connect Edition 2017 - Nabil Sleiman -->
+  <Type Name="BrString">
+    <DisplayString>{{String={m_string, su} Length={m_refs->m_length}}}</DisplayString>
+    <!-- Use trace call convention, everything inside {} get evaluated-->
+    <Expand></Expand>
+  </Type>
+
+  <Type Name="BeSharpPtr&lt;*&gt;">
+    <DisplayString>{{Val={*ms.mp}}}</DisplayString>
+    <!-- Use trace call convention, everything inside {} get evaluated-->
+    <Expand>
+      <Item Name="[Counter]">(ms.mc)->m_val</Item>
+      <Item Name="[Pointer]">(ms.mp)</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="BeAutoArray&lt;*&gt;">
+    <!-- This will format for any BeAutoArray, and anything deriving from BeAutoArray -->
+    <DisplayString>{{Size={m_nSize}}}</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>m_nSize</Size>
+        <ValuePointer>m_pData</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="CPoint3D">
+    <DisplayString>{{x={x} y={y} z={z}}}</DisplayString> <!-- Use trace call convention, everything inside {} get evaluated-->
+    <!-- Use trace call convention, everything inside {} get evaluated-->
+  </Type>
+
+  <!-- Template Version, not as clear what owns the relationship. -->
+  <!--<Type Name="BeRelation&lt;*,*,*,*&gt;">
+    <DisplayString>Relation</DisplayString>
+    <Expand>
+      <Item Name="Owner">($T1*)((_int64)(this)-(_int64)(&amp;((($T1*)0)->mr$T2Master)))</Item>
+      <Item Name="Other">m_Relations.mrs</Item>
+    </Expand>
+  </Type>-->
+      
+  <Type Name="RebarShape::BeRelationRebarCatalogMaster">
+    <DisplayString>RebarShape=>RebarCatalog Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarShape">(RebarShape*)((_int64)(this) - (_int64)(&amp;(((RebarShape*)0)->mrRebarCatalogMaster)))</Item>
+      <Item Name="RebarCatalog Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="RebarShape::BeRelationRebarElementMaster">
+    <DisplayString>RebarShape=>RebarElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarShape">(RebarShape*)((_int64)(this) - (_int64)(&amp;(((RebarShape*)0)->mrRebarElementMaster)))</Item>
+      <Item Name="RebarElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarElement::BeRelationRebarShapeMaster">
+    <DisplayString>RebarElement=>RebarShape Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarElement">(RebarElement*)((_int64)(this) - (_int64)(&amp;(((RebarElement*)0)->mrRebarShapeMaster)))</Item>
+      <Item Name="RebarShape Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarElement::BeRelationRebarSetMaster">
+    <DisplayString>RebarElement=>RebarSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarElement">(RebarElement*)((_int64)(this) - (_int64)(&amp;(((RebarElement*)0)->mrRebarSetMaster)))</Item>
+      <Item Name="RebarSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarSet::BeRelationRebarElementMaster">
+    <DisplayString>RebarSet=>RebarElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarSet">(RebarSet*)((_int64)(this) - (_int64)(&amp;(((RebarSet*)0)->mrRebarElementMaster)))</Item>
+      <Item Name="RebarElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarCatalog::BeRelationRebarShapeMaster">
+    <DisplayString>RebarCatalog=>RebarShape Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarCatalog">(RebarCatalog*)((_int64)(this) - (_int64)(&amp;(((RebarCatalog*)0)->mrRebarShapeMaster)))</Item>
+      <Item Name="RebarShape Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="RebarDetailElement::BeRelationRebarSetMaster">
+    <DisplayString>RebarDetailElement=>RebarSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarDetailElement">(RebarDetailElement*)((_int64)(this) - (_int64)(&amp;(((RebarDetailElement*)0)->mrRebarSetMaster)))</Item>
+      <Item Name="RebarSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarDetailElement::BeRelationRebarElementMaster">
+    <DisplayString>RebarDetailElement=>RebarElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarDetailElement">(RebarDetailElement*)((_int64)(this) - (_int64)(&amp;(((RebarDetailElement*)0)->mrRebarElementMaster)))</Item>
+      <Item Name="RebarElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarElement::BeRelationRebarDetailElementMaster">
+    <DisplayString>RebarElement=>RebarDetailElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarElement">(RebarElement*)((_int64)(this) - (_int64)(&amp;(((RebarElement*)0)->mrRebarDetailElementMaster)))</Item>
+      <Item Name="RebarDetailElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+    
+  <Type Name="RebarSet::BeRelationRebarDetailElementMaster">
+    <DisplayString>RebarSet=>RebarDetailElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarSet">(RebarSet*)((_int64)(this) - (_int64)(&amp;(((RebarSet*)0)->mrRebarDetailElementMaster)))</Item>
+      <Item Name="RebarDetailElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RebarDetailElement::BeRelationRebarDetailSetCell">
+    <DisplayString>RebarDetailElement=>RebarDetailSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarDetailElement">(RebarDetailElement*)((_int64)(this) - (_int64)(&amp;(((RebarDetailElement*)0)->mrRebarDetailSetCell)))</Item>
+      <Item Name="RebarDetailSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarDetailSet::BeRelationRebarDetailElementCell">
+    <DisplayString>RebarDetailSet=>RebarDetailElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarDetailSet">(RebarDetailSet*)((_int64)(this) - (_int64)(&amp;(((RebarDetailSet*)0)->mrRebarDetailElementCell)))</Item>
+      <Item Name="RebarDetailElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+  <Type Name="RebarDetailSet::BeRelationRebarSetMaster">
+    <DisplayString>RebarDetailSet=>RebarSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarDetailSet">(RebarDetailSet*)((_int64)(this) - (_int64)(&amp;(((RebarDetailSet*)0)->mrRebarSetMaster)))</Item>
+      <Item Name="RebarSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>    
+  
+<Type Name="RebarSet::BeRelationRebarDetailSetMaster">
+    <DisplayString>RebarSet=>RebarDetailSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarSet">(RebarSet*)((_int64)(this) - (_int64)(&amp;(((RebarSet*)0)->mrRebarDetailSetMaster)))</Item>
+      <Item Name="RebarDetailSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+
+<Type Name="RebarEndDevice::BeRelationRebarElementMaster">
+    <DisplayString>RebarEndDevice=>BeRelationRebarElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarEndDevice">(RebarEndDevice*)((_int64)(this) - (_int64)(&amp;(((RebarEndDevice*)0)->mrRebarElementMaster)))</Item>
+      <Item Name="RebarElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RebarElement::BeRelationRebarEndDeviceMaster">
+    <DisplayString>BeRelationRebarElement=>RebarEndDevice Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarElement">(RebarElement*)((_int64)(this) - (_int64)(&amp;(((RebarElement*)0)->mrRebarEndDeviceMaster)))</Item>
+      <Item Name="RebarEndDevice Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+
+<Type Name="RebarSet::BeRelationRegionRebarSetMaster">
+    <DisplayString>RebarSet=>RegionRebarSetMaster Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarSet">(RebarSet*)((_int64)(this) - (_int64)(&amp;(((RebarSet*)0)->mrRegionRebarSetMaster)))</Item>
+      <Item Name="RegionRebarSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RegionRebarSet::BeRelationRebarSetMaster">
+    <DisplayString>RegionRebarSet=>RebarSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RegionRebarSet">(RegionRebarSet*)((_int64)(this) - (_int64)(&amp;(((RegionRebarSet*)0)->mrRebarSetMaster)))</Item>
+      <Item Name="RebarSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RegionTypicalPoint::BeRelationRegionCurveMaster">
+    <DisplayString>RegionTypicalPoint=>RegionCurve Relation</DisplayString>
+    <Expand>
+      <Item Name="RegionTypicalPoint">(RegionTypicalPoint*)((_int64)(this) - (_int64)(&amp;(((RegionTypicalPoint*)0)->mrRegionCurveMaster)))</Item>
+      <Item Name="RegionCurve Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RegionCurve::BeRelationRegionTypicalPointMaster">
+    <DisplayString>RegionCurve=>RegionTypicalPoint Relation</DisplayString>
+    <Expand>
+      <Item Name="RegionCurve">(RegionCurve*)((_int64)(this) - (_int64)(&amp;(((RegionCurve*)0)->mrRegionTypicalPointMaster)))</Item>
+      <Item Name="RegionTypicalPoint Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RebarElement::BeRelationRebarElementGroup">
+    <DisplayString>RebarElement=>RebarElement Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarElement">(RebarElement*)((_int64)(this) - (_int64)(&amp;(((RebarElement*)0)->mrRebarElementGroup)))</Item>
+      <Item Name="RebarElement Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RebarFaceDependency::BeRelationRebarSetBridge">
+    <DisplayString>RebarFaceDependency=>RebarSet Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarFaceDependency">(RebarFaceDependency*)((_int64)(this) - (_int64)(&amp;(((RebarFaceDependency*)0)->mrRebarSetBridge)))</Item>
+      <Item Name="RebarSet Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+  
+<Type Name="RebarSet::BeRelationRebarFaceDependencyBridge">
+    <DisplayString>RebarSet=>RebarFaceDependency Relation</DisplayString>
+    <Expand>
+      <Item Name="RebarSet">(RebarSet*)((_int64)(this) - (_int64)(&amp;(((RebarSet*)0)->mrRebarFaceDependencyBridge)))</Item>
+      <Item Name="RebarFaceDependency Relations">m_Relations.mrs</Item>
+    </Expand>
+  </Type>
+
+</AutoVisualizer>
