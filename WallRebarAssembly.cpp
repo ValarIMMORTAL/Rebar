@@ -18,6 +18,8 @@
 #include "PITMSCECommon.h"
 #include "ExtractFacesTool.h"
 #include "XmlHelper.h"
+#include "CSolidTool.h"
+
 // #include "SelectRebarTool.h"
 #include <RebarHelper.h>
 // #include "HoleRebarAssembly.h"
@@ -1029,7 +1031,7 @@ void STWallRebarAssembly::movePoint(DPoint3d vec, DPoint3d& movePt, double disLe
 }
 
 bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double extendStrDis, double extendEndDis,
-	double diameter, double strMoveDis, double endMoveDis,bool isInSide,
+	double diameter, double strMoveDis, double endMoveDis, bool isInSide,
 	const PIT::PITRebarEndTypes& endTypes, vector<PIT::PITRebarCurve>& rebars, std::vector<EditElementHandle*> upflooreehs,
 	std::vector<EditElementHandle*> flooreehs, std::vector<EditElementHandle*> Walleehs, std::vector<EditElementHandle*>alleehs)
 {
@@ -1046,7 +1048,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 	}
 	m_vecRebarPtsLayer.push_back(strPt);
 	m_vecRebarPtsLayer.push_back(endPt);
-	
+
 	//计算和原始墙体相交后的点
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
 	//double dSideCover = GetSideCover()*uor_per_mm;
@@ -1080,7 +1082,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 				GetIntersectPointsWithSlabRebar(vecPtRebars, tmpptsTmp, strPt, endPt, &Eleeh, dSideCover);
 			}
 		}
-	}     
+	}
 	if (tmpptsTmp.size() < 2 && vecPtRebars.size() == 0)
 	{
 		vector<DPoint3d> vecPt;
@@ -1103,7 +1105,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 		Vec.Normalize();
 		if (COMPARE_VALUES_EPS(abs(Vec.x), 1, 0.1) == 0 || COMPARE_VALUES_EPS(abs(Vec.y), 1, 0.1) == 0 || COMPARE_VALUES_EPS(abs(Vec.z), 1, 1e-6) == 0)
 		{
-			ReCalExtendDisByTopDownFloor(strPt, endPt, strMoveDis, endMoveDis, extendStrDis, extendEndDis,isInSide);
+			ReCalExtendDisByTopDownFloor(strPt, endPt, strMoveDis, endMoveDis, extendStrDis, extendEndDis, isInSide);
 		}
 		//计算首尾移动向量
 		DVec3d strVec = strPt - endPt;
@@ -1182,6 +1184,10 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 						EFT::GetSolidElementAndSolidHoles(fllorEh, Eleeh1, Holeehs);
 					}
 					GetIntersectPointsWithHoles(tmppts, Holeehs, strPt, endtemp_point3d, dSideCover, matrix);
+					
+					if (tmppts.size() <= 0)
+						GetIntersectPointsWithHolesByInsert(tmppts, Holeehs, strPt, endtemp_point3d, dSideCover, matrix);
+
 					if (tmppts.size() > 0)
 					{
 						double dis = (double)strPt.Distance(endtemp_point3d);
@@ -1199,8 +1205,6 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 					{
 						vector.Negate();
 					}
-
-
 				}
 				tmpendEndTypes.beg.SetendNormal(vector);
 			}
@@ -1256,6 +1260,9 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 						EFT::GetSolidElementAndSolidHoles(fllorEh, Eleeh1, Holeehs);
 					}
 					GetIntersectPointsWithHoles(tmppts, Holeehs, endPt, endtemp_point3d, dSideCover, matrix);
+					if (tmppts.size() <= 0)
+						GetIntersectPointsWithHolesByInsert(tmppts, Holeehs, strPt, endtemp_point3d, dSideCover, matrix);
+
 					if (tmppts.size() > 0)
 					{
 						double dis = (double)endPt.Distance(endtemp_point3d);
@@ -1308,10 +1315,10 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 					else
 						tmpendEndTypes.beg.SetendNormal(vec.Negate());
 				}
-				
+
 				//tmpendEndTypes.beg.SetendNormal(CVector3D::kZaxis.Perpendicular(nowVec));
 			}
-			else 
+			else
 			{
 				nowVec.Negate();
 				DPoint3d temp = strtemp_point3d;
@@ -1335,7 +1342,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 					strtemp_point3d = strPt;
 				}
 			}
-			
+
 			if (ISPointInHoles(Walleehs, endtemp_point3d) && vector2.IsEqual(vectorZ))
 			{
 				tmpendEndTypes.end = Hol;
@@ -1361,7 +1368,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 				//PITCommonTool::CPointTool::DrowOnePoint(endtemp_point3d, 1, 12);
 				if (ISPointInHoles(flooreehs, endtemp_point3d))
 				{
-					
+
 					tmpendEndTypes.end.SetendNormal(vectorZ);
 					tmpendEndTypes.end.SetType(PIT::PITRebarEndType::Type::kNone);
 					endPt = endtemp_point3d;
@@ -1436,7 +1443,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			dis = dis + 1;
 			map_pts[dis] = endPt;
 		}
-		
+
 
 		for (map<int, DPoint3d>::iterator itr = map_pts.begin(); itr != map_pts.end(); itr++)
 		{
@@ -2324,8 +2331,8 @@ RebarSetTag * STWallRebarAssembly::MakeRebars(ElementId & rebarSetId, BrStringCR
 	for (auto it : barLinesData)
 	{
 		//计算端部样式
-		double strMoveDis =  GetSideCover() * uor_per_mm + diameter / 2 * uor_per_mm + it.extstrdiameter;
-		double endMoveDis =  GetSideCover() * uor_per_mm + diameter / 2 * uor_per_mm + it.extenddiameter;
+		double strMoveDis = GetSideCover() * uor_per_mm + diameter / 2 * uor_per_mm + it.extstrdiameter;
+		double endMoveDis = GetSideCover() * uor_per_mm + diameter / 2 * uor_per_mm + it.extenddiameter;
 		PIT::PITRebarEndTypes pitRebarEndTypes;
 		CalRebarEndTypes(it, sizeKey, pitRebarEndTypes, modelRef);
 		double extendstrDis = it.extendstrDis;
@@ -2593,7 +2600,7 @@ void GetMovePath(MSElementDescrP& pathline, double movedis, MSElementDescrP down
 		int tmpnum = mdlIntersect_allBetweenElms(arcinter, nullptr, 2, pathlinecpy, tmpdescr, nullptr, 0.1);
 		if (tmpnum != 2)
 			mdlIntersect_allBetweenExtendedElms(arcinter, nullptr, 2, pathlinecpy, tmpdescr, nullptr, 0.1, nullptr, nullptr);
-	// END错误 #58154?▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲有的线与面用第一个函数只有一个交点，则换另外一个函数
+		// END错误 #58154?▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲有的线与面用第一个函数只有一个交点，则换另外一个函数
 		DVec3d vecch = arcinter[1] - arcinter[0];
 		vecch.Normalize();
 		DVec3d vecf = dpts[dpts.size() - 1] - dpts[0];
@@ -2777,8 +2784,8 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 	}
 }
 //计算当前起始侧是否有板，如果有是在内侧还是在外侧
-bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref>& floorRf , DPoint3d& ptstr, DPoint3d& ptend, DPoint3d& vecLine, double thick,
-	DPoint3d vecOutwall, bool& isInside,double& diameter)
+bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref>& floorRf, DPoint3d& ptstr, DPoint3d& ptend, DPoint3d& vecLine, double thick,
+	DPoint3d vecOutwall, bool& isInside, double& diameter)
 {
 	DPoint3d zeropt = DPoint3d::From(0, 0, 0);
 	DPoint3d tmpvecZ = DPoint3d::From(0, 0, 1);
@@ -2806,7 +2813,7 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 		{
 			ishaveupfloor = true;
 			ElementId concreteid = 0;
-			
+
 			int ret = GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), concreteid, ConcreteIDXAttribute, floorRf.at(i).tModel);
 			if (ret == SUCCESS)
 			{
@@ -2850,7 +2857,7 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 				{
 					ishavetwoside = true;
 				}
-					
+
 				////求线与面的交点
 				//DPoint3d arcinter[2];
 				//if (mdlIntersect_allBetweenElms(arcinter, nullptr, 2, nlineeeh.GetElementDescrP(), cdescr, nullptr, 0.1) > 0)//如果有交点
@@ -2879,7 +2886,7 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 				if (COMPARE_VALUES_EPS(abs(wallVec.y), 1, 0.1))
 					WallDir = true;
 			}
-			if (!vecRebar.empty()&& vecRebar.at(0).rebarDir== WallDir)//关联构件配置钢筋数据不为空并且板L1钢筋方向与廊道方向相同需要偏移一个L1钢筋直径
+			if (!vecRebar.empty() && vecRebar.at(0).rebarDir == WallDir)//关联构件配置钢筋数据不为空并且板L1钢筋方向与廊道方向相同需要偏移一个L1钢筋直径
 			{
 
 				auto it = vecRebar.begin();
@@ -2908,7 +2915,7 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 			{
 
 				int i = 0;
-				for(auto it:vecRebar)
+				for (auto it : vecRebar)
 				{
 					BrString strRebarSize = it.rebarSize;
 					if (strRebarSize != L"")
@@ -2924,13 +2931,13 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 					}
 					strcpy(it.rebarSize, CT2A(strRebarSize));
 					GetDiameterAddType(it.rebarSize, it.rebarType);
-					if (i+1 > vecRebar.size()/2)
+					if (i + 1 > vecRebar.size() / 2)
 						continue;
 					diameter += RebarCode::GetBarDiameter(it.rebarSize, ACTIVEMODEL);		//乘以了10
 					i++;
 				}
 
-				
+
 			}
 		}
 
@@ -3115,7 +3122,7 @@ void GetCutPathLines(vector<WallRebarAssembly::BarLinesdata>& barlines, double s
 
 //根据线延长线，计算周围靠在当前墙体底面与延长线的交点，
 //同时计算出当前钢筋线的锚入方向和锚固长度
-double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElementDescrP& Wallfaces,vector<MSElementDescrP>& cutWallfaces,
+double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElementDescrP& Wallfaces, vector<MSElementDescrP>& cutWallfaces,
 	DPlane3d plane, DPoint3d cpt, double Lae, double L0, DPoint3d& MGvec)
 {
 	double mgDis = L0;
@@ -3167,9 +3174,9 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 		//求线与面的交点
 		DPoint3d arcinter[2];
 		if (mdlIntersect_allBetweenElms(arcinter, nullptr, 2, nlineeeh.GetElementDescrP(), copydescr, nullptr, 0.1) == 2)//如果没有交点，重新移动线
-		{			  
+		{
 			DPoint3d LineVect;
-			if(Wallrange.IsContainedXY(arcinter[0])|| Wallrange.IsContainedXY(arcinter[1]))
+			if (Wallrange.IsContainedXY(arcinter[0]) || Wallrange.IsContainedXY(arcinter[1]))
 				continue;
 			if (str.Distance(arcinter[0]) > str.Distance(arcinter[1]))
 			{
@@ -3425,7 +3432,7 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 						mgVecNeg.Normalize();
 						MGvec = mgVecNeg;
 					}
-					
+
 					mgVec = MGvec;
 					mgVec.Scale(mgDis);
 					nowpt = ptstr;
@@ -3449,7 +3456,7 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 						mgVecNeg.Normalize();
 						MGvec = mgVecNeg;
 					}
-				
+
 					mgVec = MGvec;
 					nowpt = ptstr;
 					nowpt.Add(vecLine);
@@ -3647,7 +3654,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	//PITCommonTool::CPointTool::DrowOneLine(newStrPt, newEndPt, 11);
 	//5.和所有板求交，得到起始点端的交点和终点端的交点集合
 	vector<DPoint3d> interStrPts, interEndPts, allPts; //交点
-	auto calInterPts = [&](IDandModelref floor,bool islsay=true) {
+	auto calInterPts = [&](IDandModelref floor, bool islsay = true) {
 		EditElementHandle floorEeh(floor.ID, floor.tModel);
 		if (!floorEeh.IsValid())
 			return;
@@ -3659,7 +3666,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		vecRange.low = wallLowPt;
 		vecRange.high = wallHighPt;
 		strVec.Normalize();
-		if(islsay)
+		if (islsay)
 		{
 			if ((COMPARE_VALUES_EPS(lowPt.z, wallLowPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == 1 && //板最低点在墙之间
 				COMPARE_VALUES_EPS(highPt.z, wallHighPt.z + 50 * UOR_PER_MilliMeter, 1e-6) == -1) &&
@@ -3675,13 +3682,21 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 					return;
 				}
 			}
+			MSElementDescrP is_lsay = nullptr;
+			if (!PITCommonTool::CSolidTool::SolidBoolWithFace(is_lsay, wallEeh.GetElementDescrP(), floorEeh.GetElementDescrP(), BOOLOPERATION::BOOLOPERATION_INTERSECT)
+				&& COMPARE_VALUES_EPS(lowPt.z, wallHighPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == -1
+				&& COMPARE_VALUES_EPS(highPt.z, wallHighPt.z, 1e-6) == 1
+				&& highPt.z - wallHighPt.z < 55 * UOR_PER_MilliMeter)//如果板的最低点在墙之间但板的最高点不在墙之间且板和墙不相接
+			{
+				return;
+			}
 		}
 		/*PITCommonTool::CPointTool::DrowOnePoint(wallLowPt, 1, 5);
 		PITCommonTool::CPointTool::DrowOnePoint(wallHighPt, 1, 6);
 		PITCommonTool::CPointTool::DrowOnePoint(lowPt, 1, 1);
 		PITCommonTool::CPointTool::DrowOnePoint(highPt, 1, 2);*/
 
-		
+
 		if ((COMPARE_VALUES_EPS(lowPt.z, wallLowPt.z + 80 * UOR_PER_MilliMeter, 1e-6) == -1 ||
 			COMPARE_VALUES_EPS(lowPt.z, wallHighPt.z - 80 * UOR_PER_MilliMeter, 1e-6) == 1) && //板最低点不在墙之间
 			(COMPARE_VALUES_EPS(highPt.z, wallLowPt.z + 80 * UOR_PER_MilliMeter, 1e-6) == -1 ||
@@ -3795,7 +3810,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	{
 		calInterPts(it);
 	}
-	if(!((COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) == 0)&& isInSide))//过滤掉竖向内侧钢筋
+	if (!((COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) == 0) && isInSide))//过滤掉竖向内侧钢筋
 	{
 		for (auto it : m_walldata.wallID)
 		{
@@ -3813,12 +3828,12 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		double dis1 = endPt.Distance(pt1);
 		double dis2 = endPt.Distance(pt2);
 		return COMPARE_VALUES_EPS(dis1, dis2, 1e-6) == 1;
-		});
+	});
 	std::sort(interEndPts.begin(), interEndPts.end(), [&](const DPoint3d& pt1, const DPoint3d& pt2) {
 		double dis1 = strPt.Distance(pt1);
 		double dis2 = strPt.Distance(pt2);
 		return COMPARE_VALUES_EPS(dis1, dis2, 1e-6) == 1;
-		});
+	});
 	//7.计算伸缩值
 	if (interStrPts.size() > 0)
 	{
@@ -3833,7 +3848,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		//减掉保护层
 		extendStrDis -= strMoveLen;
 	}
-	
+
 
 	if (interEndPts.size() > 0)
 	{
@@ -3848,8 +3863,8 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		//减掉保护层
 		extendEndDis -= endMoveLen;
 	}
-	
-	
+
+
 }
 
 //获取锚固长度
@@ -3912,17 +3927,17 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 	//如果只有一侧说明为外侧面，需要延长
 	DPoint3d pt1, pt2;
 	mdlElmdscr_extractEndPoints(&pt1, nullptr, &pt2, nullptr, path, ACTIVEMODEL);
-	DPoint3d Tmept1= pt1, Tmeppt2= pt2;
-	double D1=0, D2=0;
-	ExtendLineByFloor(m_walldata.upfloorfaces, m_walldata.upfloorID, pt2, pt1, vecLine, m_walldata.upfloorth - diameter / uor_per_mm, D1,vecOutwall);
-	ExtendLineByFloor(m_walldata.downfloorfaces, m_walldata.downfloorID, pt1, pt2, vecLine, m_walldata.downfloorth - diameter / uor_per_mm, D2,vecOutwall);
+	DPoint3d Tmept1 = pt1, Tmeppt2 = pt2;
+	double D1 = 0, D2 = 0;
+	ExtendLineByFloor(m_walldata.upfloorfaces, m_walldata.upfloorID, pt2, pt1, vecLine, m_walldata.upfloorth - diameter / uor_per_mm, D1, vecOutwall);
+	ExtendLineByFloor(m_walldata.downfloorfaces, m_walldata.downfloorID, pt1, pt2, vecLine, m_walldata.downfloorth - diameter / uor_per_mm, D2, vecOutwall);
 
 
 	if (Tmept1.Distance(pt1) > 1)//下半
 	{
 		DPoint3d temp = Tmept1;
 		pt1.z -= D2;
-		temp.z=temp.z - diameter+ D2;
+		temp.z = temp.z - diameter + D2;
 		EditElementHandle tmpeeh;
 		LineHandler::CreateLineElement(tmpeeh, nullptr, DSegment3d::From(pt1, temp), true, *ACTIVEMODEL);
 		MSElementDescrP tmppath = tmpeeh.ExtractElementDescr();
@@ -3938,7 +3953,7 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 	{
 		DPoint3d temp = Tmeppt2;
 		pt2.z += D1;
-		temp.z = temp.z + diameter- D1;
+		temp.z = temp.z + diameter - D1;
 		EditElementHandle tmpeeh;
 		LineHandler::CreateLineElement(tmpeeh, nullptr, DSegment3d::From(temp, pt2), true, *ACTIVEMODEL);
 		MSElementDescrP tmppath = tmpeeh.ExtractElementDescr();
@@ -3971,7 +3986,7 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 	//	
 	//}
 	mgDisHol = m_walldata.thickness - dPositiveCover - dReverseCover - diameter;
-	for(auto it: allpaths)
+	for (auto it : allpaths)
 	{
 		if (barpts.size() > 1)
 		{//开始重新计算钢筋线起始点
@@ -3979,7 +3994,7 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 			DPoint3d ptendtmp = barpts[barpts.size() - 1];
 			double mgDisstr = 0;
 			DPoint3d mgVecstr;
-			mgDisstr = GetExtendptByWalls(ptstrtmp, barpts[1],  m_walldata.thickness, m_walldata.downFace, m_walldata.cutWallfaces, plane, cpt, Lae, L0, mgVecstr);
+			mgDisstr = GetExtendptByWalls(ptstrtmp, barpts[1], m_walldata.thickness, m_walldata.downFace, m_walldata.cutWallfaces, plane, cpt, Lae, L0, mgVecstr);
 			double mgDisend = 0;
 			DPoint3d mgVecend;
 			mgDisend = GetExtendptByWalls(ptendtmp, barpts[barpts.size() - 2], m_walldata.thickness, m_walldata.downFace, m_walldata.cutWallfaces, plane, cpt, Lae, L0, mgVecend);
@@ -3995,7 +4010,7 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 			tmpbarline.strDis = dSideCover + GetvecStartOffset().at(index)*uor_per_mm + diameter / 2;
 			tmpbarline.endDis = dSideCover + GetvecEndOffset().at(index)*uor_per_mm + diameter / 2;
 			tmpbarline.diameter = diameter;
-			
+
 			tmpbarline.extendstrDis = ptstrtmp.Distance(barpts[0]) - dSideCover;
 			//根据锚入长度判断延长长度
 			if (tmpbarline.extendstrDis != 0 && abs(mgDisstr - L0) < 2)
@@ -4007,8 +4022,8 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 			{
 				tmpbarline.extendendDis = tmpbarline.extendendDis - allfdiam;
 			}
-			tmpbarline.extstrdiameter = allfdiam- diameter / 2;
-			tmpbarline.extenddiameter = allfdiam- diameter / 2;
+			tmpbarline.extstrdiameter = allfdiam - diameter / 2;
+			tmpbarline.extenddiameter = allfdiam - diameter / 2;
 			tmpbarline.isInSide = false;
 			tmpbarline.vecstr = mgVecstr;
 			tmpbarline.strMG = mgDisstr;
@@ -4028,7 +4043,7 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 
 		}
 	}
-	
+
 }
 
 void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines, double fdiam, double allfdiam, DPoint3dR vecHoleehs, MSElementDescrP& path, MSElementDescrP& barline,
@@ -4046,7 +4061,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 	double dSideCover = GetSideCover()*uor_per_mm;
 	double dPositiveCover = GetPositiveCover()*uor_per_mm;
 	double dReverseCover = GetReverseCover()*uor_per_mm;
-	double diameterStr=0, diameterEnd = 0;
+	double diameterStr = 0, diameterEnd = 0;
 	DPoint3d vecOutwall = m_walldata.vecToWall;//远离墙内的偏移方向
 	vecOutwall.Negate();
 	if (side != 0) vecOutwall.Negate();
@@ -4117,7 +4132,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 		{
 			extendstr = -1 * dPositiveCover;
 		}
-		
+
 		mgVecstr = vecOutwall;
 		//mgVecstr.Negate();
 		//绘制锚固方向长度线
@@ -4149,7 +4164,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 				diameterEnd = diameter;
 				diameterEnd = diameterEnd * 2;
 			}
-			
+
 		}
 		else
 		{
@@ -4183,7 +4198,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 		}
 		else
 		{
-			extendend = -1*dPositiveCover;
+			extendend = -1 * dPositiveCover;
 		}
 		mgVecend = vecOutwall;
 		//mgVecend.Negate();
@@ -4311,7 +4326,7 @@ void STWallRebarAssembly::CalculateBarLinesData(map<int, vector<BarLinesdata>> &
 			break;
 		mdlElmdscr_computeRange(&range.low, &range.high, it, NULL);
 		//mdlElmdscr_add(it);
-		range.low.x = range.low.x + 50* uor_per_mm;
+		range.low.x = range.low.x + 50 * uor_per_mm;
 		range.low.y = range.low.y + 50 * uor_per_mm;
 		range.high.x = range.high.x - 50 * uor_per_mm;
 		range.high.y = range.high.y - 50 * uor_per_mm;
@@ -4324,7 +4339,7 @@ void STWallRebarAssembly::CalculateBarLinesData(map<int, vector<BarLinesdata>> &
 			break;
 		}
 	}
-	if(!is_cond)
+	if (!is_cond)
 	{
 		for (auto it : m_walldata.upfloorfaces)//判断vecFontLine是否是外侧线 如果不是则跟内侧线互换
 		{
@@ -4346,7 +4361,7 @@ void STWallRebarAssembly::CalculateBarLinesData(map<int, vector<BarLinesdata>> &
 			}
 		}
 	}
-	
+
 	//计算偏移方向
 	if (m_walldata.vecFontLine.size() == 0) return;
 	DVec3d moveLine = m_walldata.vecdown;
@@ -4963,6 +4978,31 @@ bool STWallRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 		else if (GetvecDataExchange().at(it.first) == 2)//内侧面
 		{
 			it.second[0].isInSide = true;
+		}
+		//判断是否墙全部被板包围
+		DSegment3d temp = m_walldata.vecFontLine[0];
+		DPoint3d ptr1, ptr2;
+		m_walldata.vecFontLine[0].GetStartPoint(ptr1);
+		m_walldata.vecFontLine[0].GetEndPoint(ptr2);
+		ptr1.Add(ptr2);
+		ptr1.Scale(0.5);//中点判断
+		DRange3d range;
+		//计算指定元素描述符中元素的范围。
+		for (auto data : m_walldata.downfloorfaces)//判断vecFontLine是否是外侧 如果不是则跟内侧
+		{
+			if (abs(ptr1.x - ptr2.x) > 10 * uor_per_mm && abs(ptr1.y - ptr2.y) > 10 * uor_per_mm)
+				break;
+			mdlElmdscr_computeRange(&range.low, &range.high, data, NULL);
+			//mdlElmdscr_add(it);
+			range.low.x = range.low.x + 50 * uor_per_mm;
+			range.low.y = range.low.y + 50 * uor_per_mm;
+			range.high.x = range.high.x - 50 * uor_per_mm;
+			range.high.y = range.high.y - 50 * uor_per_mm;
+			if (range.IsContainedXY(ptr1))
+			{
+				it.second[0].isInSide = false;
+				break;
+			}
 		}
 		tag = MakeRebars(PopvecSetId().back(), GetvecDirSize().at(it.first), it.second,
 			GetvecStartOffset().at(it.first)*uor_per_mm, GetvecEndOffset().at(it.first)*uor_per_mm,
@@ -5716,7 +5756,7 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 				copier2.SetWriteElements(false);
 				copier2.DoCopy(tmpeeh);*/
 				EditElementHandle downeh;
-				
+
 				double tHeight;
 				ExtractFacesTool::GetDownFace(tmpeeh, downeh, &tHeight);
 				MSElementDescrP downface = downeh.ExtractElementDescr();
@@ -5754,7 +5794,7 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 
 		}
 	}
-	for(auto it:Eles)
+	for (auto it : Eles)
 	{
 		bool up = false, down = false;
 		EditElementHandle tmpeeh(it.ID, it.tModel);
@@ -5766,7 +5806,7 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 			EditElementHandle tmpeeh2(itr.ID, itr.tModel);
 			DPoint3d minP = { 0 }, maxP = { 0 };
 			mdlElmdscr_computeRange(&minP, &maxP, tmpeeh2.GetElementDescrP(), NULL);
-			DRange3d range; 
+			DRange3d range;
 			range.low = minP;
 			range.high = maxP;
 
@@ -5775,7 +5815,7 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 			if (range.IsContained(minP2))
 				down = true;
 		}
-		if(down&&up)
+		if (down&&up)
 		{
 			ElementCopyContext copier2(ACTIVEMODEL);
 			copier2.SetSourceModelRef(tmpeeh.GetModelRef());
@@ -5951,7 +5991,7 @@ bool STWallRebarAssembly::AnalyzingWallGeometricData(ElementHandleCR eh)
 	{
 		wallname = Ename;
 	}
-	
+
 	GetUpDownFloorFaces(m_walldata, testeeh);
 	GetLeftRightWallFaces(m_walldata, testeeh, wallname);
 	return true;

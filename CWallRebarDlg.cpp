@@ -253,7 +253,7 @@ BOOL CWallRebarDlg::OnInitDialog()
 		Thickness = L"墙厚:" + Thickness + L"mm";
 		m_wallthickness.SetWindowTextW(Thickness);
 	}
-	SetWindowPos(&this->wndTopMost, 0, 0, 0, 0, SWP_NOSIZE); // 让对话框界面显示在最前端
+	SetWindowPos(&this->wndNoTopMost, 0, 0, 0, 0, SWP_NOSIZE); // 让对话框界面显示在最前端
 	for each (auto var in g_listRebarSize)
 		m_ComboSize.AddString(var);
 	for each (auto var in g_listRebarType)
