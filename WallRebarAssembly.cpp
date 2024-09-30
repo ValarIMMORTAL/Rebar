@@ -1203,6 +1203,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 						if (tmppts.size() <= 0)
 							GetIntersectPointsWithHolesByInsert(tmppts, Holeehs, strPt, endtemp_point3d, dSideCover, matrix);
 					}
+					//与孔洞有交点
 					if (tmppts.size() > 0)
 					{
 						double dis = (double)strPt.Distance(endtemp_point3d);
@@ -1212,6 +1213,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 							vectortepm.Normalize();
 							vectortepm.ScaleToLength(strMoveDis);
 							endtemp_point3d.Add(vectortepm);
+							//重新计算距离，减去弯曲半径
 							dis = (double)strPt.Distance(endtemp_point3d) - tmpendEndTypes.beg.GetbendRadius();
 							//小于0则说明锚入弯钩本身就已经超出墙范围，反转再截短
 							if (dis < 0)
@@ -1226,18 +1228,34 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 								{
 									vectortepm = strPt - nonstrtemp_point3d;
 									vectortepm.Normalize();
-									vectortepm.ScaleToLength(endMoveDis);
+									vectortepm.ScaleToLength(strMoveDis);
 									nonstrtemp_point3d.Add(vectortepm);
 									dis = (double)strPt.Distance(nonstrtemp_point3d) - tmpendEndTypes.beg.GetbendRadius();
 									tmpendEndTypes.beg.SetbendLen(dis);
-									lenth = dis;
 								}
 							}
 							else
 							{
 								tmpendEndTypes.beg.SetbendLen(dis);
-								lenth = dis;
 							}
+						}
+					}
+					//仍然没有锚入任何实体，在墙内截短锚入，已知为外侧钢筋反转后指向了墙外
+					else if (!ISPointInHoles(alleehs, endtemp_point3d))
+					{
+						endtemp_point3d = strPt;
+						nonstrtemp_point3d = strPt;
+						movePoint(vector, endtemp_point3d, lenth);
+						GetIntersectPointsWithHoles(tmppts, alleehs, nonstrtemp_point3d, endtemp_point3d, dSideCover, matrix);
+						GetIntersectPointsWithHolesByInsert(tmppts, alleehs, nonstrtemp_point3d, endtemp_point3d, dSideCover, matrix);
+						if (tmppts.size() > 0)
+						{
+							CVector3D vectortepm = strPt - nonstrtemp_point3d;
+							vectortepm.Normalize();
+							vectortepm.ScaleToLength(strMoveDis);
+							nonstrtemp_point3d.Add(vectortepm);
+							lenth = (double)strPt.Distance(nonstrtemp_point3d) - tmpendEndTypes.beg.GetbendRadius();
+							tmpendEndTypes.beg.SetbendLen(lenth);
 						}
 					}
 					else
@@ -1247,23 +1265,6 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 				}
 
 				tmpendEndTypes.beg.SetendNormal(vector);
-				
-				endtemp_point3d = strPt;
-				movePoint(vector, endtemp_point3d, lenth);
-
-				for (IDandModelref IdMode : m_walldata.downfloorID)//板
-				{
-					EditElementHandle Eleeh1;
-					EditElementHandle fllorEh(IdMode.ID, IdMode.tModel);
-					EFT::GetSolidElementAndSolidHoles(fllorEh, Eleeh1, Holeehs);
-					
-					//仍然锚入在孔洞中时，向下延伸
-					if (ISPointInHoles(Holeehs, endtemp_point3d))
-					{
-						tmpendEndTypes.beg.SetType(PIT::PITRebarEndType::Type::kLap);
-						tmpendEndTypes.beg.SetstraightAnchorLen(lenth);
-					}
-				}
 			}
 			
 			//顶板转向处理1.如果锚入未在顶板内则锚入转向。2.如果转向后并未锚入到任何实体中，则还原反向,进行孔洞截断操作
@@ -1301,21 +1302,27 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			{
 				endtemp_point3d = endPt;
 				movePoint(vector, endtemp_point3d, lenth);
-				PITCommonTool::CPointTool::DrowOnePoint(endtemp_point3d, 1, 5);
+				//PITCommonTool::CPointTool::DrowOnePoint(endtemp_point3d, 1, 5);
 				if (!ISPointInHoles(alleehs, endtemp_point3d))//判断是否锚入到实体，没有则转向
 				{
 					vector.Negate();
 				}
 				movePoint(vector, nonendtemp_point3d, lenth);
-				PITCommonTool::CPointTool::DrowOnePoint(nonendtemp_point3d, 1, 6);
+				//PITCommonTool::CPointTool::DrowOnePoint(nonendtemp_point3d, 1, 6);
 				if (!ISPointInHoles(alleehs, nonendtemp_point3d))//判断转向后是否也没有锚入实体，返回
 				{
 					vector.Negate();
 					for (IDandModelref IdMode : m_walldata.upfloorID)//板
 					{
-						EditElementHandle fllorEh(IdMode.ID, IdMode.tModel);
 						EditElementHandle Eleeh1;
+						EditElementHandle fllorEh(IdMode.ID, IdMode.tModel);
 						EFT::GetSolidElementAndSolidHoles(fllorEh, Eleeh1, Holeehs);
+
+						EditElementHandle* eeh = &fllorEh;
+						if (ISPointInElement(eeh, endtemp_point3d))
+						{
+							vector.Negate();
+						}
 					}
 
 					if (Holeehs.size() != 0)
@@ -1326,7 +1333,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 						if (tmppts.size() <= 0)
 							GetIntersectPointsWithHolesByInsert(tmppts, Holeehs, endPt, endtemp_point3d, dSideCover, matrix);
 					}
-
+					//与孔洞有交点
 					if (tmppts.size() > 0)
 					{
 						double dis = (double)endPt.Distance(endtemp_point3d);
@@ -1336,6 +1343,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 							vectortepm.Normalize();
 							vectortepm.ScaleToLength(endMoveDis);
 							endtemp_point3d.Add(vectortepm);
+							//重新计算距离，减去弯曲半径
 							dis = (double)endPt.Distance(endtemp_point3d) - tmpendEndTypes.end.GetbendRadius();
 							//小于0则说明锚入弯钩本身就已经超出墙范围，反转再截短
 							if (dis < 0)
@@ -1354,15 +1362,31 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 									nonendtemp_point3d.Add(vectortepm);
 									dis = (double)endPt.Distance(nonendtemp_point3d) - tmpendEndTypes.end.GetbendRadius();
 									tmpendEndTypes.end.SetbendLen(dis);
-									lenth = dis;
 								}
 							}
 							else
 							{
 								tmpendEndTypes.end.SetbendLen(dis);
-								lenth = dis;
 							}
 							
+						}
+					}
+					//仍然没有锚入任何实体，在墙内截短锚入，已知为外侧钢筋反转后指向了墙外
+					else if (!ISPointInHoles(alleehs, endtemp_point3d))
+					{
+						endtemp_point3d = endPt;
+						nonendtemp_point3d = endPt;
+						movePoint(vector, endtemp_point3d, lenth);
+						GetIntersectPointsWithHoles(tmppts, alleehs, nonendtemp_point3d, endtemp_point3d, dSideCover, matrix);
+						GetIntersectPointsWithHolesByInsert(tmppts, alleehs, nonendtemp_point3d, endtemp_point3d, dSideCover, matrix);
+						if (tmppts.size() > 0)
+						{
+							CVector3D vectortepm = endPt - nonendtemp_point3d;
+							vectortepm.Normalize();
+							vectortepm.ScaleToLength(endMoveDis);
+							nonendtemp_point3d.Add(vectortepm);
+							lenth = (double)endPt.Distance(nonendtemp_point3d) - tmpendEndTypes.end.GetbendRadius();
+							tmpendEndTypes.end.SetbendLen(lenth);
 						}
 					}
 					else
@@ -1371,23 +1395,6 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 					}
 				}
 				tmpendEndTypes.end.SetendNormal(vector);
-				
-				endtemp_point3d = endPt;
-				movePoint(vector, endtemp_point3d, lenth);
-
-				for (IDandModelref IdMode : m_walldata.upfloorID)//板
-				{
-					EditElementHandle Eleeh1;
-					EditElementHandle fllorEh(IdMode.ID, IdMode.tModel);
-					EFT::GetSolidElementAndSolidHoles(fllorEh, Eleeh1, Holeehs);
-					
-					//仍然锚入在孔洞中时，向上延伸
-					if (ISPointInHoles(Holeehs, endtemp_point3d))
-					{
-						tmpendEndTypes.end.SetType(PIT::PITRebarEndType::Type::kLap);
-						tmpendEndTypes.end.SetstraightAnchorLen(lenth);
-					}
-				}
 			}
 
 
@@ -1428,7 +1435,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 				DPoint3d temp = strtemp_point3d;
 				movePoint(nowVec, strtemp_point3d, lae);
 				movePoint(nowVec, temp, der);
-				PITCommonTool::CPointTool::DrowOnePoint(strtemp_point3d, 1,11);
+				//PITCommonTool::CPointTool::DrowOnePoint(strtemp_point3d, 1,11);
 				if (ISPointInHoles(flooreehs, strtemp_point3d))
 				{
 					tmpendEndTypes.beg.SetendNormal(vectorZ);
