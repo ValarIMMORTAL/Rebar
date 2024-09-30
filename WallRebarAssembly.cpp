@@ -1065,7 +1065,8 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 	vector<DPoint3d> tmp_pts_Tmp;
 	vecPtRebars.clear();
 	PITRebarEndTypes tmpendEndTypes = endTypes;
-
+	PITRebarEndTypes tmpendEndTypes_2;
+	int FLAGE = 0;
 	tmpptsTmp.clear();
 	EditElementHandle ehWall(GetSelectedElement(), GetSelectedModel());
 	EditElementHandle Eleeh;
@@ -1289,7 +1290,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 				if (ISPointInElement(Walleehs[i], endtemp_point3d) && abs(vecwall1.DotProduct(vecwall) < 0.9))//垂直时才延长)
 				{
 					//isOpen = true;
-					break;
+					break; 
 				}
 			}
 			if (isOpen&&isInSide)//判断Z轴上方或者下方是否有墙并且是内侧钢筋
@@ -1404,9 +1405,9 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 		{
 			DPoint3d  strtemp_point3d = strPt, endtemp_point3d = endPt;
 			CVector3D vector1 = endTypes.beg.GetendNormal();
-			double lenth1 = endTypes.beg.GetbendLen();
+			double lenth1 = endTypes.beg.GetbendLen() + endTypes.beg.GetbendRadius();
 			CVector3D vector2 = endTypes.end.GetendNormal();
-			double lenth2 = endTypes.end.GetbendLen();
+			double lenth2 = endTypes.end.GetbendLen() + endTypes.end.GetbendRadius();
 			CVector3D vectorZ = CVector3D::From(0, 0, 0);
 			double lae = get_lae() * diameter / uor_per_mm;
 			double der = diameter * 15;
@@ -1508,9 +1509,8 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			}
 			if (!ISPointInHoles(alleehs, endtemp_point3d))
 			{
-				PITRebarEndType	tmpendTypes;
-				vector2.Negate();
-				tmpendEndTypes.end.SetendNormal(vector2);
+				FLAGE = 1;
+				tmpendEndTypes_2.beg = tmpendEndTypes.beg;
 			}
 		}
 
@@ -1583,6 +1583,11 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			}
 			if (endPttepm.Distance(itrplus->second) < 10)
 			{
+				if (FLAGE==1)
+				{
+					tmpendTypes.end= tmpendEndTypes_2.end;
+				}
+				else
 				tmpendTypes.end = tmpendEndTypes.end;
 			}
 			else
@@ -3460,6 +3465,8 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 		nowptNeg.Add(mgVecNeg);
 		//PITCommonTool::CPointTool::DrowOnePoint(nowpt,1,11);
 		//PITCommonTool::CPointTool::DrowOnePoint(nowptNeg,1,11);
+		vector <double>max_data;//延申长度
+		vector <DPoint3d>Mvec;//延申方向
 		for (int i = 0; i < cutWallfaces.size(); i++)
 		{
 			MSElementDescrP copydescr = nullptr;
@@ -3510,7 +3517,13 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 				{
 					//再延升LAE，如果还在墙内，说明为当前方向，如果不在说明为反方向
 					mgDis = L0;
+					nowpt = ptstr;
 					mgVec.Normalize();
+
+					//PITCommonTool::CPointTool::DrowOnePoint(nowptNeg, 1, 3);
+					mgVec.Scale(thick);
+					nowpt.Add(mgVec);
+					//PITCommonTool::CPointTool::DrowOnePoint(nowpt, 1, 3);
 					if (isFront)
 					{
 						mgVec.Normalize();
@@ -3539,6 +3552,8 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 					nowpt.Add(vecLine);
 					DPoint3d movept = nowpt;
 					movept.Add(mgVec);
+					max_data.push_back(mgDis);
+					Mvec.push_back(MGvec);
 					/*EditElementHandle tmpeeh;
 					LineHandler::CreateLineElement(tmpeeh, nullptr, DSegment3d::From(nowpt, movept), true, *ACTIVEMODEL);
 					tmpeeh.AddToModel();*/
@@ -3563,12 +3578,12 @@ double  GetExtendptByWalls(DPoint3d& str, DPoint3d str_1, double thick, MSElemen
 					DPoint3d movept = nowpt;
 					mgVec.Scale(mgDis);
 					movept.Add(mgVec);
+					max_data.push_back(mgDis);
+					Mvec.push_back(MGvec);
 					/*EditElementHandle tmpeeh;
 					LineHandler::CreateLineElement(tmpeeh, nullptr, DSegment3d::From(nowpt, movept), true, *ACTIVEMODEL);
 					tmpeeh.AddToModel();*/
 				}
-
-
 			}
 		}
 	}
@@ -3969,7 +3984,8 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	if (interStrPts.size() > 0)
 	{
 		//PITCommonTool::CPointTool::DrowOnePoint(*interStrPts.begin(), 1, 3);
-		extendStrDis = strPt.Distance(*interStrPts.begin());
+		int str_number = interStrPts.size() - 2;
+		extendStrDis = strPt.Distance(interStrPts[str_number]);
 		//根据法向计算距离正负
 		strVec.Normalize();
 		DVec3d extendStrVec = *interStrPts.begin() - strPt;
@@ -3983,11 +3999,15 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 
 	if (interEndPts.size() > 0)
 	{
+		int x = interEndPts.size() - 1;
 		//PITCommonTool::CPointTool::DrowOnePoint(*interEndPts.begin(), 1, 4);
+		//extendEndDis = endPt.Distance(interEndPts[x]);
+		DPoint3d xx = *interEndPts.begin();
 		extendEndDis = endPt.Distance(*interEndPts.begin());
 		//根据法向计算距离正负
 		endVec.Normalize();
-		DVec3d extendEndVec = *interEndPts.begin() - endPt;
+		DVec3d extendEndVec = xx - endPt;
+		//DVec3d extendEndVec = interEndPts[x]- endPt;
 		extendEndVec.Normalize();
 		if (extendEndVec.DotProduct(endVec) < 0) //反方向
 			extendEndDis = extendEndDis * -1;
