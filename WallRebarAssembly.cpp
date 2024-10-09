@@ -1067,6 +1067,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 	PITRebarEndTypes tmpendEndTypes = endTypes;
 	PITRebarEndTypes tmpendEndTypes_2;
 	int FLAGE = 0;
+	DPoint3d END_PTR;
 	tmpptsTmp.clear();
 	EditElementHandle ehWall(GetSelectedElement(), GetSelectedModel());
 	EditElementHandle Eleeh;
@@ -1241,7 +1242,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 							}
 						}
 					}
-					//仍然没有锚入任何实体，在墙内截短锚入，已知为外侧钢筋反转后指向了墙外
+					//仍然没有锚入任何实体，在实体内截短锚入，已知为外侧钢筋反转后指向了墙外
 					else if (!ISPointInHoles(alleehs, endtemp_point3d))
 					{
 						endtemp_point3d = strPt;
@@ -1264,7 +1265,6 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 						vector.Negate();
 					}
 				}
-
 				tmpendEndTypes.beg.SetendNormal(vector);
 			}
 			
@@ -1372,7 +1372,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 							
 						}
 					}
-					//仍然没有锚入任何实体，在墙内截短锚入，已知为外侧钢筋反转后指向了墙外
+					//仍然没有锚入任何实体，在实体内截短锚入，已知为外侧钢筋反转后指向了墙外
 					else if (!ISPointInHoles(alleehs, endtemp_point3d))
 					{
 						endtemp_point3d = endPt;
@@ -1498,6 +1498,19 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			}
 
 			//判断是否锚空
+			if (!ISPointInHoles(alleehs, endtemp_point3d))
+			{
+				//endtemp_point3d = end_Pt;
+				DPoint3d str_Pt = { 0,0,0 }, end_Pt = { 0,0,0 };
+				mdlElmdscr_extractEndPoints(&str_Pt, nullptr, &end_Pt, nullptr, lineEeh.GetElementDescrP(), ACTIVEMODEL);
+				vector<DPoint3d> tmppts;
+				GetIntersectPointsWithOldElm(tmppts, &Eleeh, str_Pt, end_Pt, dSideCover, matrix);
+				if (tmppts.size() > 1)
+				{
+					FLAGE = 2;
+					END_PTR = tmppts[tmppts.size() - 2];
+				}
+			}
 			movePoint(vector1, strtemp_point3d, lenth1);
 			movePoint(vector2, endtemp_point3d, lenth2);
 
@@ -1547,15 +1560,23 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 		int dis = (int)strPt.Distance(endPt);
 		if (map_pts.find(dis) == map_pts.end())
 		{
+			if (FLAGE == 2)
+			{
+				map_pts[dis] = END_PTR;
+			}
+			else
 			map_pts[dis] = endPt;
 		}
 		else
 		{
 			dis = dis + 1;
+			if (FLAGE == 2)
+			{
+				map_pts[dis] = END_PTR;
+			}
+			else
 			map_pts[dis] = endPt;
 		}
-
-
 		for (map<int, DPoint3d>::iterator itr = map_pts.begin(); itr != map_pts.end(); itr++)
 		{
 			PITRebarEndTypes		tmpendTypes;
@@ -2801,6 +2822,7 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
 	bool ishaveupfloor = false;
 	bool ishavetwoside = false;
+
 	for (int i = 0; i < floorfaces.size(); i++)
 	{
 		DRange3d range;
@@ -2819,6 +2841,13 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 		//PITCommonTool::CPointTool::DrowOnePoint(temp, 1, 3);//绿
 		if (range.IsContainedXY(temp) || range.IsContainedXY(ptstr) || range.IsContainedXY(ptend))
 		{
+			ElementId testid = 0;
+			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), testid, ConcreteIDXAttribute, floorRf.at(i).tModel);
+			std::vector<PIT::ConcreteRebar>                        test_vecRebarData1;
+			std::vector<PIT::ConcreteRebar>                        test_vecRebarData2;
+			GetElementXAttribute(testid, test_vecRebarData1, RebarInsideFace, ACTIVEMODEL);
+			GetElementXAttribute(testid, test_vecRebarData2, RebarOutsideFace, ACTIVEMODEL);
+
 			ishaveupfloor = true;
 			ElementId concreteid = 0;
 			vector<PIT::ConcreteRebar> vecRebar;
@@ -2831,6 +2860,14 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 			{
 				GetElementXAttribute(floorRf.at(i).ID, vecRebar, vecRebarDataXAttribute, ACTIVEMODEL);
 			}
+			if (test_vecRebarData1.size() != 0 && test_vecRebarData1.size() != 0 && vecRebar.size() == 2)
+			{
+				vecRebar.clear();
+				vecRebar.push_back(test_vecRebarData1[0]);
+				vecRebar.push_back(test_vecRebarData1[1]);
+				vecRebar.push_back(test_vecRebarData2[0]);
+				vecRebar.push_back(test_vecRebarData2[1]);
+			}	
 			CVector3D wallVec = vecOutwall;
 			wallVec.Perpendicular(CVector3D::kZaxis);
 			wallVec.Normalize();
@@ -2927,6 +2964,13 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 		//PITCommonTool::CPointTool::DrowOnePoint(pointStr, 1, 1);
 		if (range.IsContainedXY(pointStr))// && range.IsContainedXY(ptend)
 		{
+			ElementId testid = 0;
+			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), testid, ConcreteIDXAttribute, floorRf.at(i).tModel);
+			std::vector<PIT::ConcreteRebar>                        test_vecRebarData1;
+			std::vector<PIT::ConcreteRebar>                        test_vecRebarData2;
+			GetElementXAttribute(testid, test_vecRebarData1, RebarInsideFace, ACTIVEMODEL);
+			GetElementXAttribute(testid, test_vecRebarData2, RebarOutsideFace, ACTIVEMODEL);
+
 			ishaveupfloor = true;
 			ElementId concreteid = 0;
 			int ret = GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), concreteid, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -2937,6 +2981,14 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 			else
 			{
 				GetElementXAttribute(floorRf.at(i).ID, vecRebar, vecRebarDataXAttribute, ACTIVEMODEL);
+			}
+			if (test_vecRebarData1.size() != 0 && test_vecRebarData1.size() != 0 && vecRebar.size() == 2)
+			{
+				vecRebar.clear();
+				vecRebar.push_back(test_vecRebarData1[0]);
+				vecRebar.push_back(test_vecRebarData1[1]);
+				vecRebar.push_back(test_vecRebarData2[0]);
+				vecRebar.push_back(test_vecRebarData2[1]);
 			}
 			break;
 		}
@@ -3900,6 +3952,30 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 					isValid = true;
 					break;
 				}
+				// 新增条件：检查交点是否接近 interStrPts 或 interEndPts。此为判断锚入点是否可以跨实体
+				// 检查交点是否接近起点端的交点集合
+				for (auto strPtInters : interStrPts) {
+					if (islsay && COMPARE_VALUES_EPS(strPtInters.Distance(it), 50 * UOR_PER_MilliMeter, 1e-6) <= 0) {
+						isValid = true;
+						break;
+					}
+				}
+
+				if (isValid) {
+					break;  // 如果已确定线可以延伸，跳出循环
+				}
+
+				// 检查交点是否接近终点端的交点集合
+				for (auto endPtInters : interEndPts) {
+					if (islsay && COMPARE_VALUES_EPS(endPtInters.Distance(it), 50 * UOR_PER_MilliMeter, 1e-6) <= 0) {
+						isValid = true;
+						break;
+					}
+				}
+
+				if (isValid) {
+					break;  // 如果已确定线可以延伸，跳出循环
+				}
 			}
 		}
 		if (!isValid)
@@ -3970,6 +4046,17 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 			calInterPts(it, false);
 		}
 	}
+
+	//墙后可能还需要延伸至板
+	for (auto it : m_walldata.upfloorID)
+	{
+		calInterPts(it);
+	}
+	for (auto it : m_walldata.downfloorID)
+	{
+		calInterPts(it);
+	}
+	
 	std::sort(interStrPts.begin(), interStrPts.end(), [&](const DPoint3d& pt1, const DPoint3d& pt2) {
 		double dis1 = endPt.Distance(pt1);
 		double dis2 = endPt.Distance(pt2);
@@ -3984,8 +4071,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	if (interStrPts.size() > 0)
 	{
 		//PITCommonTool::CPointTool::DrowOnePoint(*interStrPts.begin(), 1, 3);
-		int str_number = interStrPts.size() - 2;
-		extendStrDis = strPt.Distance(interStrPts[str_number]);
+		extendStrDis = strPt.Distance(*interStrPts.begin());
 		//根据法向计算距离正负
 		strVec.Normalize();
 		DVec3d extendStrVec = *interStrPts.begin() - strPt;
@@ -3999,15 +4085,11 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 
 	if (interEndPts.size() > 0)
 	{
-		int x = interEndPts.size() - 1;
 		//PITCommonTool::CPointTool::DrowOnePoint(*interEndPts.begin(), 1, 4);
-		//extendEndDis = endPt.Distance(interEndPts[x]);
-		DPoint3d xx = *interEndPts.begin();
 		extendEndDis = endPt.Distance(*interEndPts.begin());
 		//根据法向计算距离正负
 		endVec.Normalize();
-		DVec3d extendEndVec = xx - endPt;
-		//DVec3d extendEndVec = interEndPts[x]- endPt;
+		DVec3d extendEndVec = *interEndPts.begin() - endPt;
 		extendEndVec.Normalize();
 		if (extendEndVec.DotProduct(endVec) < 0) //反方向
 			extendEndDis = extendEndDis * -1;

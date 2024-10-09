@@ -16,8 +16,7 @@
     <RootNamespace>rebarSDKExample</RootNamespace>
     <Keyword>MFCProj</Keyword>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
-    <ProjectName>
-    </ProjectName>
+    <ProjectName>GalleryIntelligentRebar</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -59,7 +58,7 @@
     <LinkIncremental>true</LinkIncremental>
     <LinkDelaySign>false</LinkDelaySign>
     <LibraryPath>$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\Program Files\Bentley\MicroStationCONNECTSDK\include;C:\Program Files\Bentley\ProStructuresSDK\include;D:\廊道配筋出图项目\02代码\PITGraphFunction\include;C:\Program Files\Bentley\ProStructuresSDK\include\Rebar;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\Bentley\MicroStationCONNECTSDK\include;C:\Program Files\Bentley\ProStructuresSDK\include;D:\Codes\Bentley\廊道配筋出图\02代码\PITGraphFunction\include;C:\Program Files\Bentley\ProStructuresSDK\include\Rebar;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
