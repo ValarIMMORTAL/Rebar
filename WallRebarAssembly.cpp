@@ -3822,6 +3822,8 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	//5.和所有板求交，得到起始点端的交点和终点端的交点集合
 	vector<DPoint3d> interStrPts, interEndPts, allPts; //交点
 	int  FLAG = 0;
+	int isStrRecorded = 0; // 标志起点是否遇到板，遇板之后停止延伸
+	int isEndRecorded = 0; // 标志终点是否遇到板，遇板之后停止延伸
 	auto calInterPts = [&](IDandModelref floor, bool islsay = true) {
 		EditElementHandle floorEeh(floor.ID, floor.tModel);
 		if (!floorEeh.IsValid())
@@ -4016,10 +4018,26 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 				double endDis = endPt.Distance(it);
 				allPts.push_back(it);
 				if (COMPARE_VALUES_EPS(strDis, endDis, 1e-6) == -1)
+				{
+					// 起点已经遇板，停止延伸
+					if(2 <= isStrRecorded)
+						continue;
 					interStrPts.push_back(it);
+					if(islsay)
+						isStrRecorded++;
+				}
 				else
+				{
+					// 终点已经遇板，停止延伸
+					if(2 <= isEndRecorded)
+						continue;
 					interEndPts.push_back(it);
+					if (islsay)
+						isEndRecorded++;
+				}
+					
 			}
+
 		}
 
 	};
