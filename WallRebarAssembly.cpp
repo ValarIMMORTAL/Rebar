@@ -3719,6 +3719,15 @@ void STWallRebarAssembly::CalRebarEndTypes(const BarLinesdata & data, BrStringCR
 	pitRebarEndTypes = { strEndType,endEndType };
 }
 
+void interPtsSort(vector<DPoint3d> &interPts, const DPoint3d &originPt)
+{
+	std::sort(interPts.begin(), interPts.end(), [&](const DPoint3d& pt1, const DPoint3d& pt2) {
+		double dis1 = originPt.Distance(pt1);
+		double dis2 = originPt.Distance(pt2);
+		return COMPARE_VALUES_EPS(dis1, dis2, 1e-6) == 1;
+	});
+}
+
 /*
 * @desc:		根据顶底板重新计算伸缩距离
 * @param[in]	strPt 钢筋线起点
@@ -3822,8 +3831,8 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	//5.和所有板求交，得到起始点端的交点和终点端的交点集合
 	vector<DPoint3d> interStrPts, interEndPts, allPts; //交点
 	int  FLAG = 0;
-	int isStrRecorded = 0; // 标志起点是否遇到板，遇板之后停止延伸
-	int isEndRecorded = 0; // 标志终点是否遇到板，遇板之后停止延伸
+	bool isStrRecorded = false; // 标志起点是否遇到板
+	bool isEndRecorded = false; // 标志终点是否遇到板
 	auto calInterPts = [&](IDandModelref floor, bool islsay = true) {
 		EditElementHandle floorEeh(floor.ID, floor.tModel);
 		if (!floorEeh.IsValid())
@@ -3836,6 +3845,8 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		vecRange.low = wallLowPt;
 		vecRange.high = wallHighPt;
 		strVec.Normalize();
+		int strRecord = 2; // 遇到板的交点计数
+		int endRecord = 2; // 遇到板的交点计数
 		if (islsay)
 		{
 			if ((COMPARE_VALUES_EPS(lowPt.z, wallLowPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == 1 && //板最低点在墙之间
@@ -4019,21 +4030,69 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 				allPts.push_back(it);
 				if (COMPARE_VALUES_EPS(strDis, endDis, 1e-6) == -1)
 				{
-					// 起点已经遇板，停止延伸
-					if(2 <= isStrRecorded)
+					if (!islsay)
+					{
+						if (!isStrRecorded)//墙实体且未遇到过板，正常延伸
+							interStrPts.push_back(it);
 						continue;
-					interStrPts.push_back(it);
-					if(islsay)
-						isStrRecorded++;
+					}
+					if (interStrPts.size() < 2 || strRecord == 1)//初次遇到板，或新板的另一个交点，正常延伸，需记录为板
+					{
+						interStrPts.push_back(it);
+						isStrRecorded = true;
+						continue;
+					}
+					if (!isStrRecorded)//未遇到过板，正常延伸
+					{
+						if (strRecord == 2)//墙板墙顺序，需要保留板的两个交点，且需记录为板
+							strRecord--;
+						interStrPts.push_back(it);
+						isStrRecorded = true;
+						continue;
+					}
+					// 多次遇到板，选择近的板
+					interPtsSort(interStrPts, endPt);
+					double tempStrDis = strPt.Distance(*interStrPts.end());
+					if (COMPARE_VALUES_EPS(strDis, tempStrDis, 1e-6) == -1)//新的交点在更近的板
+					{
+						if(strRecord == 2)//仅在遇到板时清空，需要保留新板的两个交点
+							interStrPts.clear();
+						interStrPts.push_back(it);
+						strRecord--;
+					}
 				}
 				else
 				{
-					// 终点已经遇板，停止延伸
-					if(2 <= isEndRecorded)
+					if (!islsay)
+					{
+						if (!isEndRecorded)//墙实体且未遇到过板，正常延伸
+							interEndPts.push_back(it);
 						continue;
-					interEndPts.push_back(it);
-					if (islsay)
-						isEndRecorded++;
+					}
+					if (interEndPts.size() < 2 || endRecord == 1)//初次遇到板，或新板的另一个交点，正常延伸，需记录为板
+					{
+						interEndPts.push_back(it);
+						isEndRecorded = true;
+						continue;
+					}
+					if (!isEndRecorded)//未遇到过板，正常延伸
+					{
+						if (endRecord == 2)//墙板墙顺序，需要保留板的两个交点，且需记录为板
+							endRecord--;
+						interEndPts.push_back(it);
+						isEndRecorded = true;
+						continue;
+					}
+					// 多次遇到板，选择近的板
+					interPtsSort(interEndPts, strPt);
+					double tempEndDis = endPt.Distance(*interEndPts.end());
+					if (COMPARE_VALUES_EPS(endDis, tempEndDis, 1e-6) == -1)//新的交点在更近的板
+					{
+						if (endRecord == 2)//仅在遇到板时清空，需要保留新板的两个交点
+							interEndPts.clear();
+						interEndPts.push_back(it);
+						endRecord--;
+					}
 				}
 					
 			}
@@ -4074,17 +4133,10 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	{
 		calInterPts(it);
 	}
+
+	interPtsSort(interStrPts, endPt);
+	interPtsSort(interEndPts, strPt);
 	
-	std::sort(interStrPts.begin(), interStrPts.end(), [&](const DPoint3d& pt1, const DPoint3d& pt2) {
-		double dis1 = endPt.Distance(pt1);
-		double dis2 = endPt.Distance(pt2);
-		return COMPARE_VALUES_EPS(dis1, dis2, 1e-6) == 1;
-	});
-	std::sort(interEndPts.begin(), interEndPts.end(), [&](const DPoint3d& pt1, const DPoint3d& pt2) {
-		double dis1 = strPt.Distance(pt1);
-		double dis2 = strPt.Distance(pt2);
-		return COMPARE_VALUES_EPS(dis1, dis2, 1e-6) == 1;
-	});
 	//7.计算伸缩值
 	if (interStrPts.size() > 0)
 	{
