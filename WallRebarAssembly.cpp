@@ -1416,6 +1416,8 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			if (ISPointInHoles(Walleehs, strtemp_point3d) && vector1.IsEqual(vectorZ))
 			{
 				tmpendEndTypes.beg = Hol;
+			    vector1 = tmpendEndTypes.beg.GetendNormal();
+				lenth1 = tmpendEndTypes.beg.GetbendLen() + tmpendEndTypes.beg.GetbendRadius();
 				CVector3D vec = (m_walldata.vecToWall);
 				if (isInSide)
 				{
@@ -1458,6 +1460,8 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			if (ISPointInHoles(Walleehs, endtemp_point3d) && vector2.IsEqual(vectorZ))
 			{
 				tmpendEndTypes.end = Hol;
+			    vector2 = tmpendEndTypes.end.GetendNormal();
+			    lenth2 = tmpendEndTypes.end.GetbendLen() + tmpendEndTypes.end.GetbendRadius();
 				CVector3D vec = (m_walldata.vecToWall);
 				if (isInSide)
 				{
@@ -1498,32 +1502,101 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			}
 
 			//判断是否锚空
-			if (!ISPointInHoles(alleehs, endtemp_point3d))
+			DPoint3d using_pt;
+			using_pt = strtemp_point3d;
+			movePoint(vector1, using_pt, lenth1);
+			//判断起始点是否锚出
+			if (!ISPointInHoles(alleehs, using_pt))
 			{
-				//endtemp_point3d = end_Pt;
-				DPoint3d str_Pt = { 0,0,0 }, end_Pt = { 0,0,0 };
-				mdlElmdscr_extractEndPoints(&str_Pt, nullptr, &end_Pt, nullptr, lineEeh.GetElementDescrP(), ACTIVEMODEL);
-				vector<DPoint3d> tmppts;
-				GetIntersectPointsWithOldElm(tmppts, &Eleeh, str_Pt, end_Pt, dSideCover, matrix);
-				if (tmppts.size() > 1)
-				{
-					FLAGE = 2;
-					END_PTR = tmppts[tmppts.size() - 2];
-				}
-			}
-			movePoint(vector1, strtemp_point3d, lenth1);
-			movePoint(vector2, endtemp_point3d, lenth2);
-
-			if (!ISPointInHoles(alleehs, strtemp_point3d))
-			{
-				PITRebarEndType	tmpendTypes;
 				vector1.Negate();
-				tmpendEndTypes.beg.SetendNormal(vector1);
+				using_pt = strtemp_point3d;
+				movePoint(vector1, using_pt, lenth1);
+				//仍然没有锚入任何实体，在实体内截短锚入，已知为外侧钢筋反转后指向了墙外
+				if (!ISPointInHoles(alleehs, using_pt))
+				{
+					using_pt = strtemp_point3d;
+					DPoint3d str_pt = strtemp_point3d;
+					vector<DPoint3d> tmppts_data;
+					//vector1.Negate();
+					movePoint(vector1, strtemp_point3d, lenth1);
+					GetIntersectPointsWithHoles(tmppts_data, alleehs, using_pt, strtemp_point3d, dSideCover, matrix);
+					GetIntersectPointsWithHolesByInsert(tmppts_data, alleehs, using_pt, strtemp_point3d, dSideCover, matrix);
+					//如果与原模型有交点
+					if (tmppts_data.size() > 0)
+					{
+						CVector3D vectortepm = strtemp_point3d - using_pt;
+						vectortepm.Normalize();
+						vectortepm.ScaleToLength(strMoveDis);
+						using_pt.Add(vectortepm);
+						lenth1 = (double)str_pt.Distance(using_pt) - tmpendEndTypes.beg.GetbendRadius();
+						tmpendEndTypes.beg.SetbendLen(lenth1);
+					}
+					else
+					{
+						vector1.Negate();
+					}
+				}
+				else
+					tmpendEndTypes.beg.SetendNormal(vector1);
 			}
-			if (!ISPointInHoles(alleehs, endtemp_point3d))
+			//尾端点是否锚出
+			using_pt = endtemp_point3d;
+			movePoint(vector2, using_pt, lenth2);
+			if (!ISPointInHoles(alleehs, using_pt))
 			{
-				FLAGE = 1;
-				tmpendEndTypes_2.beg = tmpendEndTypes.beg;
+				int flag = 0;
+				if (vector2.x == floor(vector2.x)&& vector2.y == floor(vector2.y)&& vector2.z == floor(vector2.z))
+				{
+					vector2.Negate();
+					flag = 1;
+				}
+				else
+				{
+					vector2.x = vector2.x;
+					vector2.y = -vector2.y;
+					vector2.z = vector2.z;
+				}
+				using_pt = endtemp_point3d;
+				movePoint(vector2, using_pt, lenth2);
+				//仍然没有锚入任何实体，在实体内截断
+				if (!ISPointInHoles(alleehs, using_pt))
+				{
+					if (flag == 1)
+					{
+						using_pt = endtemp_point3d;
+						DPoint3d end_pt = endtemp_point3d;
+						//vector2.Negate();
+						movePoint(vector2, endtemp_point3d, lenth2);
+						GetIntersectPointsWithHoles(tmppts, alleehs, using_pt, endtemp_point3d, dSideCover, matrix);
+						GetIntersectPointsWithHolesByInsert(tmppts, alleehs, using_pt, endtemp_point3d, dSideCover, matrix);
+						//如果与原模型有交点
+						if (tmppts.size() > 0)
+						{
+							CVector3D vectortepm = end_pt - using_pt;
+							vectortepm.Normalize();
+							vectortepm.ScaleToLength(endMoveDis);
+							using_pt.Add(vectortepm);
+							lenth2 = (double)endtemp_point3d.Distance(using_pt) - tmpendEndTypes.end.GetbendRadius();
+							tmpendEndTypes.end.SetbendLen(lenth2);
+						}
+					}
+					else
+					{
+						//endtemp_point3d = end_Pt;
+						DPoint3d str_Pt = { 0,0,0 }, end_Pt = { 0,0,0 };
+						mdlElmdscr_extractEndPoints(&str_Pt, nullptr, &end_Pt, nullptr, lineEeh.GetElementDescrP(), ACTIVEMODEL);
+						vector<DPoint3d> tmppts;
+						GetIntersectPointsWithOldElm(tmppts, &Eleeh, str_Pt, end_Pt, dSideCover, matrix);
+						if (tmppts.size() > 1)
+						{
+							FLAGE = 2;
+							END_PTR = endtemp_point3d;
+						}
+					}
+
+				}
+				else
+					tmpendEndTypes.end.SetendNormal(vector2);
 			}
 		}
 
@@ -1581,7 +1654,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 		{
 			PITRebarEndTypes		tmpendTypes;
 			CVector3D  nowVectmp;
-			PITRebarCurve rebar;
+			PITRebarCurve rebar;	
 			RebarVertexP vex;
 			vex = &rebar.PopVertices().NewElement();
 			vex->SetIP(itr->second);
@@ -1604,7 +1677,7 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			}
 			if (endPttepm.Distance(itrplus->second) < 10)
 			{
-				if (FLAGE==1)
+				if (FLAGE == 2)
 				{
 					tmpendTypes.end= tmpendEndTypes_2.end;
 				}
@@ -2961,7 +3034,10 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 		pointStr.Add(ptend);
 		pointStr.Scale(0.5);
 		pointStr.Add(vecLine);
-		//PITCommonTool::CPointTool::DrowOnePoint(pointStr, 1, 1);
+		PITCommonTool::CPointTool::DrowOnePoint(pointStr, 1, 1);
+		PITCommonTool::CPointTool::DrowOnePoint(range.high, 1, 1);
+		PITCommonTool::CPointTool::DrowOnePoint(range.low, 1, 1);
+
 		if (range.IsContainedXY(pointStr))// && range.IsContainedXY(ptend)
 		{
 			ElementId testid = 0;
@@ -3023,6 +3099,14 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 				if (ISPointInElement(&teeh, movept))
 				{
 					ishavetwoside = true;
+				}
+				else  //取三分之二点再判断一次是否在板内
+				{
+					movept.Add(vecLine);
+					if (ISPointInElement(&teeh, movept))
+					{
+						ishavetwoside = true;
+					}
 				}
 			}
 		}
@@ -3195,12 +3279,15 @@ void GetCutPathLines(vector<WallRebarAssembly::BarLinesdata>& barlines, double s
 	facenormal.Normalize();
 	DPlane3d plane = DPlane3d::FromOriginAndNormal(cpt, DVec3d::From(facenormal.x, facenormal.y, facenormal.z));
 
-	map<int, DPoint3d>::iterator itr = pathpts.begin();
-	map<int, DPoint3d>::iterator itrnext = pathpts.begin();
-	itrnext++;
-	for (; itrnext != pathpts.end();)
-	{
+	map<int, DPoint3d>  pathpts_data;
+	pathpts_data[0] = pathpts.begin()->second;
+	pathpts_data[1] = pathpts.rbegin()->second;
+	map<int, DPoint3d>::iterator itr = pathpts_data.begin();
+	map<int, DPoint3d>::iterator itrnext = pathpts_data.begin();
 
+	itrnext++;
+	for (; itrnext != pathpts_data.end();)
+	{
 		DPoint3d ptstr = itr->second;
 		DPoint3d ptend = itrnext->second;
 		DPoint3d midpt = ptstr;
@@ -14044,6 +14131,7 @@ void STGWallRebarAssembly::CalcWallsInRange()
 	}
 
 }
+
 
 bool STGWallRebarAssembly::OnDoubleClick()
 {

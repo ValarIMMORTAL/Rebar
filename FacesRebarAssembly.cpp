@@ -2761,7 +2761,7 @@ void MultiPlaneRebarAssembly::AnalyzeAssociateWallAndSlab(EditElementHandleCR ee
 void MultiPlaneRebarAssembly::AnalyzeHorizeEndType(vector<PIT::LineSegment> vecMergeSeg, int rebarnum)
 {
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
-	ElementId id = 0;
+	ElementId eid = 0;
 	DVec3d facenormal = GetfaceNormal();
 
 	EditElementHandle Eleehold;
@@ -4561,7 +4561,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 	adjustedSpacing = spacing;
 	if (numRebar > 1)
 		adjustedSpacing = adjustedXLen / (numRebar - 1);
-	adjustedSpacing = spacing;
+	//adjustedSpacing = spacing;
 	//	rebarLine.PerpendicularOffset(startOffset, vec.GetLineVec());
 	//	rebarLine.PerpendicularOffset(sideCov, vec.GetLineVec());
 	vector<PITRebarCurve>     rebarCurvesNum;
