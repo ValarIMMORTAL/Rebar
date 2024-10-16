@@ -276,6 +276,7 @@ public:
 	~PlaneRebarAssembly();
 
 private:
+	double InsideFace_OffsetLength(DPoint3dCR RebarlineMidPt);
 	//获取rebarcurve,主要是钢筋线与面拉伸的实体相交，然后在钢筋两端设置事先求出的端部样式
 	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes);
 	
@@ -287,7 +288,7 @@ protected:
 	virtual bool        Rebuild() override;
 	
 protected:
-	RebarSetTag* MakeRebars(ElementId& rebarSetId, PIT::LineSegment rebarLine, PIT::LineSegment vec, int dir, BrStringCR sizeKey, double spacing, double startOffset, double endOffset, int	level, int grade, int DataExchange, vector<PIT::EndType> const& endType, vector<CVector3D> const& vecEndNormal, DgnModelRefP modelRef);
+	RebarSetTag* MakeRebars(ElementId& rebarSetId, PIT::LineSegment rebarLine, PIT::LineSegment vec, int dir, BrStringCR sizeKey, double xLen, double spacing, double startOffset, double endOffset, int	level, int grade, int DataExchange, vector<PIT::EndType> const& endType, vector<CVector3D> const& vecEndNormal, DgnModelRefP modelRef);
 
 	void CalculateUseHoles(DgnModelRefP modelRef);
 
@@ -449,13 +450,27 @@ public:
 	}m_insidef;
 	bool m_bStartAnhorselslantedFace = false; //锚入斜面
 	bool m_bEndAnhorselslantedFace = false;
+
+	struct OutSideQuJianInfo
+	{
+		int str = 0;
+		int end = 0;
+		bool addstr = false;//起始位置是否需要加钢筋
+		bool addend = false;//终止位置是否需要加钢筋
+		int strval = 0;
+		int endval = 0;
+	};
 	struct OutSideFaceInfo//外侧面计算得到的配筋信息，每一个外侧面
 	{
+		OutSideQuJianInfo  pos[20] = { 0 };//与钢筋线平行的边坐标区间（横向钢筋时为Z坐标值，竖向钢筋时为X坐标值）
+		int  posnum = 0;//标识区间数量
 		bool isdelstr = false;//是否删除起始钢筋，为了配合墙钢筋生成
 		bool isdelend = false;//是否删除尾部钢筋，为了配合墙钢筋生成
 		bool Verstr = false;//起始有垂直墙
 		bool Verend = false;//尾部有垂直墙
 		double calLen = 0;//判断当前钢筋层，钢筋前面还有层，起点部分长度缩小1个钢筋直径，没有层缩不缩小（钢筋锚入处理）
+		int strval = 0;
+		int endval = 0;
 		PIT::EndType endtype = { 0 };
 		PIT::EndType strtype = { 0 };
 		bool bStartAnhorsel = false;
@@ -466,11 +481,23 @@ public:
 		bool m_bEndIsSlefAhol = false;
 		void ClearData()
 		{
+			for (int i = 0; i < 20; i++)
+			{
+				pos[i].str = 0;
+				pos[i].end = 0;
+				pos[i].addstr = false;
+				pos[i].addend = false;
+				pos[i].strval = 0;
+				pos[i].endval = 0;
+			}
+			posnum = 0;
 			isdelstr = false;
 			isdelend = false;
 			Verstr = false;
 			Verend = false;
 			calLen = 0;
+			strval = 0;
+			endval = 0;
 			endtype = { 0 };
 			strtype = { 0 };
 			bStartAnhorsel = false;
@@ -564,6 +591,9 @@ public:
 	double m_slabThickness = 0.0;//面配筋所选择的板的厚度
 
 	vector<ElementHandle> m_Allwalls;//保留板边附近所有的墙
+	bool m_strDelete = false;//外侧面钢筋靠近墙面的起始钢筋是否删除，配合墙钢筋生成
+
+	bool m_endDelete = false;//外侧面钢筋终始钢筋是否删除，配合墙钢筋生成
 };
 
 
