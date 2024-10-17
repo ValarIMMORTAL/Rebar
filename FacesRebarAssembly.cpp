@@ -4606,7 +4606,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 	}
 	else
 	{
-		adjustedXLen = xLen - updownSideCover * 2 - diameter - sideCov * 2/* - startOffset - endOffset*/;
+		adjustedXLen = xLen - diameter - sideCov * 2/* - startOffset - endOffset*/;
 	}
 	int numRebar = 0;
 	numRebar = (int)floor(adjustedXLen / spacing + 0.85) + 1;
@@ -5401,10 +5401,11 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						double tmpStartOffset = startOffset + m_insidef.pos[j].str;
 						m_insidef.strval = m_insidef.pos[j].strval;
 						m_insidef.endval = m_insidef.pos[j].endval;
-						tag = MakeRebars(PopSetIds().at(i), lineSeg2, linesegment1, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+						PopvecSetId().push_back(0);
+						tag = MakeRebars(PopvecSetId().back(), lineSeg2, linesegment1, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 						if (NULL != tag)
 						{
-							tag->SetBarSetTag(j);
+							tag->SetBarSetTag(j + 1);
 							rsetTags.Add(tag);
 						}
 					}
@@ -5429,10 +5430,11 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 							m_strDelete = true;
 							m_endDelete = true;
 						}
-						tag = MakeRebars(PopSetIds().at(i), lineSeg2, linesegment1, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+						PopvecSetId().push_back(0);
+						tag = MakeRebars(PopvecSetId().back(), lineSeg2, linesegment1, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 						if (NULL != tag)
 						{
-							tag->SetBarSetTag(j);
+							tag->SetBarSetTag(j + 1);
 							rsetTags.Add(tag);
 						}
 						m_strDelete = false;
@@ -5592,10 +5594,11 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						double tmpStartOffset = startOffset + m_insidef.pos[j].str;
 						m_insidef.strval = m_insidef.pos[j].strval;
 						m_insidef.endval = m_insidef.pos[j].endval;
-						tag = MakeRebars(PopSetIds().at(i), lineSeg1, linesegment2, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+						PopvecSetId().push_back(0);
+						tag = MakeRebars(PopvecSetId().back(), lineSeg1, linesegment2, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 						if (NULL != tag)
 						{
-							tag->SetBarSetTag(j);
+							tag->SetBarSetTag(j + 1);
 							rsetTags.Add(tag);
 						}
 					}
@@ -5620,10 +5623,11 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 							m_strDelete = true;
 							m_endDelete = true;
 						}
-						tag = MakeRebars(PopSetIds().at(i), lineSeg1, linesegment2, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+						PopvecSetId().push_back(0);
+						tag = MakeRebars(PopvecSetId().back(), lineSeg1, linesegment2, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 						if (NULL != tag)
 						{
-							tag->SetBarSetTag(j);
+							tag->SetBarSetTag(j + 1);
 							rsetTags.Add(tag);
 						}
 						m_strDelete = false;

@@ -42,6 +42,7 @@ public:
 	BE_DATA_VALUE(vector<PIT::ConcreteRebar>,	MainRebars)				//主筋
 	BE_DATA_VALUE(vector<vector<PIT::EndType> >, vecEndTypes)			//端部样式
 	BE_DATA_VALUE(vector<ElementId>,		SetIds)					//SetId
+	BE_DATA_VALUE(vector<ElementId>, vecSetId)								//rebarelementSet的每个Id
 	BE_DATA_VALUE(DVec3d,					faceNormal)				//平面法向
 	BE_DATA_VALUE(bool,						isReverse)
 	BE_DATA_VALUE(FaceType,					faceType)
