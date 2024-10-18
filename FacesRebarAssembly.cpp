@@ -5469,34 +5469,6 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				}
 
 				DVec3d vec = m_LineSeg2.GetLineVec();
-				offset += levelspacing;
-				if (0 == i)	//Ê×²ãÆ«ÒÆµ±Ç°¸Ö½îÖ±¾¶
-				{
-					offset += diameter * 0.5;
-				}
-				else
-				{
-					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);	//ÉÏÒ»²ã¸Ö½îÖ±¾¶
-					offset += diameterPre * 0.5;	//Æ«ÒÆÉÏÒ»²ã¸Ö½îµÄ°ë¾¶
-					offset += diameter * 0.5;		//Æ«ÒÆµ±Ç°²ã¸Ö½îµÄ°ë¾¶
-				}
-
-				lineSeg1.PerpendicularOffset(offset, GetfaceNormal());
-
-				//ChangeRebarLine(lineSeg1);
-
-				lineSeg1.PerpendicularOffset(updownSideCover + diameter * 0.5, vec);//ÔÙÆ«ÒÆ¸Ö½î°ë¸öÖ±¾¶
-				if (_ehCrossPlanePre.IsValid())
-				{
-					vecEndType[_anchorPos].endType = 7;
-					vecEndType[_anchorPos].endPtInfo.value1 = _d;
-				}
-				if (_ehCrossPlaneNext.IsValid())
-				{
-					vecEndType[_bendPos].endType = 7;
-					vecEndType[_bendPos].endPtInfo.value1 = _d;
-				}
-
 				LineSegment linesegment2 = m_LineSeg2;
 				Dpoint3d ptDirStart = linesegment2.GetLineStartPoint();
 				Dpoint3d ptdirEnd = linesegment2.GetLineEndPoint();
@@ -5504,13 +5476,22 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				DVec3d vecrebarDir1 = ptdirEnd - ptDirStart;
 				DVec3d vecrebarDir2 = ptdirEnd - ptDirStart;
 
-
 				Dpoint3d ptRebarStart = lineSeg1.GetLineStartPoint();
 				Dpoint3d ptReabrEnd = lineSeg1.GetLineEndPoint();
 
 				if (m_sidetype == SideType::In/*&& m_insidef.posnum > 0*/)
 				{
-					if (vec2.DotProduct(DVec3d::From(0, 0, 1)) > 0.9)
+					if (vec.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
+					{
+						ptRebarStart.y = ptdirEnd.y;
+						ptReabrEnd.y = ptdirEnd.y;
+						linesegment2.SetLineStartPoint(ptdirEnd);
+						linesegment2.SetLineEndPoint(ptDirStart);
+						lineSeg1.SetLineStartPoint(ptRebarStart);
+						lineSeg1.SetLineEndPoint(ptReabrEnd);
+						vec.Negate();
+					}
+					/*if (vec2.DotProduct(DVec3d::From(0, 0, 1)) > 0.9)
 					{
 						vecrebarDir1.ScaleToLength(m_insidef.pos[0].str / 10 * uor_per_mm);
 						ptDirStart.Add(vecrebarDir1);
@@ -5541,8 +5522,8 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						}
 						linesegment2.SetLineStartPoint(ptDirStart);
 						linesegment2.SetLineEndPoint(ptdirEnd);
-						lineSeg1.SetLineStartPoint(ptRebarStart);
-						lineSeg1.SetLineEndPoint(ptReabrEnd);
+						//lineSeg1.SetLineStartPoint(ptRebarStart);
+						//lineSeg1.SetLineEndPoint(ptReabrEnd);
 					}
 					else
 					{
@@ -5578,12 +5559,49 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						linesegment2.SetLineEndPoint(ptdirEnd);
 						lineSeg1.SetLineStartPoint(ptRebarStart);
 						lineSeg1.SetLineEndPoint(ptReabrEnd);
-					}
+					}*/
+				}
+				else if (m_sidetype == SideType::Out && vec.DotProduct(DVec3d::From(0, 1, 0)) > 0.9)
+				{
+					ptRebarStart.y = ptdirEnd.y;
+					ptReabrEnd.y = ptdirEnd.y;
+					linesegment2.SetLineStartPoint(ptdirEnd);
+					linesegment2.SetLineEndPoint(ptDirStart);
+					lineSeg1.SetLineStartPoint(ptRebarStart);
+					lineSeg1.SetLineEndPoint(ptReabrEnd);
+					vec.Negate();
 				}
 				else if (m_sidetype == SideType::Nor && m_solidType == 1)
 				{
 					DealWintHoriRebar(lineSeg1, linesegment2, i);
 
+				}
+				offset += levelspacing;
+				if (0 == i)	//Ê×²ãÆ«ÒÆµ±Ç°¸Ö½îÖ±¾¶
+				{
+					offset += diameter * 0.5;
+				}
+				else
+				{
+					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);	//ÉÏÒ»²ã¸Ö½îÖ±¾¶
+					offset += diameterPre * 0.5;	//Æ«ÒÆÉÏÒ»²ã¸Ö½îµÄ°ë¾¶
+					offset += diameter * 0.5;		//Æ«ÒÆµ±Ç°²ã¸Ö½îµÄ°ë¾¶
+				}
+
+				lineSeg1.PerpendicularOffset(offset, GetfaceNormal());
+
+				//ChangeRebarLine(lineSeg1);
+
+				lineSeg1.PerpendicularOffset(updownSideCover + diameter * 0.5, vec);//ÔÙÆ«ÒÆ¸Ö½î°ë¸öÖ±¾¶
+				if (_ehCrossPlanePre.IsValid())
+				{
+					vecEndType[_anchorPos].endType = 7;
+					vecEndType[_anchorPos].endPtInfo.value1 = _d;
+				}
+				if (_ehCrossPlaneNext.IsValid())
+				{
+					vecEndType[_bendPos].endType = 7;
+					vecEndType[_bendPos].endPtInfo.value1 = _d;
 				}
 
 				if (m_sidetype == SideType::In)
