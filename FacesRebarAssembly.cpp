@@ -4734,10 +4734,10 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 			rebarCurves.clear();
 		if (m_sidetype == SideType::In || (m_sidetype == SideType::Out && !m_strDelete && !m_endDelete))//内侧面钢筋处理
 		{
-			DVec3d dvec = vec.GetLineVec();
 			double tmppos = 0;
 			LineSegment tmpRebarLine = rebarLine;
-			if ((i == 0 && m_insidef.strval && m_sidetype == SideType::In) || (i == 0 && m_outsidef.strval && m_sidetype == SideType::Out))
+			tmpRebarLine.PerpendicularOffset(-adjustedSpacing, offsetVec);//对于需要添加的情况，需要还原到边界钢筋位置
+			if ((i == numRebar - 1 && m_insidef.strval && m_sidetype == SideType::In) || (i == 0 && m_outsidef.strval && m_sidetype == SideType::Out))
 			{
 				//在反方向添加一根钢筋
 				auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
@@ -4751,9 +4751,9 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 				else//y
 					midPt.x -= 2 * GetConcrete().sideCover * uor_per_mm;
 				double inside_Offset = InsideFace_OffsetLength(midPt) + diameter;//墙和板的保护层距离 + 墙的最边上的钢筋直径加上自身直径
-				tmppos = tmppos - inside_Offset - adjustedSpacing;
+				tmppos = tmppos - inside_Offset;
 			}
-			else if ((i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
+			else if ((i == 0 && m_insidef.endval && m_sidetype == SideType::In) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
 			{
 				//在反方向添加一根钢筋
 				auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
@@ -4767,11 +4767,13 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 				else//y
 					midPt.x += 2 * GetConcrete().sideCover * uor_per_mm;
 				double inside_Offset = InsideFace_OffsetLength(midPt) + diameter;//墙和板的保护层距离 + 墙的最边上的钢筋直径加上自身直径
-				tmppos = tmppos + inside_Offset - adjustedSpacing;
+				tmppos = tmppos + inside_Offset;
 			}
 			if (tmppos != 0)
 			{
-				tmpRebarLine.PerpendicularOffset(tmppos, dvec);
+				if (m_sidetype == SideType::In)
+					tmppos = -tmppos;
+				tmpRebarLine.PerpendicularOffset(tmppos, offsetVec);
 				endTypes.beg.SetptOrgin(tmpRebarLine.GetLineStartPoint());
 				endTypes.end.SetptOrgin(tmpRebarLine.GetLineEndPoint());
 				makeRebarCurve(rebarCurves, endTypes);
