@@ -2761,7 +2761,7 @@ void MultiPlaneRebarAssembly::AnalyzeAssociateWallAndSlab(EditElementHandleCR ee
 void MultiPlaneRebarAssembly::AnalyzeHorizeEndType(vector<PIT::LineSegment> vecMergeSeg, int rebarnum)
 {
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
-	ElementId eid = 0;
+	ElementId id = 0;
 	DVec3d facenormal = GetfaceNormal();
 
 	EditElementHandle Eleehold;
@@ -4736,7 +4736,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 		{
 			double tmppos = 0;
 			LineSegment tmpRebarLine = rebarLine;
-			tmpRebarLine.PerpendicularOffset(-adjustedSpacing, offsetVec);//对于需要添加的情况，需要还原到边界钢筋位置
+			tmpRebarLine.PerpendicularOffset(-adjustedSpacing, offsetVec);//对于需要添加的情况，需要还原到边界内钢筋位置
 			if ((i == numRebar - 1 && m_insidef.strval && m_sidetype == SideType::In) || (i == 0 && m_outsidef.strval && m_sidetype == SideType::Out))
 			{
 				//在反方向添加一根钢筋
@@ -5395,55 +5395,12 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						lineSeg2.SetLineEndPoint(ptReabrEnd);
 					}
 				}
-				if (m_sidetype == SideType::In)
+				tag = MakeRebars(PopSetIds().at(i), lineSeg2, linesegment1, rebarDir, strRebarSize, linesegment1.GetLength(), spacing, startOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+				if (NULL != tag)
 				{
-					for (int j = 0; j < m_insidef.posnum; j++)
-					{
-						double nowLen = m_insidef.pos[j].end - m_insidef.pos[j].str;
-						double tmpStartOffset = startOffset + m_insidef.pos[j].str;
-						m_insidef.strval = m_insidef.pos[j].strval;
-						m_insidef.endval = m_insidef.pos[j].endval;
-						PopvecSetId().push_back(0);
-						tag = MakeRebars(PopvecSetId().back(), lineSeg2, linesegment1, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
-						if (NULL != tag)
-						{
-							tag->SetBarSetTag(j + 1);
-							rsetTags.Add(tag);
-						}
-					}
+					tag->SetBarSetTag(i + 1);
+					rsetTags.Add(tag);
 				}
-				if (m_sidetype == SideType::Out)
-				{
-					double maxLength = 0;
-					for (auto it : m_outsidef.pos)
-					{
-						double length = it.end - it.str;
-						if (maxLength < length)
-							maxLength = length;
-					}
-					for (int j = 0; j < m_outsidef.posnum; j++)
-					{
-						double nowLen = m_outsidef.pos[j].end - m_outsidef.pos[j].str;
-						double tmpStartOffset = startOffset + m_outsidef.pos[j].str;
-						m_outsidef.strval = m_outsidef.pos[j].strval;
-						m_outsidef.endval = m_outsidef.pos[j].endval;
-						if (nowLen < 1201 * UOR_PER_MilliMeter && nowLen != maxLength)//最边缘的外侧面的起始和终端两条钢筋需要删除
-						{
-							m_strDelete = true;
-							m_endDelete = true;
-						}
-						PopvecSetId().push_back(0);
-						tag = MakeRebars(PopvecSetId().back(), lineSeg2, linesegment1, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
-						if (NULL != tag)
-						{
-							tag->SetBarSetTag(j + 1);
-							rsetTags.Add(tag);
-						}
-						m_strDelete = false;
-						m_endDelete = false;
-					}
-				}
-
 				vecEndType.clear();
 			}
 			else
@@ -5480,19 +5437,30 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 
 				Dpoint3d ptRebarStart = lineSeg1.GetLineStartPoint();
 				Dpoint3d ptReabrEnd = lineSeg1.GetLineEndPoint();
+				//改变内外侧钢筋布置起点
+				if (m_sidetype == SideType::In && vec.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
+				{
+					ptRebarStart.y = ptdirEnd.y;
+					ptReabrEnd.y = ptdirEnd.y;
+					linesegment2.SetLineStartPoint(ptdirEnd);
+					linesegment2.SetLineEndPoint(ptDirStart);
+					lineSeg1.SetLineStartPoint(ptRebarStart);
+					lineSeg1.SetLineEndPoint(ptReabrEnd);
+					vec.Negate();
+				}
+				else if (m_sidetype == SideType::Out && vec.DotProduct(DVec3d::From(0, 1, 0)) > 0.9)
+				{
+					ptRebarStart.y = ptdirEnd.y;
+					ptReabrEnd.y = ptdirEnd.y;
+					linesegment2.SetLineStartPoint(ptdirEnd);
+					linesegment2.SetLineEndPoint(ptDirStart);
+					lineSeg1.SetLineStartPoint(ptRebarStart);
+					lineSeg1.SetLineEndPoint(ptReabrEnd);
+					vec.Negate();
+				}
 
 				if (m_sidetype == SideType::In/*&& m_insidef.posnum > 0*/)
 				{
-					if (vec.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
-					{
-						ptRebarStart.y = ptdirEnd.y;
-						ptReabrEnd.y = ptdirEnd.y;
-						linesegment2.SetLineStartPoint(ptdirEnd);
-						linesegment2.SetLineEndPoint(ptDirStart);
-						lineSeg1.SetLineStartPoint(ptRebarStart);
-						lineSeg1.SetLineEndPoint(ptReabrEnd);
-						vec.Negate();
-					}
 					/*if (vec2.DotProduct(DVec3d::From(0, 0, 1)) > 0.9)
 					{
 						vecrebarDir1.ScaleToLength(m_insidef.pos[0].str / 10 * uor_per_mm);
@@ -5524,8 +5492,8 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						}
 						linesegment2.SetLineStartPoint(ptDirStart);
 						linesegment2.SetLineEndPoint(ptdirEnd);
-						//lineSeg1.SetLineStartPoint(ptRebarStart);
-						//lineSeg1.SetLineEndPoint(ptReabrEnd);
+						lineSeg1.SetLineStartPoint(ptRebarStart);
+						lineSeg1.SetLineEndPoint(ptReabrEnd);
 					}
 					else
 					{
@@ -5562,16 +5530,6 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						lineSeg1.SetLineStartPoint(ptRebarStart);
 						lineSeg1.SetLineEndPoint(ptReabrEnd);
 					}*/
-				}
-				else if (m_sidetype == SideType::Out && vec.DotProduct(DVec3d::From(0, 1, 0)) > 0.9)
-				{
-					ptRebarStart.y = ptdirEnd.y;
-					ptReabrEnd.y = ptdirEnd.y;
-					linesegment2.SetLineStartPoint(ptdirEnd);
-					linesegment2.SetLineEndPoint(ptDirStart);
-					lineSeg1.SetLineStartPoint(ptRebarStart);
-					lineSeg1.SetLineEndPoint(ptReabrEnd);
-					vec.Negate();
 				}
 				else if (m_sidetype == SideType::Nor && m_solidType == 1)
 				{
@@ -5623,7 +5581,7 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						}
 					}
 				}
-				if (m_sidetype == SideType::Out)
+				else if (m_sidetype == SideType::Out)
 				{
 					double maxLength = 0;
 					for (auto it : m_outsidef.pos)
@@ -5652,6 +5610,15 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 						}
 						m_strDelete = false;
 						m_endDelete = false;
+					}
+				}
+				else
+				{
+					tag = MakeRebars(PopSetIds().at(i), lineSeg1, linesegment2, rebarDir, strRebarSize, linesegment2.GetLength(), spacing, startOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+					if (NULL != tag)
+					{
+						tag->SetBarSetTag(i + 1);
+						rsetTags.Add(tag);
 					}
 				}
 
@@ -10813,29 +10780,6 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
 		{
-			/*过滤一些墙*/
-			DRange3d faceRange;
-			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
-			if (faceRange.XLength() < 0.6 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.6 * m_ldfoordata.Ylenth)
-			{
-				/*if (faceRange.low.x < 2 * uor_per_mm || faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-					;*/
-				if (faceRange.XLength() > faceRange.ZLength())//横墙
-				{
-					if (faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-				else//竖墙
-				{
-					if (faceRange.low.x < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-			}
-			/*过滤一些墙*/
 			DPoint3d tmpstr, tmpend;
 			tmpstr = tmpend = DPoint3d::From(0, 0, 0);
 			PITCommonTool::CElementTool::GetLongestLineMidPt(tmpdescrs[i], tmpstr, tmpend);
@@ -10846,10 +10790,6 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				DPoint3d tminP, tmaxP;
 				//计算指定元素描述符中元素的范围。
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-				if (tminP.z < 50 * UOR_PER_MilliMeter)
-					tminP.z = 0;
-				if (tmaxP.z < 50 * UOR_PER_MilliMeter)
-					tmaxP.z = 0;
 				tmpqj[(int)tminP.x] = (int)tmaxP.x;
 				tmpqj[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -11061,32 +11001,6 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
 		{
-			/*过滤一些墙*/
-			DRange3d faceRange;
-			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
-			if (faceRange.XLength() < 0.6 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.6 * m_ldfoordata.Ylenth)
-			{
-				/*if (faceRange.low.x < 2 * uor_per_mm || faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-				{
-					;
-				}*/
-				if (faceRange.XLength() > faceRange.ZLength())//横墙
-				{
-					if (faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-				else//竖墙
-				{
-					if (faceRange.low.x < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-
-			}
-			/*过滤一些墙*/
 			DPoint3d tmpstr, tmpend;
 			tmpstr = tmpend = DPoint3d::From(0, 0, 0);
 			PITCommonTool::CElementTool::GetLongestLineMidPt(tmpdescrs[i], tmpstr, tmpend);
@@ -11099,10 +11013,6 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
 				//tmpqj[m_ldfoordata.Ylenth - (int)tminP.z] = m_ldfoordata.Ylenth - (int)tmaxP.z;
 				//tmpqj[m_ldfoordata.Ylenth - (int)tmaxP.z] = 0;
-				if (tminP.z < 50 * UOR_PER_MilliMeter)
-					tminP.z = 0;
-				if (tmaxP.z < 50 * UOR_PER_MilliMeter)
-					tmaxP.z = 0;
 				tmpqj[(int)tminP.z] = (int)tmaxP.z;
 				tmpqj[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -11434,6 +11344,9 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		{
 			m_sidetype = SideType::Nor;
 		}
+		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
+		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
+
 		//计算配筋区间值,平行墙处理
 		map<int, int>  tmpqj;
 		tmpqj[(int)minP.x] = (int)maxP.x;//大面区间
@@ -11441,29 +11354,6 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
 		{
-			/*过滤一些墙*/
-			DRange3d faceRange;
-			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
-			if (faceRange.XLength() < 0.8 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.8 * m_ldfoordata.Ylenth)
-			{
-				/*if (faceRange.low.x < 2 * uor_per_mm || faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-					;*/
-				if (faceRange.XLength() > faceRange.ZLength())//横墙
-				{
-					if (faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-				else//竖墙
-				{
-					if (faceRange.low.x < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-			}
-			/*过滤一些墙*/
 			DPoint3d tmpstr, tmpend;
 			tmpstr = tmpend = DPoint3d::From(0, 0, 0);
 			PITCommonTool::CElementTool::GetLongestLineMidPt(tmpdescrs[i], tmpstr, tmpend);
@@ -11527,8 +11417,6 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				m_outsidef.posnum++;
 			}
 		}
-		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
-		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
 	}
 	else//横向钢筋X方向
 	{
@@ -11668,6 +11556,9 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		{
 			m_sidetype = SideType::Nor;
 		}
+		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
+		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg1, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
+
 		//计算配筋区间值,平行钢筋处理
 		map<int, int>  tmpqj;
 		tmpqj[(int)minP.z] = (int)maxP.z;//大面区间
@@ -11675,32 +11566,6 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
 		{
-			/*过滤一些墙*/
-			DRange3d faceRange;
-			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
-			if (faceRange.XLength() < 0.8 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.8 * m_ldfoordata.Ylenth)
-			{
-				/*if (faceRange.low.x < 2 * uor_per_mm || faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-				{
-					;
-				}*/
-				if (faceRange.XLength() > faceRange.ZLength())//横墙
-				{
-					if (faceRange.low.z < 2 * uor_per_mm || abs(faceRange.high.z - m_ldfoordata.Ylenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-				else//竖墙
-				{
-					if (faceRange.low.x < 2 * uor_per_mm || abs(faceRange.high.x - m_ldfoordata.Xlenth) < 2 * uor_per_mm)
-						;
-					else
-						continue;
-				}
-
-			}
-			/*过滤一些墙*/
 			DPoint3d tmpstr, tmpend;
 			tmpstr = tmpend = DPoint3d::From(0, 0, 0);
 			PITCommonTool::CElementTool::GetLongestLineMidPt(tmpdescrs[i], tmpstr, tmpend);
@@ -11762,8 +11627,6 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				m_outsidef.posnum++;
 			}
 		}
-		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
-		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg1, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
 	}
 }
 
