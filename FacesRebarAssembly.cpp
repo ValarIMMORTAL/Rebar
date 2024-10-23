@@ -4609,7 +4609,11 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 		adjustedXLen = xLen - diameter - sideCov * 2/* - startOffset - endOffset*/;
 	}
 	int numRebar = 0;
-	numRebar = (int)floor(adjustedXLen / spacing + 0.85) + 1;
+	//竖直采用墙间距计算参数0.85
+	if (fabs(vec.GetLineVec().DotProduct(DVec3d::From(0, 0, 1))) > 0.9)
+		numRebar = (int)floor(adjustedXLen / spacing + 0.85) + 1;
+	else//横向采用板间距计算参数0.5
+		numRebar = (int)floor(adjustedXLen / spacing + 0.5) + 1;
 	adjustedSpacing = spacing;
 	if (numRebar > 1)
 		adjustedSpacing = adjustedXLen / (numRebar - 1);

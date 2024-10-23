@@ -30,6 +30,8 @@ public:
 
 	//初始化界面
 	virtual BOOL OnInitDialog();
+	//刷新表格数据
+	virtual BOOL UpdateLaeListALL();
 	//初始化ComboBox的值
 	void InitCComboBox();
 	//更新ComboBox的值
@@ -38,10 +40,13 @@ public:
 	void SetConditionData();
 	//根据全局变量的值设置Condition的值
 	void Set_gConditionData();
+	void SetConditionData_2();
 	//填充表格数据
 	void SetListData();
+	void SetListData_2();
 	//刷新表格数据
 	void UpdateLa0List();
+	void UpdateLa0List_2();
 	//保存表格里面的值
 	void SaveConcreteAndRebar_Grade();
 	//根据全局变量里面的钢筋等级保存表格里面的值
@@ -75,8 +80,9 @@ public:
 	// || s=3 ,a<25,d<25   || s=3 ,a<25,d>25   || s=3 ,a=50,d<25   || s=3 ,a=50,d>25   ||
 	int m_Condition;
 	int m_Sel_ConcreteGrade;//选择的混凝土等级的下标
+	bool m_bInitialized = false; // 标志位，用于检查是否已初始化
 	CString m_data;//表格中确定的数据
-
+	
 	map<int, vector<vector<CString>>> m_TableData;
 
 	CString m_Str_ConcreteGrade;	//混凝土等级

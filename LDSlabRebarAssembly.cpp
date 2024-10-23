@@ -4083,7 +4083,7 @@ namespace Gallery
 	void LDSlabRebarAssembly::CreateInSideFaceAssembly(int& iTwinbarSetIdIndex, int& setCount, MSElementDescrP upface,
 		MSElementDescrP tmpupfaces[40],
 		MSElementDescrP tmpdownfaces[40],
-		int index,
+		int i,
 		DVec3d rebarVec,
 		vector<CVector3D>& vTrans,
 		vector<CVector3D>& vTransTb
@@ -4096,7 +4096,7 @@ namespace Gallery
 		double dis_x = 0;//X方向偏移
 		double dis_y = 0;//Y方向偏移
 
-		CalculateInSideData(upface, tmpupfaces, tmpdownfaces, index, rebarVec);
+		CalculateInSideData(upface, tmpupfaces, tmpdownfaces, i, rebarVec);
 
 		CMatrix3D const rot90 = CMatrix3D::Rotate(PI / 2.0, CVector3D::kYaxis);
 		CMatrix3D   mat, matTb;
@@ -4109,7 +4109,7 @@ namespace Gallery
 		}
 		else
 		{
-			vecEndType = GetvvecEndType().at(index);
+			vecEndType = GetvvecEndType().at(i);
 		}
 		//内侧面弯钩处理
 		vecEndType[0] = m_insidef.strtype;
@@ -4121,8 +4121,8 @@ namespace Gallery
 		m_vecRebarPtsLayer.clear();
 		m_vecTwinRebarPtsLayer.clear();
 		m_vecTieRebarPtsLayer.clear();
-		m_nowvecDir = GetvecDir().at(index);
-		if (GetvecDir().at(index) == 1)	//纵向钢筋
+		m_nowvecDir = GetvecDir().at(i);
+		if (GetvecDir().at(i) == 1)	//纵向钢筋
 		{
 			vector<CVector3D> vecEndNormal(2);
 			CVector3D	endNormal;	//端部弯钩方向
@@ -4139,10 +4139,10 @@ namespace Gallery
 			}			
 			if (m_strSlabRebarMethod != 2)
 			{
-				mat.SetTranslation(vTrans[index]);
+				mat.SetTranslation(vTrans[i]);
 				mat = GetPlacement() * mat;
 
-				matTb.SetTranslation(vTransTb[index]);
+				matTb.SetTranslation(vTransTb[i]);
 				matTb = GetPlacement() * matTb;
 			}
 			for (int j=0;j<m_insidef.posnum;j++)
@@ -4153,7 +4153,7 @@ namespace Gallery
 				dis_x = m_insidef.pos[j].str;
 				m_insidef.strval = m_insidef.pos[j].strval;
 				m_insidef.endval = m_insidef.pos[j].endval;
-				MakeFaceRebars(iTwinbarSetIdIndex, setCount, index,
+				MakeFaceRebars(iTwinbarSetIdIndex, setCount, i,
 					nowLen, nowwidth, vecEndType, vecEndNormal, dis_x, dis_y,
 					mat, matTb);
 			}
@@ -4165,7 +4165,7 @@ namespace Gallery
 			double leftSideCov = 0;
 			double rightSideCov = 0;
 			double allSideCov = leftSideCov + rightSideCov;
-			vTrans[index].x = (tLenth - allSideCov) / 2 + Misdisstr + leftSideCov;
+			vTrans[i].x = (tLenth - allSideCov) / 2 + Misdisstr + leftSideCov;
 			vector<CVector3D> vecEndNormal(2);
 			CVector3D	endNormal;	//端部弯钩方向
 			for (size_t k = 0; k < vecEndNormal.size(); ++k)
@@ -4181,10 +4181,10 @@ namespace Gallery
 			matTb = rot90;
 			if (m_strSlabRebarMethod != 2)
 			{
-				mat.SetTranslation(vTrans[index]);
+				mat.SetTranslation(vTrans[i]);
 				mat = GetPlacement() * mat;
 
-				matTb.SetTranslation(vTransTb[index]);
+				matTb.SetTranslation(vTransTb[i]);
 				matTb = GetPlacement() * matTb;
 			}
 			//奇数层为并筋层,偶数层为普通层
@@ -4198,7 +4198,7 @@ namespace Gallery
 				m_insidef.endval = m_insidef.pos[j].endval;
 				if (nowwidth > 3 * dWidth)
 					break;
-				MakeFaceRebars(iTwinbarSetIdIndex, setCount, index,
+				MakeFaceRebars(iTwinbarSetIdIndex, setCount, i,
 					nowwidth, nowLen, vecEndType, vecEndNormal, dis_x, dis_y,
 					mat, matTb);
 			}

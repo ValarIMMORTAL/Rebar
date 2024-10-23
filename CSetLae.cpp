@@ -7,8 +7,9 @@
 #include "afxdialogex.h"
 #include "resource.h"
 #include "CommonFile.h"
+#include "CSetLaeAndLa0Dlg.h"
 
-StrLae g_StrLae = { _T("一、二级") ,L"C25" ,L"HPB300" ,_T("<=25") ,39};
+StrLae g_StrLae = { _T("一、二级") ,L"C25" ,L"HPB300" ,_T("<=25") ,39 };
 //g_StrLae.g_StrLae_ConcreteGrade = L"C25";
 //g_StrLae.g_StrLae_RebarDiameter = _T("<=25");
 //g_StrLae.g_StrLae_RebarGrade = L"HPB300";
@@ -53,9 +54,47 @@ BEGIN_MESSAGE_MAP(CSetLae, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_RebarDiameter, &CSetLae::OnCbnSelchangeRebardiameter)
 END_MESSAGE_MAP()
 
+void CLaeDataListCtrl::ClearColumns()
+{
+	// 删除所有列
+	while (GetHeaderCtrl()->GetItemCount() > 0)
+	{
+		DeleteColumn(0); // 从左到右依次删除所有列
+	}
+}
 
 // CSetLae 消息处理程序
-
+BOOL CSetLae::UpdateLaeListALL()
+{
+	CDialogEx::UpdateData();
+	if (g_global_stander == 0)
+	{
+		//3、根据CComboBox的值设置m_Condition
+		SetConditionData();
+		//4、填写表格的值存到 m_TableData
+		SetListData();
+		//5、根据m_Condition的值设置表格的数据
+		UpdateLaeList();
+		//6、 读取XML数据
+		readXML();
+		//7、根据全局变量设置的值刷新到上一次设置的表格
+		UpdateComboBox();
+	}
+	else if (g_global_stander == 1)
+	{
+		//3、根据CComboBox的值设置m_Condition
+		SetConditionData_2();
+		//4、填写表格的值存到 m_TableData
+		SetListData_2();
+		//5、根据m_Condition的值设置表格的数据
+		UpdateLaeList();
+		//6、 读取XML数据
+		readXML();
+		//7、根据全局变量设置的值刷新到上一次设置的表格
+		UpdateComboBox();
+	}
+	return true;
+}
 
 void CSetLae::OnBnClickedOk()
 {
@@ -76,7 +115,7 @@ void CSetLae::InitCComboBox()
 	m_ConcreteGrade.AddString(_T("C50"));
 	m_ConcreteGrade.AddString(_T("C55"));
 	m_ConcreteGrade.AddString(_T(">= C60"));
-	
+
 	SetDlgItemText(IDC_ConcreteGrade, _T("C25"));
 
 
@@ -85,21 +124,21 @@ void CSetLae::InitCComboBox()
 	m_RebarGrade.SetCurSel(0);
 	m_RebarGrade.AddString(_T("HRB400"));
 	m_RebarGrade.AddString(_T("HRB500"));
-	
+
 	SetDlgItemText(IDC_RebarGrade, _T("HPB300"));
 
 	//钢筋直径
 	m_RebarDiameter.AddString(_T("<=25"));
 	m_RebarDiameter.SetCurSel(0);
 	m_RebarDiameter.AddString(_T(">25"));
-	
+
 	SetDlgItemText(IDC_RebarDiameter, _T("<=25"));
 
 	//抗震等级
 	m_SeismicGrade.AddString(_T("一、二级"));
 	m_SeismicGrade.SetCurSel(0);
 	m_SeismicGrade.AddString(_T("三级"));
-	
+
 	SetDlgItemText(IDC_SeismicGrade, _T("一、二级"));
 }
 
@@ -125,7 +164,6 @@ void CSetLae::UpdateComboBox()
 		else if (g_StrLae.g_StrLae_ConcreteGrade == L">= C60")
 			m_Sel_ConcreteGrade = 7;
 	}
-
 	if (g_StrLae.g_StrLae_RebarGrade != L"")
 		SetDlgItemText(IDC_RebarGrade, g_StrLae.g_StrLae_RebarGrade);
 
@@ -139,33 +177,55 @@ void CSetLae::UpdateComboBox()
 	if ((g_StrLae.g_StrLae_ConcreteGrade != L"") || (g_StrLae.g_StrLae_RebarGrade != L"") ||
 		(g_StrLae.g_StrLae_RebarDiameter != L"") || (g_StrLae.g_StrLae_SeismicGrade != L""))
 	{
-		Set_gConditionData();
-		SetListData();
+		if (g_global_stander == 0) 
+		{
+			Set_gConditionData();
+			SetListData();
+		}
+		if (g_global_stander == 1)
+		{
+			SetConditionData_2();
+			SetListData_2();
+		}
 		UpdateLaeList();
 		Save_gConcreteAndRebar_Grade();
 	}
 }
 
-//根据ComboBox的值设置Condition的值
+//根据ComboBox的值设置Condition的值      国家标准
 void CSetLae::SetConditionData()
 {
 	if ((m_Str_SeismicGrade == _T("一、二级")) && (m_Str_RebarDiameter == _T("<=25")))
 	{
 		m_Condition = 0;
 	}
-	else if ((m_Str_SeismicGrade == _T("一、二级"))  && (m_Str_RebarDiameter == _T(">25")))
+	else if ((m_Str_SeismicGrade == _T("一、二级")) && (m_Str_RebarDiameter == _T(">25")))
 	{
 		m_Condition = 1;
 	}
-	else if ((m_Str_SeismicGrade == _T("三级"))  && (m_Str_RebarDiameter == _T("<=25")))
+	else if ((m_Str_SeismicGrade == _T("三级")) && (m_Str_RebarDiameter == _T("<=25")))
 	{
 		m_Condition = 2;
 	}
-	else if ((m_Str_SeismicGrade == _T("三级"))  && (m_Str_RebarDiameter == _T(">25")))
+	else if ((m_Str_SeismicGrade == _T("三级")) && (m_Str_RebarDiameter == _T(">25")))
 	{
 		m_Condition = 3;
 	}
 
+	return;
+}
+
+//根据ComboBox的值设置Condition的值      核广电标准
+void CSetLae::SetConditionData_2()
+{
+	if ((m_Str_RebarDiameter == _T("<=25")))
+	{
+		m_Condition = 0;
+	}
+	else if ((m_Str_RebarDiameter == _T(">25")))
+	{
+		m_Condition = 1;
+	}
 	return;
 }
 
@@ -191,7 +251,7 @@ void CSetLae::Set_gConditionData()
 	return;
 }
 
-//填充表格数据
+//填充国标表格数据
 void CSetLae::SetListData()
 {
 	//存第一行，每一列的数据
@@ -357,27 +417,163 @@ void CSetLae::SetListData()
 
 }
 
+//填充核广电标准表格数据
+void CSetLae::SetListData_2()
+{
+	//存第一行，每一列的数据
+	vector<vector<CString>> row1;
+	vector<CString> column0;
+	column0.push_back(_T(""));
+	column0.push_back(_T(""));
+	row1.push_back(column0);
+	vector<CString> column1;
+	column1.push_back(_T("35"));
+	column1.push_back(_T(""));
+	row1.push_back(column1);
+	vector<CString> column2;
+	column2.push_back(_T("32"));
+	column2.push_back(_T(""));
+	row1.push_back(column2);
+	vector<CString> column3;
+	column3.push_back(_T("29"));
+	column3.push_back(_T(""));
+	row1.push_back(column3);
+	vector<CString> column4;
+	column4.push_back(_T("28"));
+	column4.push_back(_T(""));
+	row1.push_back(column4);
+	vector<CString> column5;
+	column5.push_back(_T("26"));
+	column5.push_back(_T(""));
+	row1.push_back(column5);
+	vector<CString> column6;
+	column6.push_back(_T("25"));
+	column6.push_back(_T(""));
+	row1.push_back(column6);
+	vector<CString> column7;
+	column7.push_back(_T("24"));
+	column7.push_back(_T(""));
+	row1.push_back(column7);
+	m_TableData[1] = row1;
+	column0.clear();
+	column1.clear();
+	column2.clear();
+	column3.clear();
+	column4.clear();
+	column5.clear();
+	column6.clear();
+	column7.clear();
+	//存第二行，每一列的数据
+	vector<vector<CString>> row2;
+	column0.push_back(_T(""));
+	column0.push_back(_T(""));
+	row2.push_back(column0);
+	column1.push_back(_T("40"));
+	column1.push_back(_T("45"));
+	row2.push_back(column1);
+	column2.push_back(_T("37"));
+	column2.push_back(_T("40"));
+	row2.push_back(column2);
+	column3.push_back(_T("33"));
+	column3.push_back(_T("37"));
+	row2.push_back(column3);
+	column4.push_back(_T("32"));
+	column4.push_back(_T("36"));
+	row2.push_back(column4);
+	column5.push_back(_T("31"));
+	column5.push_back(_T("35"));
+	row2.push_back(column5);
+	column6.push_back(_T("30"));
+	column6.push_back(_T("33"));
+	row2.push_back(column6);
+	column7.push_back(_T("29"));
+	column7.push_back(_T("32"));
+	row2.push_back(column7);
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//row2.push_back(column8);
+	m_TableData[2] = row2;
+	column0.clear();
+	column1.clear();
+	column2.clear();
+	column3.clear();
+	column4.clear();
+	column5.clear();
+	column6.clear();
+	column7.clear();
+	//column8.clear();
+	//存第三行，每一列的数据
+	vector<vector<CString>> row3;
+	column0.push_back(_T(""));
+	column0.push_back(_T(""));
+	row3.push_back(column0);
+	column1.push_back(_T("49"));
+	column1.push_back(_T("54"));
+	row3.push_back(column1);
+	column2.push_back(_T("45"));
+	column2.push_back(_T("49"));
+	row3.push_back(column2);
+	column3.push_back(_T("41"));
+	column3.push_back(_T("46"));
+	row3.push_back(column3);
+	column4.push_back(_T("39"));
+	column4.push_back(_T("43"));
+	row3.push_back(column4);
+	column5.push_back(_T("37"));
+	column5.push_back(_T("40"));
+	row3.push_back(column5);
+	column6.push_back(_T("36"));
+	column6.push_back(_T("39"));
+	row3.push_back(column6);
+	column7.push_back(_T("35"));
+	column7.push_back(_T("38"));
+	row3.push_back(column7);
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//column8.push_back(_T("32"));
+	//column8.push_back(_T("35"));
+	//row3.push_back(column8);
+	m_TableData[3] = row3;
+
+	return;
+
+}
+
 //刷新表格数据
 void CSetLae::UpdateLaeList()
 {
 	m_Lae_ListCtrl.DeleteAllItems();
 	//分成三行一行一行的生成表格
+	int size = 9;
 	//第一行
 	m_Lae_ListCtrl.InsertItem(0, _T(""));
 	CString strValue = _T("HPB300");
 	m_Lae_ListCtrl.SetItemText(0, 0, strValue);
-	for (int i = 1; i < 9; ++i)
+	if (g_global_stander == 0)
 	{
-		CString strValue = _T("");
-		strValue = m_TableData[1].at(i - 1).at(m_Condition);
-		m_Lae_ListCtrl.SetItemText(0, i, strValue);
+		for (int i = 1; i < size; ++i)
+		{
+			CString strValue = _T("");
+			strValue = m_TableData[1].at(i - 1).at(m_Condition);
+			m_Lae_ListCtrl.SetItemText(0, i, strValue);
+		}
 	}
-
+	if (g_global_stander == 1)
+	{
+		for (int i = 1; i < size; ++i)
+		{
+			CString strValue = _T("");
+			strValue = m_TableData[1].at(i - 1).at(0);
+			m_Lae_ListCtrl.SetItemText(0, i, strValue);
+		}
+	}
 	//第二行
 	m_Lae_ListCtrl.InsertItem(1, _T(""));
 	strValue = _T("HRB400");
 	m_Lae_ListCtrl.SetItemText(1, 0, strValue);
-	for (int i = 1; i < 9; ++i)
+	for (int i = 1; i < size; ++i)
 	{
 		CString strValue = _T("");
 		strValue = m_TableData[2].at(i - 1).at(m_Condition);
@@ -388,7 +584,7 @@ void CSetLae::UpdateLaeList()
 	m_Lae_ListCtrl.InsertItem(2, _T(""));
 	strValue = _T("HRB500");
 	m_Lae_ListCtrl.SetItemText(2, 0, strValue);
-	for (int i = 1; i < 9; ++i)
+	for (int i = 1; i < size; ++i)
 	{
 		CString strValue = _T("");
 		strValue = m_TableData[3].at(i - 1).at(m_Condition);
@@ -403,52 +599,44 @@ void CSetLae::UpdateLaeList()
 BOOL CSetLae::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
-	//1、初始化四个CComboBox按钮的值
-	InitCComboBox();
-
+	if (!m_bInitializ)
+	{
+	     //1、初始化四个CComboBox按钮的值
+	     InitCComboBox();
+	     //m_Lae_ListCtrl.ClearColumns(); // 清空列
 	//2、设置列表属性并在列表控件中插入列
-	LONG lStyle;
-	lStyle = GetWindowLong(m_Lae_ListCtrl.m_hWnd, GWL_STYLE);//获取当前窗口style
-	lStyle &= ~LVS_TYPEMASK; //清除显示方式位
-	lStyle |= LVS_REPORT;	//设置style
-	lStyle |= LVS_SINGLESEL;//单选模式
-	SetWindowLong(m_Lae_ListCtrl.m_hWnd, GWL_STYLE, lStyle);//设置style
-
-	DWORD dwStyle = m_Lae_ListCtrl.GetExtendedStyle();
-	dwStyle |= LVS_EX_FULLROWSELECT;					// 选中某行使整行高亮（仅仅适用与report 风格的listctrl ） 
-	dwStyle |= LVS_EX_GRIDLINES;						// 网格线（仅仅适用与report 风格的listctrl ） 
-	m_Lae_ListCtrl.SetExtendedStyle(dwStyle);			// 设置扩展风格
-
-	tagRECT stRect;
-	m_Lae_ListCtrl.GetClientRect(&stRect);
-	double width = stRect.right - stRect.left;
-	//在列表控件中插入列
-	m_Lae_ListCtrl.InsertColumn(0, _T(""), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(1, _T("C25"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(2, _T("C30"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(3, _T("C35"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(4, _T("C40"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(5, _T("C45"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(6, _T("C50"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(7, _T("C55"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_Lae_ListCtrl.InsertColumn(8, _T(">= C60"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-
-	//3、根据CComboBox的值设置m_Condition
-	SetConditionData();
-
-	//4、填写表格的值存到 m_TableData
-	SetListData();
-
-	//5、根据m_Condition的值设置表格的数据
-	UpdateLaeList();
-
-	//6、 读取XML数据
-	readXML();
-	
-	//7、根据全局变量设置的值刷新到上一次设置的表格
-	UpdateComboBox();
-
+	     LONG lStyle;
+	     lStyle = GetWindowLong(m_Lae_ListCtrl.m_hWnd, GWL_STYLE);//获取当前窗口style
+	     lStyle &= ~LVS_TYPEMASK; //清除显示方式位
+	     lStyle |= LVS_REPORT;	//设置style
+	     lStyle |= LVS_SINGLESEL;//单选模式
+	     SetWindowLong(m_Lae_ListCtrl.m_hWnd, GWL_STYLE, lStyle);//设置style
+	     
+	     DWORD dwStyle = m_Lae_ListCtrl.GetExtendedStyle();
+	     dwStyle |= LVS_EX_FULLROWSELECT;					// 选中某行使整行高亮（仅仅适用与report 风格的listctrl ） 
+	     dwStyle |= LVS_EX_GRIDLINES;						// 网格线（仅仅适用与report 风格的listctrl ） 
+	     m_Lae_ListCtrl.SetExtendedStyle(dwStyle);			// 设置扩展风格
+	     
+	     tagRECT stRect;
+	     m_Lae_ListCtrl.GetClientRect(&stRect);
+	     double width = stRect.right - stRect.left;
+	     
+	     //在列表控件中插入列
+	     m_Lae_ListCtrl.InsertColumn(0, _T(""), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(1, _T("C25"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(2, _T("C30"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(3, _T("C35"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(4, _T("C40"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(5, _T("C45"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(6, _T("C50"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(7, _T("C55"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     m_Lae_ListCtrl.InsertColumn(8, _T(">= C60"), (int)(width / 9.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	     UpdateLaeListALL();
+	     // 设置初始化标志位
+		 m_bInitializ = true;
+	}
+	else
+		UpdateLaeListALL();
 	return TRUE;
 }
 
@@ -465,7 +653,12 @@ void CSetLae::OnCbnSelchangeSeismicgrade()
 	g_StrLae.g_StrLae_SeismicGrade = m_Str_SeismicGrade;
 
 	//SetConditionData();
-	Set_gConditionData();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+	}
+	else
+		SetConditionData_2();
 	UpdateLaeList();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
@@ -488,7 +681,12 @@ void CSetLae::OnCbnSelchangeConcretegrade()
 	/*SetConditionData();
 	UpdateLaeList();*/
 	g_StrLae.g_StrLae_ConcreteGrade = m_Str_ConcreteGrade;
-	Set_gConditionData();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+	}
+	else
+		SetConditionData_2();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
 
@@ -511,7 +709,12 @@ void CSetLae::OnCbnSelchangeRebargrade()
 	/*SetConditionData();
 	UpdateLaeList();*/
 	g_StrLae.g_StrLae_RebarGrade = m_Str_RebarGrade;
-	Set_gConditionData();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+	}
+	else
+		SetConditionData_2();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
 
@@ -533,7 +736,12 @@ void CSetLae::OnCbnSelchangeRebardiameter()
 
 	g_StrLae.g_StrLae_RebarDiameter = m_Str_RebarDiameter;
 	//SetConditionData();
-	Set_gConditionData();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+	}
+	else
+		SetConditionData_2();
 	UpdateLaeList();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
@@ -709,7 +917,7 @@ void CSetLae::displayNodeAttributes(XmlNodeRef nodeRef)
 		g_StrLae.g_db_LaeValue = LaeValue;
 		return;
 	}
-	
+
 
 }
 

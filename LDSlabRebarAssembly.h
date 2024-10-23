@@ -225,7 +225,7 @@ namespace Gallery
 		void CreateInSideFaceAssembly(int& iTwinbarSetIdIndex, int& setCount, MSElementDescrP upface,
 			MSElementDescrP tmpupfaces[40],
 			MSElementDescrP tmpdownfaces[40],
-			int index,
+			int i,
 			DVec3d rebarVec,
 			vector<CVector3D>& vTrans,
 			vector<CVector3D>& vTransTb

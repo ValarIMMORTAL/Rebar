@@ -7,6 +7,8 @@
 #include "GalleryIntelligentRebar.h"
 #include "CSetLa0.h"
 #include "afxdialogex.h"
+#include "CSetLaeAndLa0Dlg.h"
+#include <cmath>
 
 StrLa0 g_StrLa0 = { L"C20" ,L"<=25%" ,L"HPB300" ,L"<=25" ,L"一、二级" ,54};
 //g_StrLa0.g_StrLa0_SeismicGrade = L"一、二级";
@@ -17,6 +19,43 @@ StrLa0 g_StrLa0 = { L"C20" ,L"<=25%" ,L"HPB300" ,L"<=25" ,L"一、二级" ,54};
 // CSetLa0 对话框
 
 IMPLEMENT_DYNAMIC(CSetLa0, CDialogEx)
+
+// CSetLae 消息处理程序
+BOOL CSetLa0::UpdateLaeListALL()
+{
+	CDialogEx::UpdateData();
+	if (g_global_stander == 0)
+	{
+		//3、根据CComboBox的值设置m_Condition
+		SetConditionData();
+
+		//4、填写表格的值存到 m_TableData
+		SetListData();
+
+		//5、根据m_Condition的值设置表格的数据
+		UpdateLa0List();
+
+		//6、读取XML文件参数
+		readXML();
+
+		//7、根据全局变量设置的值刷新到上一次设置的表格
+		UpdateComboBox();
+	}
+	else if (g_global_stander == 1)
+	{
+		//3、根据CComboBox的值设置m_Condition
+		SetConditionData_2();
+		//4、填写表格的值存到 m_TableData
+		SetListData_2();
+		//5、根据m_Condition的值设置表格的数据
+		UpdateLa0List_2();
+		//6、 读取XML数据
+		readXML();
+		//7、根据全局变量设置的值刷新到上一次设置的表格
+		UpdateComboBox();
+	}
+	return true;
+}
 
 CSetLa0::CSetLa0(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_SetLa0, pParent)
@@ -87,7 +126,7 @@ void CSetLa0::InitCComboBox()
 	m_OverlapArea.AddString(L"<=25%");
 	m_OverlapArea.SetCurSel(0);
 	m_OverlapArea.AddString(L"50%");
-	
+	m_OverlapArea.AddString(L"100%");
 	SetDlgItemText(IDC_OverlapArea, L"<=25%");
 
 	//钢筋等级
@@ -141,6 +180,7 @@ void CSetLa0::UpdateComboBox()
 			m_Sel_ConcreteGrade = 8;
 	}
 
+
 	if (g_StrLa0.g_StrLa0_OverlapArea != L"")
 		SetDlgItemText(IDC_OverlapArea, g_StrLa0.g_StrLa0_OverlapArea);
 
@@ -156,9 +196,18 @@ void CSetLa0::UpdateComboBox()
 	if ((g_StrLa0.g_StrLa0_ConcreteGrade != L"") || (g_StrLa0.g_StrLa0_OverlapArea != L"") ||
 		(g_StrLa0.g_StrLa0_RebarGrade != L"") || (g_StrLa0.g_StrLa0_RebarDiameter != L"") || (g_StrLa0.g_StrLa0_SeismicGrade != L""))
 	{
-		Set_gConditionData();
-		SetListData();
-		UpdateLa0List();
+		if (g_global_stander == 0)
+		{
+			Set_gConditionData();
+			SetListData();
+			UpdateLa0List();
+		}
+		if (g_global_stander == 1)
+		{
+			SetConditionData_2();
+			SetListData_2();
+			UpdateLa0List_2();
+		}
 		Save_gConcreteAndRebar_Grade();
 	}
 }
@@ -202,6 +251,20 @@ void CSetLa0::SetConditionData()
 	return;
 }
 
+//根据ComboBox的值设置Condition的值      核广电标准
+void CSetLa0::SetConditionData_2()
+{
+	if ((m_Str_RebarDiameter == _T("<=25")))
+	{
+		m_Condition = 0;
+	}
+	else if ((m_Str_RebarDiameter == _T(">25")))
+	{
+		m_Condition = 1;
+	}
+	return;
+}
+
 
 //根据全局变量的值设置Condition的值
 void CSetLa0::Set_gConditionData()
@@ -240,6 +303,142 @@ void CSetLa0::Set_gConditionData()
 	}
 
 	return;
+}
+
+//填充核广电标准表格数据
+void CSetLa0::SetListData_2()
+{
+	//存第一行，每一列的数据
+	vector<vector<CString>> row1;
+	vector<CString> column;
+	column.push_back(_T(""));
+	column.push_back(_T(""));
+	row1.push_back(column);
+	vector<CString> column0;
+	column0.push_back(_T(""));
+	column0.push_back(_T(""));
+	row1.push_back(column0);
+	vector<CString> column1;
+	column1.push_back(_T("35"));
+	column1.push_back(_T(""));
+	row1.push_back(column1);
+	vector<CString> column2;
+	column2.push_back(_T("32"));
+	column2.push_back(_T(""));
+	row1.push_back(column2);
+	vector<CString> column3;
+	column3.push_back(_T("29"));
+	column3.push_back(_T(""));
+	row1.push_back(column3);
+	vector<CString> column4;
+	column4.push_back(_T("28"));
+	column4.push_back(_T(""));
+	row1.push_back(column4);
+	vector<CString> column5;
+	column5.push_back(_T("26"));
+	column5.push_back(_T(""));
+	row1.push_back(column5);
+	vector<CString> column6;
+	column6.push_back(_T("25"));
+	column6.push_back(_T(""));
+	row1.push_back(column6);
+	vector<CString> column7;
+	column7.push_back(_T("24"));
+	column7.push_back(_T(""));
+	row1.push_back(column7);
+	m_TableData[1] = row1;
+	column.clear();
+	column0.clear();
+	column1.clear();
+	column2.clear();
+	column3.clear();
+	column4.clear();
+	column5.clear();
+	column6.clear();
+	column7.clear();
+	//存第二行，每一列的数据
+	vector<vector<CString>> row2;
+	column.push_back(_T(""));
+	column.push_back(_T(""));
+	row2.push_back(column);
+	column0.push_back(_T(""));
+	column0.push_back(_T(""));
+	row2.push_back(column0);
+	column1.push_back(_T("40"));
+	column1.push_back(_T("45"));
+	row2.push_back(column1);
+	column2.push_back(_T("37"));
+	column2.push_back(_T("40"));
+	row2.push_back(column2);
+	column3.push_back(_T("33"));
+	column3.push_back(_T("37"));
+	row2.push_back(column3);
+	column4.push_back(_T("32"));
+	column4.push_back(_T("36"));
+	row2.push_back(column4);
+	column5.push_back(_T("31"));
+	column5.push_back(_T("35"));
+	row2.push_back(column5);
+	column6.push_back(_T("30"));
+	column6.push_back(_T("33"));
+	row2.push_back(column6);
+	column7.push_back(_T("29"));
+	column7.push_back(_T("32"));
+	row2.push_back(column7);
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//row2.push_back(column8);
+	m_TableData[2] = row2;
+	column.clear();
+	column0.clear();
+	column1.clear();
+	column2.clear();
+	column3.clear();
+	column4.clear();
+	column5.clear();
+	column6.clear();
+	column7.clear();
+	//column8.clear();
+	//存第三行，每一列的数据
+	vector<vector<CString>> row3;
+	column.push_back(_T(""));
+	column.push_back(_T(""));
+	row3.push_back(column);
+	column0.push_back(_T(""));
+	column0.push_back(_T(""));
+	row3.push_back(column0);
+	column1.push_back(_T("49"));
+	column1.push_back(_T("54"));
+	row3.push_back(column1);
+	column2.push_back(_T("45"));
+	column2.push_back(_T("49"));
+	row3.push_back(column2);
+	column3.push_back(_T("41"));
+	column3.push_back(_T("46"));
+	row3.push_back(column3);
+	column4.push_back(_T("39"));
+	column4.push_back(_T("43"));
+	row3.push_back(column4);
+	column5.push_back(_T("37"));
+	column5.push_back(_T("40"));
+	row3.push_back(column5);
+	column6.push_back(_T("36"));
+	column6.push_back(_T("39"));
+	row3.push_back(column6);
+	column7.push_back(_T("35"));
+	column7.push_back(_T("38"));
+	row3.push_back(column7);
+	//column8.push_back(_T(""));
+	//column8.push_back(_T(""));
+	//column8.push_back(_T("32"));
+	//column8.push_back(_T("35"));
+	//row3.push_back(column8);
+	m_TableData[3] = row3;
+
+	return;
+
 }
 
 //填充表格数据
@@ -629,6 +828,89 @@ void CSetLa0::SetListData()
 
 }
 
+
+//刷新表格数据
+void CSetLa0::UpdateLa0List_2()
+{
+	if (g_global_stander != 1)
+	{
+		return;
+	}
+	double multiple_data = 1;
+	double dblValue = 0.0;
+	if (m_Str_OverlapArea == L"<=25%" && g_global_stander == 1)
+	{
+		multiple_data = 1.2;
+	}
+	if (m_Str_OverlapArea == L"50%" && g_global_stander == 1)
+	{
+		multiple_data = 1.4;
+	}
+	if (m_Str_OverlapArea == L"100%" && g_global_stander == 1)
+	{
+		multiple_data = 1.6;
+	}
+
+	m_La0_ListCtrl.DeleteAllItems();
+	//分成si行一行一行的生成表格
+	//第一行
+	m_La0_ListCtrl.InsertItem(0, L"");
+	CString strValue = L"HPB300";
+	m_La0_ListCtrl.SetItemText(0, 0, strValue);
+
+	for (int i = 1; i < 10; ++i)
+	{
+		CString strValue = _T("");
+		strValue = m_TableData[1].at(i - 1).at(0);
+		dblValue = _ttof(strValue) * multiple_data;
+		// 四舍五入取整
+		dblValue = round(dblValue);
+		// 将double值转换回CString
+		CString strConvertedValue;
+		strConvertedValue.Format(_T("%.0f"), dblValue);  // 格式化为两位小数的字符串
+		// 将转换后的CString设置到列表控件的指定位置
+		m_La0_ListCtrl.SetItemText(0, i, strConvertedValue);
+
+	}
+	//第二行
+	m_La0_ListCtrl.InsertItem(1, L"");
+	strValue = L"HRB400";
+	m_La0_ListCtrl.SetItemText(1, 0, strValue);
+	for (int i = 1; i < 10; ++i)
+	{
+		CString strValue = L"";
+		strValue = m_TableData[2].at(i - 1).at(m_Condition);
+		dblValue = _ttof(strValue) * multiple_data;
+		// 四舍五入取整
+		dblValue = round(dblValue);
+		// 将double值转换回CString
+		CString strConvertedValue;
+		strConvertedValue.Format(_T("%.0f"), dblValue);  // 格式化为两位小数的字符串
+		// 将转换后的CString设置到列表控件的指定位置
+		m_La0_ListCtrl.SetItemText(1, i, strConvertedValue);
+	}
+
+	//第三行
+	m_La0_ListCtrl.InsertItem(2, L"");
+	strValue = L"HRB500";
+	m_La0_ListCtrl.SetItemText(2, 0, strValue);
+	for (int i = 1; i < 10; ++i)
+	{
+		CString strValue = L"";
+		strValue = m_TableData[3].at(i - 1).at(m_Condition);
+		dblValue = _ttof(strValue) * multiple_data;
+		// 四舍五入取整
+		dblValue = round(dblValue);
+		// 将double值转换回CString
+		CString strConvertedValue;
+		strConvertedValue.Format(_T("%.0f"), dblValue);  // 格式化为两位小数的字符串
+		// 将转换后的CString设置到列表控件的指定位置
+		m_La0_ListCtrl.SetItemText(2, i, strConvertedValue);
+	}
+
+	return;
+}
+
 //刷新表格数据
 void CSetLa0::UpdateLa0List()
 {
@@ -641,10 +923,10 @@ void CSetLa0::UpdateLa0List()
 	for (int i = 1; i < 10; ++i)
 	{
 		CString strValue = L"";
-		strValue = m_TableData[1].at(i - 1).at(m_Condition);
-		m_La0_ListCtrl.SetItemText(0, i, strValue);
+		strValue = m_TableData[2].at(i - 1).at(m_Condition);
+		m_La0_ListCtrl.SetItemText(1, i, strValue);
 	}
-
+	
 	//第二行
 	m_La0_ListCtrl.InsertItem(1, L"");
 	strValue = L"HRB335";
@@ -684,55 +966,43 @@ void CSetLa0::UpdateLa0List()
 BOOL CSetLa0::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+	if (!m_bInitialized)
+	{
+		//1、初始化四个CComboBox按钮的值
+		InitCComboBox();
 
-	//1、初始化四个CComboBox按钮的值
-	InitCComboBox();
+		//2、设置列表属性并在列表控件中插入列
+		LONG lStyle;
+		lStyle = GetWindowLong(m_La0_ListCtrl.m_hWnd, GWL_STYLE);//获取当前窗口style
+		lStyle &= ~LVS_TYPEMASK; //清除显示方式位
+		lStyle |= LVS_REPORT;	//设置style
+		lStyle |= LVS_SINGLESEL;//单选模式
+		SetWindowLong(m_La0_ListCtrl.m_hWnd, GWL_STYLE, lStyle);//设置style
 
-	//2、设置列表属性并在列表控件中插入列
-	LONG lStyle;
-	lStyle = GetWindowLong(m_La0_ListCtrl.m_hWnd, GWL_STYLE);//获取当前窗口style
-	lStyle &= ~LVS_TYPEMASK; //清除显示方式位
-	lStyle |= LVS_REPORT;	//设置style
-	lStyle |= LVS_SINGLESEL;//单选模式
-	SetWindowLong(m_La0_ListCtrl.m_hWnd, GWL_STYLE, lStyle);//设置style
+		DWORD dwStyle = m_La0_ListCtrl.GetExtendedStyle();
+		dwStyle |= LVS_EX_FULLROWSELECT;					// 选中某行使整行高亮（仅仅适用与report 风格的listctrl ） 
+		dwStyle |= LVS_EX_GRIDLINES;						// 网格线（仅仅适用与report 风格的listctrl ） 
+		m_La0_ListCtrl.SetExtendedStyle(dwStyle);			// 设置扩展风格
 
-	DWORD dwStyle = m_La0_ListCtrl.GetExtendedStyle();
-	dwStyle |= LVS_EX_FULLROWSELECT;					// 选中某行使整行高亮（仅仅适用与report 风格的listctrl ） 
-	dwStyle |= LVS_EX_GRIDLINES;						// 网格线（仅仅适用与report 风格的listctrl ） 
-	m_La0_ListCtrl.SetExtendedStyle(dwStyle);			// 设置扩展风格
-
-	tagRECT stRect;
-	m_La0_ListCtrl.GetClientRect(&stRect);
-	double width = stRect.right - stRect.left;
-	//在列表控件中插入列
-	m_La0_ListCtrl.InsertColumn(0, L"", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(1, L"C20", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_LEFT, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(2, L"C25", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(3, L"C30", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(4, L"C35", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(5, L"C40", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(6, L"C45", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(7, L"C50", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(8, L"C55", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_La0_ListCtrl.InsertColumn(9, L"C60", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	
-	//3、根据CComboBox的值设置m_Condition
-	SetConditionData();
-
-	//4、填写表格的值存到 m_TableData
-	SetListData();
-
-	//5、根据m_Condition的值设置表格的数据
-	UpdateLa0List();
-
-	//6、读取XML文件参数
-	readXML();
-
-	//7、根据全局变量设置的值刷新到上一次设置的表格
-	UpdateComboBox();
-
-
-
+		tagRECT stRect;
+		m_La0_ListCtrl.GetClientRect(&stRect);
+		double width = stRect.right - stRect.left;
+		//在列表控件中插入列
+		m_La0_ListCtrl.InsertColumn(0, L"", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(1, L"C20", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_LEFT, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(2, L"C25", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(3, L"C30", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(4, L"C35", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(5, L"C40", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(6, L"C45", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(7, L"C50", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(8, L"C55", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		m_La0_ListCtrl.InsertColumn(9, L"C60", (int)(width / 10.0), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+		UpdateLaeListALL();
+		m_bInitialized = true;
+	}
+	else
+		UpdateLaeListALL();
 	return TRUE;
 }
 
@@ -751,7 +1021,12 @@ void CSetLa0::OnCbnSelchangeConcretegrade()
 	//SaveConcreteAndRebar_Grade();
 
 	g_StrLa0.g_StrLa0_ConcreteGrade = m_Str_ConcreteGrade;
-	Set_gConditionData();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+	}
+	else
+		SetConditionData_2();
 	Save_gConcreteAndRebar_Grade();
 
 	WriteXml();
@@ -771,8 +1046,16 @@ void CSetLa0::OnCbnSelchangeOverlaparea()
 
 	//SetConditionData();
 	g_StrLa0.g_StrLa0_OverlapArea = m_Str_OverlapArea;
-	Set_gConditionData();
-	UpdateLa0List();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+		UpdateLa0List();
+	}
+	else
+	{
+		SetConditionData_2();
+		UpdateLa0List_2();
+	}
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
 
@@ -796,7 +1079,15 @@ void CSetLa0::OnCbnSelchangeRebargrade()
 	//SaveConcreteAndRebar_Grade();
 
 	g_StrLa0.g_StrLa0_RebarGrade = m_Str_RebarGrade;
-	Set_gConditionData();
+
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+	}
+	else
+	{
+		SetConditionData_2();
+	}
 	Save_gConcreteAndRebar_Grade();
 
 	WriteXml();
@@ -816,8 +1107,17 @@ void CSetLa0::OnCbnSelchangeRebardiameter()
 
 	//SetConditionData();
 	g_StrLa0.g_StrLa0_RebarDiameter = m_Str_RebarDiameter;
-	Set_gConditionData();
-	UpdateLa0List();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+		UpdateLa0List();
+	}
+	else
+	{
+		SetConditionData_2();
+		UpdateLa0List_2();
+	}
+
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
 
@@ -838,10 +1138,16 @@ void CSetLa0::OnCbnSelchangeSeismicgrade()
 
 
 	g_StrLa0.g_StrLa0_SeismicGrade = m_Str_SeismicGrade;
-	//SetConditionData();
-	Set_gConditionData();
-	UpdateLa0List();
-	//SaveConcreteAndRebar_Grade();
+	if (g_global_stander == 0)
+	{
+		Set_gConditionData();
+		UpdateLa0List();
+	}
+	else
+	{
+		SetConditionData_2();
+		UpdateLa0List_2();
+	}
 	Save_gConcreteAndRebar_Grade();
 
 	WriteXml();
@@ -852,21 +1158,26 @@ void CSetLa0::OnCbnSelchangeSeismicgrade()
 //保存表格里面的值
 void CSetLa0::SaveConcreteAndRebar_Grade()
 {
+	int number = m_Sel_ConcreteGrade;
+	if (g_global_stander == 1)
+	{
+		//number += 2;
+	}
 	if (m_Str_RebarGrade == L"HPB300")
 	{
 		m_data = m_TableData[1].at(m_Sel_ConcreteGrade).at(m_Condition);
 	}
 	else if (m_Str_RebarGrade == L"HRB335")
 	{
-		m_data = m_TableData[2].at(m_Sel_ConcreteGrade).at(m_Condition);
+		m_data = m_TableData[2].at(number).at(m_Condition);
 	}
 	else if(m_Str_RebarGrade == L"HRB400")
 	{
-		m_data= m_TableData[3].at(m_Sel_ConcreteGrade).at(m_Condition);
+		m_data= m_TableData[3].at(number).at(m_Condition);
 	}
 	else if(m_Str_RebarGrade == L"HRB500")
 	{
-		m_data = m_TableData[4].at(m_Sel_ConcreteGrade).at(m_Condition);
+		m_data = m_TableData[4].at(number).at(m_Condition);
 	}
 
 	return;
@@ -875,21 +1186,48 @@ void CSetLa0::SaveConcreteAndRebar_Grade()
 
 void CSetLa0::Save_gConcreteAndRebar_Grade()
 {
+	double miultiple = 1;
+	int number = m_Sel_ConcreteGrade;
+
+	if (m_Str_OverlapArea == L"<=25%" && g_global_stander == 1)
+	{
+		miultiple = 1.2;
+	}
+	if (m_Str_OverlapArea == L"50%" && g_global_stander == 1)
+	{
+		miultiple = 1.4;
+	}
+	if (m_Str_OverlapArea == L"100%" && g_global_stander == 1)
+	{
+		miultiple = 1.6;
+	}
+
+
 	if (g_StrLa0.g_StrLa0_RebarGrade == L"HPB300")
 	{
-		g_StrLa0.g_db_La0Value = _ttof(m_TableData[1].at(m_Sel_ConcreteGrade).at(m_Condition));
+		g_StrLa0.g_db_La0Value = _ttof(m_TableData[1].at(number).at(m_Condition))* miultiple;
 	}
 	else if (g_StrLa0.g_StrLa0_RebarGrade == L"HRB335")
 	{
-		g_StrLa0.g_db_La0Value = _ttof(m_TableData[2].at(m_Sel_ConcreteGrade).at(m_Condition));
+		g_StrLa0.g_db_La0Value = _ttof(m_TableData[2].at(number).at(m_Condition))* miultiple;
 	}
 	else if (g_StrLa0.g_StrLa0_RebarGrade == L"HRB400")
 	{
-		g_StrLa0.g_db_La0Value = _ttof(m_TableData[3].at(m_Sel_ConcreteGrade).at(m_Condition));
+		if (g_global_stander == 1)
+		{
+			g_StrLa0.g_db_La0Value = _ttof(m_TableData[2].at(number).at(m_Condition))* miultiple;
+		}
+		else
+		g_StrLa0.g_db_La0Value = _ttof(m_TableData[3].at(number).at(m_Condition))* miultiple;
 	}
 	else if (g_StrLa0.g_StrLa0_RebarGrade == L"HRB500")
 	{
-		g_StrLa0.g_db_La0Value = _ttof(m_TableData[4].at(m_Sel_ConcreteGrade).at(m_Condition));
+		if (g_global_stander == 1)
+		{
+			g_StrLa0.g_db_La0Value = _ttof(m_TableData[3].at(number).at(m_Condition))* miultiple;
+		}
+		else
+			g_StrLa0.g_db_La0Value = _ttof(m_TableData[4].at(number).at(m_Condition))* miultiple;
 	}
 
 	return;

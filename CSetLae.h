@@ -14,7 +14,7 @@ struct StrLae
 class CLaeDataListCtrl :public ListCtrlEx::CListCtrlEx
 {
 public:
-	
+	void CLaeDataListCtrl::ClearColumns();//清空表格列的函数
 };
 // CSetLae 对话框
 
@@ -25,19 +25,22 @@ class CSetLae : public CDialogEx
 public:
 	CSetLae(CWnd* pParent = nullptr);   // 标准构造函数
 	virtual ~CSetLae();
-
 	//初始化界面
 	virtual BOOL OnInitDialog();
+	//刷新表格数据
+	virtual BOOL UpdateLaeListALL();
 	//初始化ComboBox的值
 	void InitCComboBox();
 	//更新ComboBox的值
 	void UpdateComboBox();
 	//根据ComboBox的值设置Condition的值
 	void SetConditionData();
+	void SetConditionData_2();
 	//根据全局变量的值设置Condition的值
 	void Set_gConditionData();
 	//填充表格数据
 	void SetListData();
+	void SetListData_2();
 	//刷新表格数据
 	void UpdateLaeList();
 	//保存表格里面的值
@@ -55,7 +58,7 @@ public:
 	void readXML();
 
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_SetLae };
 #endif
@@ -73,9 +76,10 @@ public:
 	// || s=1/2 ,d<25 || s=1/2 ,d>25 ||
 	// || s=3 ,  d<25 || s=3 ,  d>25 || 
 	int m_Condition;
+	int m_Init = 0 ;
 	int m_Sel_ConcreteGrade;//选择的混凝土等级的下标
+	bool m_bInitializ = false; // 标志位，用于检查是否已初始化 默认为未初始化
 	CString m_data;//表格中确定的数据
-
 	map<int, vector<vector<CString>>> m_TableData;//存储每一行每一列各种情况的表格的数据
 
 	CString m_Str_SeismicGrade;		//抗震等级

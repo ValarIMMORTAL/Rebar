@@ -193,6 +193,8 @@ public:
 	void SetTieRebarInfo(TieReBarInfo const& tieRebarInfo);
 	const TieReBarInfo GetTieRebarInfo() const;
 
+	static MSElementDescrP GetElementDownFace(ElementHandleCR eeh, EditElementHandleR DownFace, double* tHeight);
+	
 	void ClearLines();
 	//当前钢筋方向，0表示x轴，1表示z轴
 	int m_nowvecDir;
@@ -337,6 +339,28 @@ public:
 	*/
 	void CalRebarEndTypes(const BarLinesdata& data, BrStringCR sizeKey,
 		PIT::PITRebarEndTypes& pitRebarEndTypes, DgnModelRefP modelRef);
+
+	/*
+* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
+* @param[in]	alleehs 周围元素
+* @param[in]	tmpendEndTypes 端部样式
+* @param[in]    Eleeh  开孔之前的实体（墙、板）
+* @param[in]	direction  锚入角度
+* @param[in]	matrix  矩阵
+* @param[in]	MoveDis 保护层距离
+* @param[in]	lenth   锚入长度
+* @param[in]	Point   端点位置
+* @param[in]	FLAGE   是否不需要端部样式
+* @param[in/out]	data 配筋线数据
+* @return	MSElementDescrP 新的钢筋线
+* @author	ChenDon
+* @Date:	2024/10/17
+*/
+	void JudgeBarLinesLegitimate(vector<EditElementHandle*>alleehs, PIT::PITRebarEndTypes& tmpendEndTypes,
+		EditElementHandle &lineEeh,EditElementHandle *Eleeh, CVector3D direction
+		, Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &FLAGE);
+
+	/*
 
 	/*
 	* @desc:		根据顶底板重新计算伸缩距离
