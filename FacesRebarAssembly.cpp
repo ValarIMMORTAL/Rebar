@@ -3401,6 +3401,13 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 		return false;
 	}
 
+	//使用Z型板墙体判断,防止偏移出板
+	DPoint3d midpos = startPt;
+	midpos.Add(endPt);
+	midpos.Scale(0.5);
+	if (!ISPointInElement(m_pOldElm, midpos))
+		return false;
+
 	m_vecRebarPtsLayer.push_back(startPt);
 	m_vecRebarPtsLayer.push_back(endPt);
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
@@ -6392,6 +6399,56 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	ehLin1.AddToModel();
 	ehLin2.AddToModel();*/
 	/*testEnd*/
+
+	// 确保是从绝对坐标系最低往最高
+	DVec3d vec1 = m_LineSeg1.GetLineVec();
+	DVec3d vec2 = m_LineSeg2.GetLineVec();
+	Dpoint3d ptSeg1Start = m_LineSeg1.GetLineStartPoint();
+	Dpoint3d ptSeg1End = m_LineSeg1.GetLineEndPoint();
+	Dpoint3d ptSeg2Start = m_LineSeg2.GetLineStartPoint();
+	Dpoint3d ptSeg2End = m_LineSeg2.GetLineEndPoint();
+	if (fabs(vec1.DotProduct(DVec3d::From(1, 0, 0))) > 0.9)//似板
+	{
+		if (vec1.DotProduct(DVec3d::From(-1, 0, 0)) > 0.9)
+		{
+			ptSeg2Start.x = ptSeg1End.x;
+			ptSeg2End.x = ptSeg1End.x;
+			m_LineSeg1.SetLineStartPoint(ptSeg1End);
+			m_LineSeg1.SetLineEndPoint(ptSeg1Start);
+			m_LineSeg2.SetLineStartPoint(ptSeg2Start);
+			m_LineSeg2.SetLineEndPoint(ptSeg2End);
+		}
+		if (vec2.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
+		{
+			ptSeg1Start.y = ptSeg2End.y;
+			ptSeg1End.y = ptSeg2End.y;
+			m_LineSeg1.SetLineStartPoint(ptSeg1Start);
+			m_LineSeg1.SetLineEndPoint(ptSeg1End);
+			m_LineSeg2.SetLineStartPoint(ptSeg2End);
+			m_LineSeg2.SetLineEndPoint(ptSeg2Start);
+		}
+	}
+	else//似墙
+	{
+		if (vec1.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
+		{
+			ptSeg2Start.y = ptSeg1End.y;
+			ptSeg2End.y = ptSeg1End.y;
+			m_LineSeg1.SetLineStartPoint(ptSeg1End);
+			m_LineSeg1.SetLineEndPoint(ptSeg1Start);
+			m_LineSeg2.SetLineStartPoint(ptSeg2Start);
+			m_LineSeg2.SetLineEndPoint(ptSeg2End);
+		}
+		if (vec2.DotProduct(DVec3d::From(0, 0, -1)) > 0.9)
+		{
+			ptSeg1Start.z = ptSeg2End.z;
+			ptSeg1End.z = ptSeg2End.z;
+			m_LineSeg1.SetLineStartPoint(ptSeg1Start);
+			m_LineSeg1.SetLineEndPoint(ptSeg1End);
+			m_LineSeg2.SetLineStartPoint(ptSeg2End);
+			m_LineSeg2.SetLineEndPoint(ptSeg2Start);
+		}
+	}
 
 	PopvecFrontPts().push_back(m_LineSeg1.GetLineStartPoint());
 	PopvecFrontPts().push_back(m_LineSeg1.GetLineEndPoint());
