@@ -4740,6 +4740,8 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 				continue;
 			}
 		}
+		if ((i == 0 || (i == (numRebar - 1))) && rebarCurves.empty())
+			continue;
 		rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 		if (i != 0 && (i != (numRebar - 1)))
 			rebarCurves.clear();
@@ -6882,18 +6884,29 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 
 
 	DPoint3d ptStart, ptEnd;
-	DPoint3d ptOrgin = m_STslabData.ptStart;
-
 	ptStart = m_STslabData.ptStart;
 	ptEnd = m_STslabData.ptEnd;
 
+	CVector3D  xVecNew(ptStart, ptEnd);
+	xVecNew.Normalize();
+
+	//确保x方向是从绝对坐标系最低往最高
+	if (xVecNew.DotProduct(DVec3d::From(-1, 0, 0)) > 0.9)
+	{
+		DPoint3d tmpPt = m_STslabData.ptStart;
+		m_STslabData.ptStart = m_STslabData.ptEnd;
+		m_STslabData.ptEnd = tmpPt;
+		xVecNew.Negate();
+		m_STslabData.vecZ.Negate();
+	}
+
+	DPoint3d ptOrgin = m_STslabData.ptStart;
 	DVec3d tmpz = m_STslabData.vecZ;
 	tmpz.Normalize();
 
 	CVector3D  yVec = tmpz;     //返回两个向量的（标量）叉积。y  	
 	yVec.Scale(-1);
-	CVector3D  xVecNew(ptStart, ptEnd);
-	xVecNew.Normalize();
+
 	bool isXtY = false;
 	tmpz.Scale(m_STslabData.width);
 	ptOrgin.Add(tmpz);
