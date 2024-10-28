@@ -315,6 +315,9 @@ public:
 	//分析面的类型
 	int GetFaceType(MSElementDescrP face,MSElementDescrP upface[40], int upfacenum, MSElementDescrP downface[40], int downfacenum,int i, DVec3d vecRebar);
 	void ChangeRebarLine(PIT:: LineSegment& lineSeg);
+	// 反转有效区间
+	void ReverseInsideStrEndPos();
+	void ReverseOutsideStrEndPos();
 	//bisSumps是否是集水坑
 	void CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg,double benrandis,double la0,double lae, double diameter, int irebarlevel, bool isInface = true,bool bisSumps = false);
 	//钢筋遇到孔洞时，求出端部锚固信息，包括长度，方向。
