@@ -279,7 +279,7 @@ public:
 private:
 	double InsideFace_OffsetLength(DPoint3dCR RebarlineMidPt);
 	//获取rebarcurve,主要是钢筋线与面拉伸的实体相交，然后在钢筋两端设置事先求出的端部样式
-	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes, bool isExtraRebar = false);
+	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes);
 	
 protected:
 	virtual int         GetPolymorphic() const override { return REX_Type::kLastRebarElement + kRebarAssembly + PIT::PITRebarAssemblyEnum::Plane; }
@@ -340,6 +340,8 @@ public:
 	void CutRebarAnchorLeng(Dpoint3d ptStr, CVector3D vecAnchor, int rebarLevel, double& dAnchorleng);
 	//集水坑
 	void CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double benrandis, double la0, double lae, double diameter, int irebarlevel, bool isInface = true, bool bisSumps = false, bool isYdir = false);
+	// 处理竖向钢筋对于Z型板的钢筋分区
+	bool CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP);
 	//分析内面钢筋信息，包括端部样式等
 	void CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		MSElementDescrP tmpupfaces[40],
