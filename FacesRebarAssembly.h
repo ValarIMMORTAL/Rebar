@@ -279,7 +279,7 @@ public:
 private:
 	double InsideFace_OffsetLength(DPoint3dCR RebarlineMidPt);
 	//获取rebarcurve,主要是钢筋线与面拉伸的实体相交，然后在钢筋两端设置事先求出的端部样式
-	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes);
+	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes, bool isExtraRebar = false);
 	
 protected:
 	virtual int         GetPolymorphic() const override { return REX_Type::kLastRebarElement + kRebarAssembly + PIT::PITRebarAssemblyEnum::Plane; }
@@ -593,6 +593,7 @@ public:
 	int m_curLevel;//当前配筋层
 	EditElementHandle* m_CurentFace = nullptr;//当前的配筋面
 	double m_slabThickness = 0.0;//面配筋所选择的板的厚度
+	EditElementHandle* m_zCorner = nullptr;//Z型板拐角需要配置额外的钢筋
 
 	vector<ElementHandle> m_Allwalls;//保留板边附近所有的墙
 	bool m_strDelete = false;//外侧面钢筋靠近墙面的起始钢筋是否删除，配合墙钢筋生成

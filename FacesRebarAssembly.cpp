@@ -3368,11 +3368,15 @@ double PlaneRebarAssembly::InsideFace_OffsetLength(DPoint3dCR RebarlineMidPt)
 		}
 
 	}
+	if (m_zCorner != nullptr)
+	{
+		return ((GetConcrete().sideCover) * Get_uor_per_mm);
+	}
 	return 0;
 }
 
 
-bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, const PIT::PITRebarEndTypes& endTypes)
+bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, const PIT::PITRebarEndTypes& endTypes, bool isExtraRebar)
 {
 	DRange3d range_eeh;
 	DRange3d range_CurFace;
@@ -3424,7 +3428,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 		EditElementHandle eehSolid;
 		ISolidKernelEntityPtr ptarget;
 		SolidUtil::Convert::ElementToBody(ptarget, m_face, true, true, true);
-		if (SUCCESS == SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm))
+		if (SUCCESS == SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm) && !isExtraRebar)
 		{
 			if (SUCCESS == SolidUtil::Convert::BodyToElement(eehSolid, *ptarget, NULL, *ACTIVEMODEL))
 			{
@@ -4787,7 +4791,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 				tmpRebarLine.PerpendicularOffset(tmppos, offsetVec);
 				endTypes.beg.SetptOrgin(tmpRebarLine.GetLineStartPoint());
 				endTypes.end.SetptOrgin(tmpRebarLine.GetLineEndPoint());
-				makeRebarCurve(rebarCurves, endTypes);
+				makeRebarCurve(rebarCurves, endTypes, true);
 				rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 			}
 		}
@@ -6080,7 +6084,7 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 		}
 
 		double ditanceBetweenFace = ptmid.Distance(ptproject);
-		if (ditanceBetweenFace < 10 * UOR_PER_MilliMeter)
+		if (ditanceBetweenFace < 100 * UOR_PER_MilliMeter)
 		{
 			continue;
 		}
@@ -10709,7 +10713,7 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 
 	//将所有面转换到XOZ平面
 	CVector3D ORIPT = GetPlacement().GetTranslation();
-	PITCommonTool::CPointTool::DrowOnePoint(ORIPT, 1, 2);
+	// PITCommonTool::CPointTool::DrowOnePoint(ORIPT, 1, 2);
 	CMatrix3D tmpmat = GetPlacement();
 	Transform trans;
 	tmpmat.AssignTo(trans);
@@ -11298,7 +11302,7 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 
 	//将所有面转换到XOZ平面
 	CVector3D ORIPT = GetPlacement().GetTranslation();
-	PITCommonTool::CPointTool::DrowOnePoint(ORIPT, 1, 5);
+	// PITCommonTool::CPointTool::DrowOnePoint(ORIPT, 1, 5);
 	CMatrix3D tmpmat = GetPlacement();
 	Transform trans;
 	tmpmat.AssignTo(trans);
@@ -11544,6 +11548,86 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
+
+		// 处理竖向钢筋对于Z型板的钢筋分区。如果本面更长则进行分区，无论长短都需要在拐角增加平面
+		DPoint3d ptDefault = DPoint3d::From(0, 0, 1);
+		DVec3d vecfacenor;
+		mdlElmdscr_extractNormal(&vecfacenor, nullptr, m_Solid->GetElementDescrP(), &ptDefault);
+		std::vector<EditElementHandle*> allFaces;//该元素所有的面
+		std::vector<EditElementHandle*> allParalFaces;//与所选面平行的所有面
+		ExtractFacesTool::GetFaces(*m_Solid, allFaces);
+		for (size_t index = 0; index < allFaces.size(); index++)
+		{
+			DVec3d vecface;
+			mdlElmdscr_extractNormal(&vecface, nullptr, allFaces[index]->GetElementDescrP(), &ptDefault);
+			if (abs(vecface.DotProduct(vecfacenor)) > 0.9)
+			{
+				allParalFaces.push_back(allFaces[index]);
+			}
+		}
+
+		double eps = 100 * UOR_PER_MilliMeter;//同一面左右高度可能有较大偏差
+		DPoint3d ptStart = m_LineSeg1.GetLineStartPoint();
+		DPoint3d ptEnd = m_LineSeg1.GetLineEndPoint();
+		for (size_t index = 0; index < allParalFaces.size(); index++)
+		{
+			Dpoint3d ptFaceMin, ptFaceMax;
+			mdlElmdscr_computeRange(&ptFaceMin, &ptFaceMax, allParalFaces[index]->GetElementDescrCP(), nullptr);
+			if (COMPARE_VALUES_EPS(abs(ptStart.z - ptFaceMin.z), m_slabThickness, eps) != 0)
+				continue;
+			if (COMPARE_VALUES_EPS(m_LineSeg1.GetLength(), abs(ptFaceMax.x - ptFaceMin.x), eps) == 0)
+				continue;
+			DPoint3d pts[4] = { 0 };
+			if (COMPARE_VALUES_EPS(ptFaceMin.x - ptStart.x, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(ptFaceMax.x, ptEnd.x, eps) == 0) {
+				// 左长，从对面构建平面，填充分区
+				pts[0] = DPoint3d::From(ptStart.x, ptStart.y, ptFaceMin.z);
+				pts[1] = DPoint3d::From(ptFaceMin.x, ptStart.y, ptFaceMin.z);
+				pts[2] = DPoint3d::From(ptFaceMin.x, ptFaceMax.y, ptFaceMin.z);
+				pts[3] = DPoint3d::From(ptStart.x, ptFaceMax.y, ptFaceMin.z);
+
+				tmpqj[0] = (int)(ptFaceMin.x - ptStart.x);
+				tmpqj[(int)(ptFaceMin.x - ptStart.x)] = 0;
+			}
+			else if (COMPARE_VALUES_EPS(ptStart.x - ptFaceMin.x, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(ptFaceMax.x, ptEnd.x, eps) == 0) {
+				// 左短，从自身构建平面
+				pts[0] = DPoint3d::From(ptStart.x, ptStart.y, ptStart.z);
+				pts[1] = DPoint3d::From(ptFaceMin.x, ptStart.y, ptStart.z);
+				pts[2] = DPoint3d::From(ptFaceMin.x, ptFaceMax.y, ptStart.z);
+				pts[3] = DPoint3d::From(ptStart.x, ptFaceMax.y, ptStart.z);
+				
+				minP.x -= m_slabThickness;
+			}
+			else if (COMPARE_VALUES_EPS(ptFaceMin.x, ptStart.x, eps) == 0 && COMPARE_VALUES_EPS(ptFaceMax.x - ptEnd.x, m_slabThickness, eps) == 0) {
+				// 右短，从自身构建平面
+				pts[0] = DPoint3d::From(ptEnd.x, ptEnd.y, ptEnd.z);
+				pts[1] = DPoint3d::From(ptFaceMax.x, ptEnd.y, ptEnd.z);
+				pts[2] = DPoint3d::From(ptFaceMax.x, ptFaceMax.y, ptEnd.z);
+				pts[3] = DPoint3d::From(ptEnd.x, ptFaceMax.y, ptEnd.z);
+
+				maxP.x += m_slabThickness;
+			}
+			else if (COMPARE_VALUES_EPS(ptFaceMin.x, ptStart.x, eps) == 0 && COMPARE_VALUES_EPS(ptEnd.x - ptFaceMax.x, m_slabThickness, eps) == 0) {
+				// 右长，从对面构建平面，填充分区
+				pts[0] = DPoint3d::From(ptFaceMax.x, ptEnd.y, ptFaceMax.z);
+				pts[1] = DPoint3d::From(ptEnd.x, ptEnd.y, ptFaceMax.z);
+				pts[2] = DPoint3d::From(ptEnd.x, ptFaceMax.y, ptFaceMax.z);
+				pts[3] = DPoint3d::From(ptFaceMax.x, ptFaceMax.y, ptFaceMax.z);
+
+				tmpqj[(int)(ptFaceMin.x - ptStart.x)] = (int)(ptFaceMax.x - ptStart.x);
+				tmpqj[(int)(ptFaceMax.x - ptStart.x)] = 0;
+			}
+			if (pts[0].IsEqual(DPoint3d::From(0, 0, 0)))
+				continue;
+
+			EditElementHandle eehZCorner;
+			ShapeHandler::CreateShapeElement(eehZCorner, NULL, pts, 4, true, *ACTIVEMODEL);
+			if (m_zCorner == NULL)
+				m_zCorner = new EditElementHandle();
+			m_zCorner->Duplicate(eehZCorner);
+			parafaces.push_back(eehZCorner.GetElementDescrP());
+			break;
+		}
+
 		map<int, int>::iterator itr = tmpqj.begin();
 		for (; itr != tmpqj.end(); itr++)
 		{
