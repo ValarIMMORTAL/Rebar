@@ -3368,7 +3368,7 @@ double PlaneRebarAssembly::InsideFace_OffsetLength(DPoint3dCR RebarlineMidPt)
 		}
 
 	}
-	if (m_zCorner != nullptr)
+	if (m_zCorner)
 	{
 		return ((GetConcrete().sideCover) * Get_uor_per_mm);
 	}
@@ -3428,7 +3428,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 		EditElementHandle eehSolid;
 		ISolidKernelEntityPtr ptarget;
 		SolidUtil::Convert::ElementToBody(ptarget, m_face, true, true, true);
-		if (SUCCESS == SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm) && m_zCorner == nullptr)
+		if (SUCCESS == SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm) && !m_zCorner)
 		{
 			if (SUCCESS == SolidUtil::Convert::BodyToElement(eehSolid, *ptarget, NULL, *ACTIVEMODEL))
 			{
@@ -4733,7 +4733,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 		DVec3d offsetVec = vec.GetLineVec();
 		rebarLine.PerpendicularOffset(adjustedSpacing, offsetVec);
 
-		if (m_sidetype == SideType::Out || (m_sidetype == SideType::In && m_zCorner != nullptr))//外侧面钢筋处理，或者Z型板处理
+		if (m_sidetype == SideType::Out || (m_sidetype == SideType::In && m_zCorner))//外侧面钢筋处理，或者Z型板处理
 		{
 			if (i == 0 && m_strDelete)
 			{
@@ -8107,54 +8107,6 @@ void PlaneRebarAssembly::ChangeRebarLine(PIT::LineSegment& lineSeg)
 	}
 }
 
-// 反转有效区间
-void PlaneRebarAssembly::ReverseInsideStrEndPos() {
-	int start = 0;               // 起始指针
-	int end = m_insidef.posnum - 1; // 末尾指针
-
-	while (start < end) {
-		// 交换start和end区间的strval和endval
-		std::swap(m_insidef.pos[start].strval, m_insidef.pos[end].endval);
-		std::swap(m_insidef.pos[start].endval, m_insidef.pos[end].strval);
-
-		std::swap(m_insidef.pos[start].addstr, m_insidef.pos[end].addend);
-		std::swap(m_insidef.pos[start].addend, m_insidef.pos[end].addstr);
-
-		// 移动指针
-		start++;
-		end--;
-	}
-
-	// 如果区间数量是奇数，中心区间也需要反转strval和endval
-	if (start == end) {
-		std::swap(m_insidef.pos[start].strval, m_insidef.pos[start].endval);
-	}
-}
-
-// 反转有效区间
-void PlaneRebarAssembly::ReverseOutsideStrEndPos() {
-	int start = 0;               // 起始指针
-	int end = m_outsidef.posnum - 1; // 末尾指针
-
-	while (start < end) {
-		// 交换start和end区间的strval和endval
-		std::swap(m_outsidef.pos[start].strval, m_outsidef.pos[end].endval);
-		std::swap(m_outsidef.pos[start].endval, m_outsidef.pos[end].strval);
-
-		std::swap(m_outsidef.pos[start].addstr, m_outsidef.pos[end].addend);
-		std::swap(m_outsidef.pos[start].addend, m_outsidef.pos[end].addstr);
-
-		// 移动指针
-		start++;
-		end--;
-	}
-
-	// 如果区间数量是奇数，中心区间也需要反转strval和endval
-	if (start == end) {
-		std::swap(m_outsidef.pos[start].strval, m_outsidef.pos[start].endval);
-	}
-}
-
 void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double bendradius, double la0, double lae, double diameter, int irebarlevel, bool isInface, bool bisSumps)
 {
 	m_verSlabFaceInfo.ClearData();
@@ -10774,7 +10726,7 @@ bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElement
 
 		EditElementHandle eehZCorner;
 		ShapeHandler::CreateShapeElement(eehZCorner, NULL, pts, 4, true, *ACTIVEMODEL);
-		if (m_zCorner == NULL)
+		if (!m_zCorner)
 			m_zCorner = new EditElementHandle();
 		m_zCorner->Duplicate(eehZCorner);
 		parafaces.push_back(eehZCorner.GetElementDescrP());
