@@ -2427,21 +2427,24 @@ namespace Gallery
 					continue;
 				if (i == numRebar - 1 && m_endDelete)
 					continue;
-				/*if (i == 0 && m_outsidef.isdelstr)
-				{
-					continue;
-				}
-				else if (i == numRebar - 1 && m_outsidef.isdelend)
-				{
-					continue;
-				}*/
 			}
+			std::vector<double> lengths;
+			for (const auto& it : m_insidef.pos)
+			{
+				double length = it.end - it.str;
+				lengths.push_back(length); // 收集所有长度
+			}
+			// 排序并去重
+			std::sort(lengths.begin(), lengths.end(), std::greater<double>());
+			lengths.erase(std::unique(lengths.begin(), lengths.end()), lengths.end()); // 去重
+			double secondMaxLength = (lengths.size() > 1) ? lengths[1] : 0.0; // 获取第二大的长度
+
 			rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 			if (i != 0 && (i != (numRebar - 1)))
 				rebarCurves.clear();
-			if (m_sidetype == SideType::In || (m_sidetype == SideType::Out && !m_strDelete && !m_endDelete))//内侧面钢筋处理
+			if ((m_sidetype == SideType::In && rebarCurves.size() != 0) || (m_sidetype == SideType::Out && !m_strDelete && !m_endDelete && rebarCurves.size() != 0))//内侧面钢筋处理
 			{
-				if ((i == 0 && m_insidef.strval && m_sidetype == SideType::In) || ( i == 0 && m_outsidef.strval && m_sidetype == SideType::Out))
+				if ((i == 0 && m_insidef.strval && m_sidetype == SideType::In ) || ( i == 0 && m_outsidef.strval && m_sidetype == SideType::Out ))
 				{
 					//在反方向添加一根钢筋
 					auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
@@ -2462,7 +2465,7 @@ namespace Gallery
 					makeRebarCurve_G(rebarCurves, tmppos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel);
 					rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 				}
-				else if ((i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
+				else if ((secondMaxLength == xLen && i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In ) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
 				{
 					//在反方向添加一根钢筋
 					auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
@@ -4172,7 +4175,7 @@ namespace Gallery
 			{
 				double dRotateAngle = vecEndType.at(k).rotateAngle;
 				CVector3D rebarVec = m_STwallData.ptEnd - m_STwallData.ptStart;
-				rebarVec.Negate();
+				rebarVec.Negate();   
 				endNormal = CVector3D::From(0, 0, -1);
 				endNormal.Rotate(dRotateAngle * PI / 180, rebarVec);	//以钢筋方向为轴旋转
 				vecEndNormal[k] = endNormal;	
@@ -4285,6 +4288,13 @@ namespace Gallery
 				if (maxLength < length)
 					maxLength = length;
 			}
+			double minLength = maxLength;
+			for (auto it : m_outsidef.pos)
+			{
+				double length = it.end - it.str;
+				if (minLength > length && length != 0)
+					minLength = length;
+			}
 			for (int j = 0; j < m_outsidef.posnum; j++)
 			{
 				double nowLen = dLength;
@@ -4293,11 +4303,12 @@ namespace Gallery
 				dis_x = m_outsidef.pos[j].str;
 				m_outsidef.strval = m_outsidef.pos[j].strval;
 				m_outsidef.endval = m_outsidef.pos[j].endval;
-				if (nowLen < 1201 * UOR_PER_MilliMeter && nowLen != maxLength)//最边缘的外侧面的起始和终端两条钢筋需要删除
+
+				if (minLength == nowLen && nowLen != maxLength)//最边缘的外侧面的起始和终端两条钢筋需要删除
 				{
 					m_strDelete = true;
 					m_endDelete = true;
-				}	
+				}
 				/*if (m_outsidef.posnum > 1 && j != m_outsidef.posnum - 1)
 					m_isAddset = false;*/
 				MakeFaceRebars(iTwinbarSetIdIndex, setCount, i,
@@ -4598,13 +4609,27 @@ namespace Gallery
 		m_ScanedAllWallsandFloor.emplace_back(m_pOldElm);
 		for (auto walleh : m_Allwalls)
 		{//遍历所有墙，判断是不是Z型板拆开的两块板
+			auto id = walleh.GetElementId();
 			DRange3d tmpWall_range;
 			mdlElmdscr_computeRange(&tmpWall_range.low, &tmpWall_range.high, walleh.GetElementDescrCP(), nullptr);
 			DRange3d floor_range;
 			mdlElmdscr_computeRange(&floor_range.low, &floor_range.high, m_pOldElm->GetElementDescrCP(), nullptr);
-			if (tmpWall_range.low.z < floor_range.low.z && tmpWall_range.high.z > floor_range.high.z)
+
+			//取出墙方向和板方向
+			DVec3d wall_direction = tmpWall_range.high - tmpWall_range.low;
+			DVec3d fool_direction = floor_range.high - floor_range.low;
+			bool  is_one_direction = false;
+			if ((wall_direction.x > wall_direction.y && fool_direction.x > fool_direction.y)//如果墙板的方向相同
+				|| (wall_direction.y > wall_direction.x &&fool_direction.y > fool_direction.x)
+				)
+			{
+				is_one_direction = true;
+			}
+
+			if (tmpWall_range.low.z < floor_range.low.z && tmpWall_range.high.z > floor_range.high.z && is_one_direction)
 			{
 				m_isMidFloor = true;
+		
 				for (auto walleh : m_Allwalls)
 				{//遍历所有墙，确定是中间的板之后确定剩余那块墙是在板上还是板下
 					DRange3d tmpWall_range;

@@ -229,6 +229,11 @@ BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 	//1、为Tab Control增加两个页面以及创建钢筋标准选择
+	if (g_global_stander == 1)
+		SetDlgItemText(IDC_COMBO1, _T("核电厂混凝土结构技术标准"));
+	else
+		SetDlgItemText(IDC_COMBO1, _T("混凝土结构技术标准"));
+
 	m_tab.InsertItem(0, _T("搭接"));
 	m_tab.InsertItem(1, _T("锚固"));
 	g_global_stander = 0;
@@ -236,7 +241,6 @@ BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 	m_LaeDlg.Create(IDD_SetLae, &m_tab);//锚固
 
 	m_Stander_ComboBox.AddString(_T("混凝土结构设计标准"));
-	SetDlgItemText(IDC_COMBO1, _T("混凝土结构技术标准"));
 	m_Stander_ComboBox.AddString(_T("核电厂混凝土结构技术标准"));
 	//2、设定在Tab内显示的范围
 	CRect rc;

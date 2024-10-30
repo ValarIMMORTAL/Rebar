@@ -24,6 +24,7 @@ public:
 	CSetLa0       m_La0Dlg;	//搭接界面
 	CSetLae       m_LaeDlg;	//锚固界面
 	CDialog*	  pDialog[2];	//用来保存对话框对象指针
+	bool m_bInitialized = false; // 标志位，用于检查是否已初始化 默认为未初始化
 
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
