@@ -13,6 +13,7 @@
 
 extern StrLa0 g_StrLa0;
 extern StrLae g_StrLae;
+int CSetLaeAndLa0Dlg::lastGlobalStander = -1; // 定义并初始化静态变量
 
 int g_global_stander = 0; // 定义并初始化全局变量
 
@@ -39,6 +40,7 @@ void CSetLaeAndLa0Dlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CSetLaeAndLa0Dlg, CDialogEx)
 	// 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_WallRebar, &CSetLaeAndLa0Dlg::OnTcnSelchangeTabWallrebar)
 	// 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_La, &CSetLaeAndLa0Dlg::OnTcnSelchangeTabLa)
+	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDOK, &CSetLaeAndLa0Dlg::OnBnClickedOk)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_La, &CSetLaeAndLa0Dlg::OnTcnSelchangeTabLa)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &CSetLaeAndLa0Dlg::OnStandard_Selection)
@@ -224,15 +226,42 @@ void CSetLaeAndLa0Dlg::OnTcnSelchangeTabLa(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
+void CSetLaeAndLa0Dlg::OnClose() {
+	// 保存当前组合框的值
+	CString text;
+	int selIndex = m_Stander_ComboBox.GetCurSel(); // 获取当前选中项的索引
+
+	if (selIndex != CB_ERR) { // 检查是否有选中项
+		m_Stander_ComboBox.GetLBText(selIndex, text); // 用有效的索引获取文本
+
+		if (text == _T("核电厂混凝土结构技术标准")) {
+			g_global_stander = 1;
+		}
+		else {
+			g_global_stander = 0;
+		}
+
+		lastGlobalStander = g_global_stander; // 保存最后的选择状态
+	}
+
+	CDialogEx::OnClose();
+}
 
 BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-	//1、为Tab Control增加两个页面以及创建钢筋标准选择
-	if (g_global_stander == 1)
-		SetDlgItemText(IDC_COMBO1, _T("核电厂混凝土结构技术标准"));
-	else
-		SetDlgItemText(IDC_COMBO1, _T("混凝土结构技术标准"));
+	// 1、为 Tab Control 增加两个页面以及创建钢筋标准选择
+
+	// 根据 g_global_stander 的值来设置组合框的文本
+	if (g_global_stander == 1 || lastGlobalStander == 1) {
+		m_comboText = _T("核电厂混凝土结构技术标准");
+	}
+	else {
+		m_comboText = _T("混凝土结构技术标准");
+	}
+
+	// 设置组合框的文本
+	SetDlgItemText(IDC_COMBO1, m_comboText);
 
 	m_tab.InsertItem(0, _T("搭接"));
 	m_tab.InsertItem(1, _T("锚固"));
