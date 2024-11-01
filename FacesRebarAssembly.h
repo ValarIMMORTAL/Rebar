@@ -512,6 +512,56 @@ public:
 		}
 	}m_outsidef;
 
+	struct NorSideQuJianInfo
+	{
+		int str = 0;
+		int end = 0;
+		bool addstr = false;//起始位置是否需要加钢筋
+		bool addend = false;//终止位置是否需要加钢筋
+		int strval = 0;
+		int endval = 0;
+	};
+	struct NorSideFaceInfo//竖直面计算得到的配筋信息，每一个竖直面
+	{
+		NorSideQuJianInfo  pos[20] = { 0 };//与钢筋线平行的边坐标区间（横向钢筋时为Z坐标值，竖向钢筋时为X坐标值）
+		int  posnum = 0;//标识区间数量
+		double calLen = 0;//判断当前钢筋层，钢筋前面还有层，起点部分长度缩小1个钢筋直径，没有层缩不缩小（钢筋锚入处理）
+		int strval = 0;
+		int endval = 0;
+		PIT::EndType endtype = { 0 };
+		PIT::EndType strtype = { 0 };
+		bool bStartAnhorsel = false;
+		bool bEndAnhorsel = false;
+		double dStartanchoroffset = 0;
+		double dEndanchoroffset = 0;
+		bool m_bStartIsSlefAhol = false;
+		bool m_bEndIsSlefAhol = false;
+		void ClearData()
+		{
+			for (int i = 0; i < 20; i++)
+			{
+				pos[i].str = 0;
+				pos[i].end = 0;
+				pos[i].addstr = false;
+				pos[i].addend = false;
+				pos[i].strval = 0;
+				pos[i].endval = 0;
+			}
+			posnum = 0;
+			calLen = 0;
+			strval = 0;
+			endval = 0;
+			endtype = { 0 };
+			strtype = { 0 };
+			bStartAnhorsel = false;
+			 bEndAnhorsel = false;
+			dStartanchoroffset = 0;
+			dEndanchoroffset = 0;
+			m_bStartIsSlefAhol = false;
+			m_bEndIsSlefAhol = false;
+		}
+	}m_norsidef;
+
 	struct LDSlabGeometryInfo//几何信息
 	{
 		DPoint3d ptStart;
