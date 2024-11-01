@@ -6899,6 +6899,23 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 	mdlTMatrix_transformPoint(&m_STslabData.ptEnd, &trans);
 	mdlTMatrix_transformPoint(&ptPreStr, &trans);
 	mdlTMatrix_transformPoint(&ptPreEnd, &trans);
+
+	//确保xy方向是从绝对坐标系最低往最高
+	if (COMPARE_VALUES(m_STslabData.ptStart.x, m_STslabData.ptEnd.x) == 1)
+	{
+		swap(m_STslabData.ptStart, m_STslabData.ptEnd);
+		swap(ptPreStr, ptPreEnd);
+	}
+	if (COMPARE_VALUES(m_STslabData.ptStart.y, minP.y) == 1)
+	{
+		m_STslabData.ptStart.y = minP.y;
+		m_STslabData.ptEnd.y = minP.y;
+		m_ldfoordata.oriPt.y = minP.y;
+		ptPreStr.y = minP.y;
+		ptPreEnd.y = minP.y;
+		swap(ptPreStr.z, ptPreEnd.z);
+	}
+
 	m_STslabData.vecZ = ptPreEnd - ptPreStr;
 	m_STslabData.vecZ.Normalize();
 
@@ -6920,16 +6937,6 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 
 	CVector3D  xVecNew(ptStart, ptEnd);
 	xVecNew.Normalize();
-
-	//确保x方向是从绝对坐标系最低往最高
-	if (xVecNew.DotProduct(DVec3d::From(-1, 0, 0)) > 0.9)
-	{
-		DPoint3d tmpPt = m_STslabData.ptStart;
-		m_STslabData.ptStart = m_STslabData.ptEnd;
-		m_STslabData.ptEnd = tmpPt;
-		xVecNew.Negate();
-		m_STslabData.vecZ.Negate();
-	}
 
 	DPoint3d ptOrgin = m_STslabData.ptStart;
 	DVec3d tmpz = m_STslabData.vecZ;
