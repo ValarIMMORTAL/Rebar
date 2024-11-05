@@ -2925,14 +2925,16 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 	if (ishaveupfloor)//如果有板才有可能要往上延伸
 	{
 		DPoint3d movept = ptstr;
-		DPoint3d jude_pt = ptstr;
-		jude_pt.z = 0;
 		vecOutwall.Scale(thick*uor_per_mm / 2);
 		movept.Add(vecOutwall);
 		movept.z = 0;
 		vecLine.z = 0;
 		movept.Add(vecLine);
-		//PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 2);//蓝
+
+		DPoint3d jude_pt = ptstr;//取2/3
+		jude_pt.Add(vecLine);
+		jude_pt.z = 0;
+
 		for (int i = 0; i < floorfaces.size(); i++)
 		{
 			//mdlElmdscr_add(floorfaces.at(i));
@@ -2952,19 +2954,12 @@ bool CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDa
 				mdlElmdscr_transform(&cdescr, &tran);
 				EditElementHandle teeh(cdescr, true, false, ACTIVEMODEL);
 
-				//PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
+				auto is_InElement = ISPointInElement(&teeh, movept);
+				auto is_InElement2 = ISPointInElement(&teeh, jude_pt);
 
-				if (ISPointInElement(&teeh, movept) && ISPointInElement(&teeh, jude_pt))
+				if (is_InElement && is_InElement2)
 				{
 					ishavetwoside = true;
-				}
-				else  //取三分之二点再判断一次是否在板内
-				{
-					movept.Add(vecLine);
-					if (ISPointInElement(&teeh, movept))
-					{
-						ishavetwoside = true;
-					}
 				}
 			}
 		}

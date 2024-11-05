@@ -122,7 +122,7 @@ bool GetIntersectPointsWithOldElmOwner(vector<DPoint3d>& interPoints, EditElemen
 	return isInside; // 起点终点都没有在实体里面
 }
 
-int IsHaveVerticalWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20], int facenum)
+int IsHaveVerticalWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20], int facenum, bool isGetFaceType = false)
 {
 	int revalue = 0;
 	DVec3d vecRebar = ptend - ptstr;
@@ -137,7 +137,8 @@ int IsHaveVerticalWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[
 		PITCommonTool::CElementTool::GetLongestLineMidPt(tmpfaces[i], tmpstr, tmpend);
 		DVec3d vectmp = tmpend - tmpstr;
 		vectmp.Normalize();
-		//if (abs(vectmp.DotProduct(vecRebar)) < 0.01)
+		//曾为了优化孔洞周围的墙与钢筋方向平行时，钢筋也需要向墙内锚入注释掉。暂时解除注释并仅供判断内外面
+		if (!isGetFaceType || abs(vectmp.DotProduct(vecRebar)) < 0.01)
 		{
 			EditElementHandle tmpeeh(tmpfaces[i], false, false, ACTIVEMODEL);
 			if (ISPointInElement(&tmpeeh, ptstr))
@@ -153,27 +154,28 @@ int IsHaveVerticalWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[
 
 	if (verfacesstr.size() == 0 && verfaceend.size() == 0)
 	{
-		revalue = 0;
+		revalue = 0;//两侧均没有垂直墙
 	}
 	else if (verfacesstr.size() > 0 && verfaceend.size() > 0)
 	{
-		revalue = 3;
+		revalue = 3;//两侧均有垂直墙
 	}
 	else if (verfacesstr.size() > 0)
 	{
-		revalue = 1;
+		revalue = 1;//起始段有垂直墙
 	}
 	else
 	{
-		revalue = 2;
+		revalue = 2;//终止段有垂直墙
 	}
 	return revalue;
 }
 
 //是否有平行墙
-bool IsHaveParaWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20], int facenum)
+bool IsHaveParaWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20], int facenum, bool isGetFaceType = false)
 {
 	int revalue = 0;
+	double totalLength = ptstr.Distance(ptend);
 	DVec3d vecRebar = ptend - ptstr;
 	vecRebar.Normalize();
 	DPoint3d midpos = ptstr;
@@ -187,6 +189,9 @@ bool IsHaveParaWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20]
 		PITCommonTool::CElementTool::GetLongestLineMidPt(tmpfaces[i], tmpstr, tmpend);
 		DVec3d vectmp = tmpend - tmpstr;
 		vectmp.Normalize();
+		double length = tmpstr.Distance(tmpend);
+		if (isGetFaceType && length < totalLength * 0.8)// 暂时根据长度过滤集水坑的短墙
+			continue;
 		if (abs(vectmp.DotProduct(vecRebar)) > 0.9)
 		{
 			EditElementHandle tmpeeh(tmpfaces[i], false, false, ACTIVEMODEL);
@@ -7937,6 +7942,8 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 			LineHandler::CreateLineElement(eehline2, NULL, m_LineSeg2.GetLineSeg(), ACTIVEMODEL->Is3d(), *ACTIVEMODEL);
 
 			int verRe = 0;
+			int verReStr = 0;//增加旁边两条线判断内外侧，任意0，则为外侧面。
+			int verReEnd = 0;
 			bool isdelstr = false;
 			bool isdelend = false;
 			if (GetMainRebars().at(i).rebarDir == 1)	//纵向钢筋,局部坐标系Z方向
@@ -7947,14 +7954,15 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				midstr.z = midpos.z - m_ldfoordata.Ylenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				DPoint3d midend = midstr;
 				midend.z = midpos.z + m_ldfoordata.Ylenth / 2 - GetConcrete().sideCover*uor_per_mm;
-				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size());
+				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size(), true);
 
 				DPoint3d firstr = midpos;
 				firstr.x = firstr.x - m_ldfoordata.Xlenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				firstr.z = midstr.z;
 				DPoint3d firend = firstr;
 				firend.z = midend.z;
-				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReStr = IsHaveVerticalWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelstr = true;
 				}
@@ -7964,7 +7972,8 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				secstr.z = midstr.z;
 				DPoint3d secend = secstr;
 				secend.z = midend.z;
-				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReEnd = IsHaveVerticalWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelend = true;
 				}
@@ -7977,14 +7986,15 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				midstr.x = midpos.x - m_ldfoordata.Xlenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				DPoint3d midend = midstr;
 				midend.x = midpos.x + m_ldfoordata.Xlenth / 2 - GetConcrete().sideCover*uor_per_mm;
-				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size());
+				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size(), true);
 
 				DPoint3d firstr = midpos;
 				firstr.z = firstr.z - m_ldfoordata.Ylenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				firstr.x = midstr.x;
 				DPoint3d firend = firstr;
 				firend.x = midend.x;
-				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReStr = IsHaveVerticalWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelend = true;
 				}
@@ -7997,12 +8007,13 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				secstr.x = midstr.x;
 				DPoint3d secend = secstr;
 				secend.x = midend.x;
-				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReEnd = IsHaveVerticalWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelstr = true;
 				}
 			}
-			if (!isdelstr && !isdelend && verRe == 0)
+			if (!isdelstr && !isdelend && (verRe == 0 || verReStr == 0 || verReEnd == 0))
 			{
 				m_holeRebarInfo.bIsUpFace = true;
 				return SideType::Out;
@@ -8060,8 +8071,10 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 			LineHandler::CreateLineElement(eehline2, NULL, m_LineSeg2.GetLineSeg(), ACTIVEMODEL->Is3d(), *ACTIVEMODEL);
 
 			int verRe = 0;
+			int verReStr = 0;//增加旁边两条线判断内外侧，任意0，则为外侧面。
+			int verReEnd = 0;
 			bool isdelstr = false;
-			bool isdelend = true;
+			bool isdelend = false;
 			if (GetMainRebars().at(i).rebarDir == 1)	//纵向钢筋,局部坐标系Z方向
 			{
 				tmpVec = DVec3d::From(0, 0, 1);
@@ -8070,14 +8083,15 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				midstr.z = midpos.z - m_ldfoordata.Ylenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				DPoint3d midend = midstr;
 				midend.z = midpos.z + m_ldfoordata.Ylenth / 2 - GetConcrete().sideCover*uor_per_mm;
-				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size());
+				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size(), true);
 
 				DPoint3d firstr = midpos;
 				firstr.x = firstr.x - m_ldfoordata.Xlenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				firstr.z = midstr.z;
 				DPoint3d firend = firstr;
 				firend.z = midend.z;
-				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReStr = IsHaveVerticalWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelstr = true;
 				}
@@ -8087,7 +8101,8 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				secstr.z = midstr.z;
 				DPoint3d secend = secstr;
 				secend.z = midend.z;
-				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReEnd = IsHaveVerticalWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelend = true;
 				}
@@ -8100,14 +8115,15 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				midstr.x = midpos.x - m_ldfoordata.Xlenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				DPoint3d midend = midstr;
 				midend.x = midpos.x + m_ldfoordata.Xlenth / 2 - GetConcrete().sideCover*uor_per_mm;
-				int verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size());
+				verRe = IsHaveVerticalWall(midstr, midend, &tmpdescrs.at(0), tmpdescrs.size(), true);
 
 				DPoint3d firstr = midpos;
 				firstr.z = firstr.z - m_ldfoordata.Ylenth / 2 + GetConcrete().sideCover*uor_per_mm;
 				firstr.x = midstr.x;
 				DPoint3d firend = firstr;
 				firend.x = midend.x;
-				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReStr = IsHaveVerticalWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(firstr, firend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelend = true;
 				}
@@ -8120,12 +8136,13 @@ int PlaneRebarAssembly::GetFaceType(MSElementDescrP face, MSElementDescrP upface
 				secstr.x = midstr.x;
 				DPoint3d secend = secstr;
 				secend.x = midend.x;
-				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size()))
+				verReEnd = IsHaveVerticalWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true);
+				if (IsHaveParaWall(secstr, secend, &tmpdescrs.at(0), tmpdescrs.size(), true))
 				{
 					isdelstr = true;
 				}
 			}
-			if (!isdelstr && !isdelend && verRe == 0)
+			if (!isdelstr && !isdelend && (verRe == 0 || verReStr == 0 || verReEnd == 0))
 			{
 				return SideType::Out;
 			}
@@ -11100,7 +11117,7 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 			/*过滤一些墙*/
 			DRange3d faceRange;
 			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
-			if (faceRange.XLength() < 0.6 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.6 * m_ldfoordata.Ylenth)
+			if (faceRange.XLength() < 0.8 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.8 * m_ldfoordata.Ylenth)
 			{
 				if (faceRange.XLength() > faceRange.ZLength())//横墙
 				{
@@ -11350,7 +11367,7 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 			/*过滤一些墙*/
 			DRange3d faceRange;
 			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
-			if (faceRange.XLength() < 0.6 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.6 * m_ldfoordata.Ylenth)
+			if (faceRange.XLength() < 0.8 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.8 * m_ldfoordata.Ylenth)
 			{
 				if (faceRange.XLength() > faceRange.ZLength())//横墙
 				{

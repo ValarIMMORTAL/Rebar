@@ -2465,7 +2465,7 @@ namespace Gallery
 					makeRebarCurve_G(rebarCurves, tmppos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel);
 					rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 				}
-				else if ((secondMaxLength == xLen && i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In ) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
+				else if (( i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In ) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
 				{
 					//在反方向添加一根钢筋
 					auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
@@ -3789,9 +3789,13 @@ namespace Gallery
 					DPoint3d tminP, tmaxP;
 					//计算指定元素描述符中元素的范围。
 					mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-					tmpqj[(int)tminP.x] = (int)tmaxP.x;
-					tmpqj[(int)tmaxP.x] = 0;
-					parafaces.push_back(tmpdescrs[i]);
+
+					if ((int)tmaxP.x <= (int)maxP.x  && (int)tminP.x >= (int)minP.x)
+					{
+						tmpqj[(int)tminP.x] = (int)tmaxP.x;
+						tmpqj[(int)tmaxP.x] = 0;
+						parafaces.push_back(tmpdescrs[i]);
+					}
 				}
 			}
 			map<int, int>::iterator itr = tmpqj.begin();
@@ -4628,8 +4632,9 @@ namespace Gallery
 
 			if (tmpWall_range.low.z < floor_range.low.z && tmpWall_range.high.z > floor_range.high.z && is_one_direction)
 			{
-				m_isMidFloor = true;
-		
+				m_isMidFloor = true;		
+				auto id = walleh.GetElementId();
+
 				for (auto walleh : m_Allwalls)
 				{//遍历所有墙，确定是中间的板之后确定剩余那块墙是在板上还是板下
 					DRange3d tmpWall_range;
@@ -4678,6 +4683,9 @@ namespace Gallery
 			{
 				frontlevel++;
 				tmpLevel = frontlevel;
+
+				m_isMidFloor = false;
+
 				if (m_isMidFloor && m_Allwalls.size() == 3)
 				{
 					if (m_isIndownWall)
@@ -5088,6 +5096,8 @@ namespace Gallery
 					std::vector<EditElementHandle*> Holeehs;
 					EFT::GetSolidElementAndSolidHoles(tmpeeh, Eleeh, Holeehs);
 					MSElementDescrP resultEdp = nullptr;
+
+					//mdlElmdscr_add(downface);
 					PITCommonTool::CSolidTool::SolidBoolWithFace(resultEdp, downface, Eleeh.GetElementDescrP(),
 						BOOLOPERATION_INTERSECT);
 					/*EditElementHandleP resultEdp = nullptr;
@@ -5096,11 +5106,16 @@ namespace Gallery
 					//mdlElmdscr_addByModelRef(downface, ACTIVEMODEL);
 					////mdlElmdscr_addByModelRef(Eleeh.GetElementDescrP(), ACTIVEMODEL);
 					//mdlElmdscr_add(tmpeeh.GetElementDescrP());
-					//DRange3d faceRange, eehRange;
-					//mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, downface, NULL);
-					//mdlElmdscr_computeRange(&eehRange.low, &eehRange.high, tmpeeh.GetElementDescrP(), NULL);
-					//
-					if (nullptr == resultEdp)
+					DRange3d faceRange, eehRange;
+					mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, downface, NULL);
+					mdlElmdscr_computeRange(&eehRange.low, &eehRange.high, tmpeeh.GetElementDescrP(), NULL);
+					int flag = -1;
+					if (eehRange.low.z <= faceRange.low.z && eehRange.high.z >= faceRange.high.z)
+					{
+						flag = 1;
+					}
+
+					if (nullptr == resultEdp  && flag == -1)
 					{
 						continue;
 					}
