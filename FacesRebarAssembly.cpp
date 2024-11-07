@@ -6126,6 +6126,8 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	}
 	if (distance != 0)
 		m_slabThickness = distance;
+	//尽可能消除噪声
+	m_slabThickness = round(m_slabThickness / 10.0) * 10.0;
 
 	//面配筋时求板的厚度
 
@@ -6822,19 +6824,20 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 	Dpoint3d ptfaceStart, ptfaceEnd;
 	mdlElmdscr_computeRange(&ptfaceStart, &ptfaceEnd, m_face.GetElementDescrCP(), nullptr);
 	Dpoint3d mid = DPoint3d::From((ptfaceStart.x + ptfaceEnd.x) / 2, (ptfaceStart.y + ptfaceEnd.y) / 2, (ptfaceStart.z + ptfaceEnd.z) / 2);
-	double FHight = 0.0;
+	//Z型板取到的高度有误，改为在AnalyzingFaceGeometricData得到的板厚度m_slabThickness
+	//double FHight = 0.0;
 	if (mid.z > midDown.z)
 	{
 		DVec3d vecZ = DVec3d::From(0, 0, -1);
-		FHight = abs(mid.z - midDown.z);
-		vecZ.Scale(FHight);
+		//FHight = abs(mid.z - midDown.z);
+		vecZ.Scale(m_slabThickness);
 		MSElementDescrP upface = nullptr;
 		m_face.GetElementDescrCP()->Duplicate(&upface);
 		PITCommonTool::CFaceTool::MoveCenterFaceByMidPt(upface, vecZ);
 		//m_ldfoordata.facedesUp = upface;
 		downface.ReplaceElementDescr(upface);
 	}
-	else
+	/*else
 	{
 		EditElementHandle eehUP;
 		if (!ExtractFacesTool::GetFloorDownFaceForSlab(copyEleeh, eehUP, minPos, false, const_cast<MSElementDescrP>(m_face.GetElementDescrCP())))
@@ -6844,10 +6847,35 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 		mdlElmdscr_computeRange(&ptfaceStartdown, &ptfaceEnddown, eehUP.GetElementDescrCP(), nullptr);
 		Dpoint3d midUp = DPoint3d::From((ptfaceStartdown.x + ptfaceEnddown.x) / 2, (ptfaceStartdown.y + ptfaceEnddown.y) / 2, (ptfaceStartdown.z + ptfaceEnddown.z) / 2);
 
-		FHight = abs(mid.z - midUp.z);
+		//FHight = abs(mid.z - midUp.z);
+	}*/
+
+	//Z型板根据顶底面位置调整坐标，例如底面对应的”顶面“应该是本身z轴向上移动一个厚度得到
+	if(COMPARE_VALUES_EPS(mid.z, minP2.z, 500) == 0 && COMPARE_VALUES_EPS(maxP2.z, mid.z + m_slabThickness, 500) > 0
+	|| COMPARE_VALUES_EPS(mid.z + m_slabThickness, maxP2.z, 500) == 0 && COMPARE_VALUES_EPS(mid.z, minP2.z, 500) > 0)
+	{
+		minP2 = ptfaceStart;
+		maxP2 = ptfaceEnd;
+		maxP2.z += m_slabThickness;
+
+		MSElementDescrP upface = nullptr;
+		m_face.GetElementDescrCP()->Duplicate(&upface);
+		downface.ReplaceElementDescr(upface);
 	}
+	else if(COMPARE_VALUES_EPS(mid.z, maxP2.z, 500) == 0 && COMPARE_VALUES_EPS(mid.z - m_slabThickness, minP2.z, 500) > 0
+	|| COMPARE_VALUES_EPS(mid.z - m_slabThickness, minP2.z, 500) == 0 && COMPARE_VALUES_EPS(maxP2.z, mid.z, 500) > 0)
+	{
+		minP2 = ptfaceStart;
+		minP2.z -= m_slabThickness;
+		maxP2 = ptfaceEnd;
 
-
+		DVec3d vecZ = DVec3d::From(0, 0, -1);
+		vecZ.Scale(m_slabThickness);
+		MSElementDescrP upface = nullptr;
+		m_face.GetElementDescrCP()->Duplicate(&upface);
+		PITCommonTool::CFaceTool::MoveCenterFaceByMidPt(upface, vecZ);
+		downface.ReplaceElementDescr(upface);
+	}
 
 	DVec3d vecZ = DVec3d::UnitZ();
 	DPoint3d facenormal;
@@ -6871,7 +6899,7 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 		tmpangle = PI - tmpangle;
 	}
 	//计算指定元素描述符中元素的范围。
-	mdlElmdscr_computeRange(&minP2, &maxP2, copyEleeh.GetElementDescrP(), NULL);
+	//mdlElmdscr_computeRange(&minP2, &maxP2, copyEleeh.GetElementDescrP(), NULL);
 	DPoint3d minP, maxP;
 	//计算指定元素描述符中元素的范围。
 	mdlElmdscr_computeRange(&minP, &maxP, downface.GetElementDescrP(), NULL);
@@ -6879,7 +6907,7 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 	downface.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(downface, TransformInfo(trans));
 	m_ldfoordata.Ylenth = (maxP.y - minP.y)*uor_now / uor_ref;
 	m_ldfoordata.Xlenth = (maxP.x - minP.x)*uor_now / uor_ref;
-	m_ldfoordata.Zlenth = FHight;//(maxP2.z - minP2.z)*uor_now / uor_ref;
+	m_ldfoordata.Zlenth = m_slabThickness;//FHight;//(maxP2.z - minP2.z)*uor_now / uor_ref;
 	m_ldfoordata.oriPt = minP;
 	m_ldfoordata.Vec = DVec3d::From(facenormal.x, facenormal.y, facenormal.z);
 	m_ldfoordata.facedes = downface.ExtractElementDescr();
@@ -6889,7 +6917,7 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 	//计算整个板的参数
 	m_STslabData.height = (maxP.y - minP.y)*uor_now / uor_ref;
 	m_STslabData.length = (maxP.x - minP.x)*uor_now / uor_ref;
-	m_STslabData.width = (maxP2.z - minP2.z)*uor_now / uor_ref;
+	m_STslabData.width = m_slabThickness;// (maxP2.z - minP2.z)*uor_now / uor_ref;
 	m_STslabData.ptStart = minP;
 	m_STslabData.ptEnd = minP;
 	m_STslabData.ptEnd.x = maxP.x;
@@ -11102,11 +11130,12 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 
 		//计算配筋区间值,平行墙处理
 		map<int, int>  tmpqj;
-
-		if (minP.x < 0)
+		double offset = 0;
+		if (COMPARE_VALUES_EPS(minP.x, 0, 50) == 0)
 		{
-			maxP.x += abs(0 - minP.x);
-			minP.x += abs(0 - minP.x);
+			offset += minP.x;
+			maxP.x -= offset;
+			minP.x -= offset;
 		}
 		tmpqj[(int)minP.x] = (int)maxP.x;//大面区间
 		tmpqj[(int)maxP.x] = 0;//大面区间
@@ -11145,11 +11174,16 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				DPoint3d tminP, tmaxP;
 				//计算指定元素描述符中元素的范围。
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-				if (tminP.x < 0)
+				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) < 0)
 				{
-					tmaxP.x += abs(0 - tminP.x);
-					tminP.x += abs(0 - tminP.x);
+					tminP.x = 0;
 				}
+				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) == 0)
+				{
+					offset += tminP.x;
+				}
+				tmaxP.x -= offset;
+				tminP.x -= offset;
 				tmpqj[(int)tminP.x] = (int)tmaxP.x;
 				tmpqj[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -11350,16 +11384,16 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 
 		//计算配筋区间值,平行钢筋处理
 		map<int, int>  tmpqj;
-		//if (minP.z < 0)
-		//{
-		//	tmpqj[0] = (int)maxP.z;//大面区间
-		//	tmpqj[(int)maxP.z - minP.z] = 0;//大面区间
-		//}
-		//else 
+		double offset = 0;
+		if (COMPARE_VALUES_EPS(minP.z, 0, 50) == 0)
 		{
-			tmpqj[(int)minP.z] = (int)maxP.z;//大面区间
-			tmpqj[(int)maxP.z] = 0;//大面区间
+			offset += minP.z;
+			maxP.z -= offset;
+			minP.z -= offset;
 		}
+		tmpqj[(int)minP.z] = (int)maxP.z;//大面区间
+		tmpqj[(int)maxP.z] = 0;//大面区间
+		
 
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
@@ -11398,6 +11432,16 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
 				//tmpqj[m_ldfoordata.Ylenth - (int)tminP.z] = m_ldfoordata.Ylenth - (int)tmaxP.z;
 				//tmpqj[m_ldfoordata.Ylenth - (int)tmaxP.z] = 0;
+				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) < 0)
+				{
+					tminP.z = 0;
+				}
+				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) == 0)
+				{
+					offset += tminP.z;
+				}
+				tmaxP.z -= offset;
+				tminP.z -= offset;
 				tmpqj[(int)tminP.z] = (int)tmaxP.z;
 				tmpqj[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -11733,13 +11777,15 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
 		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
 
-		if (minP.x < 0)
-		{
-			maxP.x += abs(0 - minP.x);
-			minP.x += abs(0 - minP.x);
-		}
 		//计算配筋区间值,平行墙处理
 		map<int, int>  tmpqj;
+		double offset = 0;
+		if (COMPARE_VALUES_EPS(minP.x, 0, 50) == 0)
+		{
+			offset += minP.x;
+			maxP.x -= offset;
+			minP.x -= offset;
+		}
 		tmpqj[(int)minP.x] = (int)maxP.x;//大面区间
 		tmpqj[(int)maxP.x] = 0;//大面区间
 		vector<MSElementDescrP> parafaces;//平行墙
@@ -11776,11 +11822,16 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				DPoint3d tminP, tmaxP;
 				//计算指定元素描述符中元素的范围。
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-				if (tminP.x < 0)
+				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) < 0)
 				{
-					tmaxP.x += abs(0 - tminP.x);
-					tminP.x += abs(0 - tminP.x);
+					tminP.x = 0;
 				}
+				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) == 0)
+				{
+					offset += tminP.x;
+				}
+				tmaxP.x -= offset;
+				tminP.x -= offset;
 				tmpqj[(int)tminP.x] = (int)tmaxP.x;
 				tmpqj[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -11981,6 +12032,13 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 
 		//计算配筋区间值,平行钢筋处理
 		map<int, int>  tmpqj;
+		double offset = 0;
+		if (COMPARE_VALUES_EPS(minP.z, 0, 50) == 0)
+		{
+			offset += minP.z;
+			maxP.z -= offset;
+			minP.z -= offset;
+		}
 		tmpqj[(int)minP.z] = (int)maxP.z;//大面区间
 		tmpqj[(int)maxP.z] = 0;//大面区间
 		vector<MSElementDescrP> parafaces;//平行墙
@@ -12024,6 +12082,16 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
 				// tmpqj[m_ldfoordata.Ylenth - (int)tminP.z] = m_ldfoordata.Ylenth - (int)tmaxP.z;
 				// tmpqj[m_ldfoordata.Ylenth - (int)tmaxP.z] = 0;
+				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) < 0)
+				{
+					tminP.z = 0;
+				}
+				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) == 0)
+				{
+					offset += tminP.z;
+				}
+				tmaxP.z -= offset;
+				tminP.z -= offset;
 				tmpqj[(int)tminP.z] = (int)tmaxP.z;
 				tmpqj[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
