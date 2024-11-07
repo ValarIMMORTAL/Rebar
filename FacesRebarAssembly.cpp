@@ -204,6 +204,16 @@ bool IsHaveParaWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20]
 	return false;
 }
 
+void movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true)
+{
+	vec.Normalize();
+	if (!bFlag)
+	{
+		vec.Negate();
+	}
+	vec.ScaleToLength(disLen);
+	movePt.Add(vec);
+}
 
 // @brief 分析外侧面竖直方向的钢筋是否需要变换锚固方向和锚固长度，;
 // @param range_eeh：		集水坑实体的range
@@ -4390,16 +4400,48 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			}			
 			// END#61271 集水井用“集水井面配筋”功能配出来的钢筋锚固长度没有规避孔洞（已点选规避孔洞功能） ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
+			// 尝试反转锚入集水坑或装饰墙
+			auto checkAndReverseEnd = [&](PITRebarEndType &endTypeTmp) {
+				if (endTypeTmp.GetType() != PITRebarEndType::kBend)
+					return;
+				CVector3D vector = endTypeTmp.GetendNormal();
+				DPoint3d  endPtTemp = endTypeTmp.GetptOrgin();
+				DPoint3d  endPtTempEx = endPtTemp;
+				double length = endTypeTmp.GetbendLen() + endTypeTmp.GetbendRadius();
+				movePoint(vector, endPtTemp, length);
+				vector.Negate();
+				movePoint(vector, endPtTempEx, length);
+				// 正常情况，已经锚入到板内合适位置，且反转后不在
+				if (ISPointInElement(m_pOldElm, endPtTemp) && !ISPointInElement(m_pOldElm, endPtTempEx))
+				{
+					for (auto wall : m_Allwalls)
+					{
+						EditElementHandle eehWall(wall.GetElementRef(), wall.GetDgnModelP());
+						if (!ISPointInElement(&eehWall, endPtTempEx))
+							continue;
+						// 能锚入到其它实体
+						endTypeTmp.SetendNormal(vector);
+					}
+				}
+				// 异常情况，本身就是锚空，则反转，如果反转也锚空则取消锚入
+				else if(!ISPointInElement(m_pOldElm, endPtTemp))
+				{
+					if (!ISPointInElement(m_pOldElm, endPtTempEx))
+						endTypeTmp.SetType(PITRebarEndType::kNone);
+					else
+						endTypeTmp.SetendNormal(vector);
+				}
+			};
+			checkAndReverseEnd(endTypesTmp.beg);
+			checkAndReverseEnd(endTypesTmp.end);
+
 			vex = &rebar.PopVertices().NewElement();
 			vex->SetIP(ptEnd);
 			vex->SetType(RebarVertex::kEnd);
 
-
-
 			// 			EditElementHandle eeh;
 			// 			LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptStart, ptEnd), true, *ACTIVEMODEL);
 			// 			eeh.AddToModel();
-
 
 			rebar.EvaluateEndTypes(endTypesTmp);
 
