@@ -4400,40 +4400,35 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			}			
 			// END#61271 集水井用“集水井面配筋”功能配出来的钢筋锚固长度没有规避孔洞（已点选规避孔洞功能） ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-			// 尝试反转锚入集水坑或装饰墙
-			auto checkAndReverseEnd = [&](PITRebarEndType &endTypeTmp) {
-				if (endTypeTmp.GetType() != PITRebarEndType::kBend)
-					return;
-				CVector3D vector = endTypeTmp.GetendNormal();
-				DPoint3d  endPtTemp = endTypeTmp.GetptOrgin();
-				DPoint3d  endPtTempEx = endPtTemp;
-				double length = endTypeTmp.GetbendLen() + endTypeTmp.GetbendRadius();
-				movePoint(vector, endPtTemp, length);
-				vector.Negate();
-				movePoint(vector, endPtTempEx, length);
-				// 正常情况，已经锚入到板内合适位置，且反转后不在
-				if (ISPointInElement(m_pOldElm, endPtTemp) && !ISPointInElement(m_pOldElm, endPtTempEx))
-				{
+			// 外侧尝试反转锚入集水坑或装饰墙
+			if(m_sidetype == SideType::Out)
+			{
+				auto checkAndAnchor = [&](PITRebarEndType &endTypeTmp) {
+					if (endTypeTmp.GetType() != PITRebarEndType::kBend)
+						return;
+					CVector3D vector = endTypeTmp.GetendNormal();
+					DPoint3d  endPtTemp = endTypeTmp.GetptOrgin();
+					DPoint3d  endPtTempEx = endPtTemp;
+					double length = endTypeTmp.GetbendLen() + endTypeTmp.GetbendRadius();
+					bool canAcnhor = false;
+					bool isAnchored = false;
+					movePoint(vector, endPtTemp, length);
+					vector.Negate();
+					movePoint(vector, endPtTempEx, length);
 					for (auto wall : m_Allwalls)
 					{
 						EditElementHandle eehWall(wall.GetElementRef(), wall.GetDgnModelP());
-						if (!ISPointInElement(&eehWall, endPtTempEx))
-							continue;
-						// 能锚入到其它实体
-						endTypeTmp.SetendNormal(vector);
+						if (ISPointInElement(&eehWall, endPtTemp))
+							isAnchored = true;
+						if (ISPointInElement(&eehWall, endPtTempEx))
+							canAcnhor = true;
 					}
-				}
-				// 异常情况，本身就是锚空，则反转，如果反转也锚空则取消锚入
-				else if(!ISPointInElement(m_pOldElm, endPtTemp))
-				{
-					if (!ISPointInElement(m_pOldElm, endPtTempEx))
-						endTypeTmp.SetType(PITRebarEndType::kNone);
-					else
+					if (!isAnchored && canAcnhor)// 能锚入到其它实体
 						endTypeTmp.SetendNormal(vector);
-				}
-			};
-			checkAndReverseEnd(endTypesTmp.beg);
-			checkAndReverseEnd(endTypesTmp.end);
+				};
+				checkAndAnchor(endTypesTmp.beg);
+				checkAndAnchor(endTypesTmp.end);
+			}
 
 			vex = &rebar.PopVertices().NewElement();
 			vex->SetIP(ptEnd);
