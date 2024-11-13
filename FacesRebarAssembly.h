@@ -338,7 +338,7 @@ public:
 	//集水坑
 	void CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double benrandis, double la0, double lae, double diameter, int irebarlevel, bool isInface = true, bool bisSumps = false, bool isYdir = false);
 	// 处理竖向钢筋对于Z型板的钢筋分区
-	bool CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP);
+	bool CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP, bool isXDir = true);
 	//分析内面钢筋信息，包括端部样式等
 	void CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		MSElementDescrP tmpupfaces[40],

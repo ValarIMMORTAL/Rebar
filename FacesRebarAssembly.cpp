@@ -5450,7 +5450,7 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 					for (auto it : m_insidef.pos)
 					{
 						double length = it.end - it.str;
-						if (maxLength < length)
+						if (maxLength < length && COMPARE_VALUES_EPS(length, m_slabThickness, 50) != 0)
 							maxLength = length;
 					}
 					for (int j = 0; j < m_insidef.posnum; j++)
@@ -5483,7 +5483,7 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 					for (auto it : m_outsidef.pos)
 					{
 						double length = it.end - it.str;
-						if (maxLength < length)
+						if (maxLength < length && COMPARE_VALUES_EPS(length, m_slabThickness, 50) != 0)
 							maxLength = length;
 					}
 					for (int j = 0; j < m_outsidef.posnum; j++)
@@ -5686,12 +5686,24 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 
 				if (m_sidetype == SideType::In)
 				{
+					double maxLength = 0;
+					for (auto it : m_insidef.pos)
+					{
+						double length = it.end - it.str;
+						if (maxLength < length && COMPARE_VALUES_EPS(length, m_slabThickness, 50) != 0)
+							maxLength = length;
+					}
 					for (int j = 0; j < m_insidef.posnum; j++)
 					{
 						double nowLen = m_insidef.pos[j].end - m_insidef.pos[j].str;
 						double tmpStartOffset = startOffset + m_insidef.pos[j].str;
 						m_insidef.strval = m_insidef.pos[j].strval;
 						m_insidef.endval = m_insidef.pos[j].endval;
+						if (m_zCorner && nowLen < 1201 * UOR_PER_MilliMeter && nowLen != maxLength)//最边缘的外侧面的起始和终端两条钢筋需要删除
+						{
+							m_strDelete = true;
+							m_endDelete = true;
+						}
 						PopvecSetId().push_back(0);
 						tag = MakeRebars(PopvecSetId().back(), lineSeg1, linesegment2, rebarDir, strRebarSize, nowLen, spacing, tmpStartOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 						if (NULL != tag)
@@ -5699,6 +5711,8 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 							tag->SetBarSetTag(j + 1);
 							rsetTags.Add(tag);
 						}
+						m_strDelete = false;
+						m_endDelete = false;
 					}
 				}
 				else if (m_sidetype == SideType::Out)
@@ -5707,7 +5721,7 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 					for (auto it : m_outsidef.pos)
 					{
 						double length = it.end - it.str;
-						if (maxLength < length)
+						if (maxLength < length && COMPARE_VALUES_EPS(length, m_slabThickness, 50) != 0)
 							maxLength = length;
 					}
 					for (int j = 0; j < m_outsidef.posnum; j++)
@@ -10819,7 +10833,7 @@ void PlaneRebarAssembly::CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchord
 }
 
 // 处理竖向钢筋对于Z型板的钢筋分区。如果本面更长则进行分区，无论长短都需要在拐角增加平面
-bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP)
+bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP, bool isXDir)
 {
 	DPoint3d ptDefault = DPoint3d::From(0, 0, 1);
 	DVec3d vecfacenor;
@@ -10838,54 +10852,65 @@ bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElement
 	}
 
 	double eps = 100 * UOR_PER_MilliMeter;//同一面左右高度可能有较大偏差
-	DPoint3d ptStart = m_LineSeg1.GetLineStartPoint();
-	DPoint3d ptEnd = m_LineSeg1.GetLineEndPoint();
+	DPoint3d ptStart = isXDir ? m_LineSeg1.GetLineStartPoint() : m_LineSeg2.GetLineStartPoint();
+	DPoint3d ptEnd = isXDir ? m_LineSeg1.GetLineEndPoint() : m_LineSeg2.GetLineEndPoint();
+	double start = isXDir ? ptStart.x : ptStart.y;
+	double end = isXDir ? ptEnd.x : ptEnd.y;
 	for (size_t index = 0; index < allParalFaces.size(); index++)
 	{
 		Dpoint3d ptFaceMin, ptFaceMax;
 		mdlElmdscr_computeRange(&ptFaceMin, &ptFaceMax, allParalFaces[index]->GetElementDescrCP(), nullptr);
+		double faceStart = isXDir ? ptFaceMin.x : ptFaceMin.y;
+		double faceEnd = isXDir ? ptFaceMax.x : ptFaceMax.y;
+		
 		if (COMPARE_VALUES_EPS(abs(ptStart.z - ptFaceMin.z), m_slabThickness, eps) != 0)
 			continue;
-		if (COMPARE_VALUES_EPS(m_LineSeg1.GetLength(), abs(ptFaceMax.x - ptFaceMin.x), eps) == 0)
+		if (COMPARE_VALUES_EPS(m_LineSeg1.GetLength(), abs(faceEnd - faceStart), eps) == 0)
 			continue;
 		DPoint3d pts[4] = { 0 };
-		if (COMPARE_VALUES_EPS(ptFaceMin.x - ptStart.x, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(ptFaceMax.x, ptEnd.x, eps) == 0) {
+		if (COMPARE_VALUES_EPS(faceStart - start, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(faceEnd, end, eps) == 0) {
 			// 左长，从对面构建平面，填充分区
 			pts[0] = DPoint3d::From(ptStart.x, ptStart.y, ptFaceMin.z);
 			pts[1] = DPoint3d::From(ptFaceMin.x, ptStart.y, ptFaceMin.z);
 			pts[2] = DPoint3d::From(ptFaceMin.x, ptFaceMax.y, ptFaceMin.z);
 			pts[3] = DPoint3d::From(ptStart.x, ptFaceMax.y, ptFaceMin.z);
 
-			tmpqj[0] = (int)(ptFaceMin.x - ptStart.x);
-			tmpqj[(int)(ptFaceMin.x - ptStart.x)] = 0;
+			tmpqj[0] = (int)(faceStart - start);
+			tmpqj[(int)(faceStart - start)] = 0;
 		}
-		else if (COMPARE_VALUES_EPS(ptStart.x - ptFaceMin.x, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(ptFaceMax.x, ptEnd.x, eps) == 0) {
-			// 左短，从自身构建平面
+		else if (COMPARE_VALUES_EPS(start - faceStart, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(faceEnd, end, eps) == 0) {
+			// 左短，从自身构建平面，扩大分区范围
 			pts[0] = DPoint3d::From(ptStart.x, ptStart.y, ptStart.z);
 			pts[1] = DPoint3d::From(ptFaceMin.x, ptStart.y, ptStart.z);
 			pts[2] = DPoint3d::From(ptFaceMin.x, ptFaceMax.y, ptStart.z);
 			pts[3] = DPoint3d::From(ptStart.x, ptFaceMax.y, ptStart.z);
 
-			minP.x -= m_slabThickness;
+			if(isXDir)//XOZ平面需要使用x和z计算
+				minP.x -= m_slabThickness;
+			else
+				minP.z -= m_slabThickness;
 		}
-		else if (COMPARE_VALUES_EPS(ptFaceMin.x, ptStart.x, eps) == 0 && COMPARE_VALUES_EPS(ptFaceMax.x - ptEnd.x, m_slabThickness, eps) == 0) {
-			// 右短，从自身构建平面
+		else if (COMPARE_VALUES_EPS(faceStart, start, eps) == 0 && COMPARE_VALUES_EPS(faceEnd - end, m_slabThickness, eps) == 0) {
+			// 右短，从自身构建平面，扩大分区范围
 			pts[0] = DPoint3d::From(ptEnd.x, ptEnd.y, ptEnd.z);
 			pts[1] = DPoint3d::From(ptFaceMax.x, ptEnd.y, ptEnd.z);
 			pts[2] = DPoint3d::From(ptFaceMax.x, ptFaceMax.y, ptEnd.z);
 			pts[3] = DPoint3d::From(ptEnd.x, ptFaceMax.y, ptEnd.z);
 
-			maxP.x += m_slabThickness;
+			if(isXDir)
+				maxP.x += m_slabThickness;
+			else
+				maxP.z += m_slabThickness;
 		}
-		else if (COMPARE_VALUES_EPS(ptFaceMin.x, ptStart.x, eps) == 0 && COMPARE_VALUES_EPS(ptEnd.x - ptFaceMax.x, m_slabThickness, eps) == 0) {
+		else if (COMPARE_VALUES_EPS(faceStart, start, eps) == 0 && COMPARE_VALUES_EPS(end - faceEnd, m_slabThickness, eps) == 0) {
 			// 右长，从对面构建平面，填充分区
 			pts[0] = DPoint3d::From(ptFaceMax.x, ptEnd.y, ptFaceMax.z);
 			pts[1] = DPoint3d::From(ptEnd.x, ptEnd.y, ptFaceMax.z);
 			pts[2] = DPoint3d::From(ptEnd.x, ptFaceMax.y, ptFaceMax.z);
 			pts[3] = DPoint3d::From(ptFaceMax.x, ptFaceMax.y, ptFaceMax.z);
 
-			tmpqj[(int)(ptFaceMin.x - ptStart.x)] = (int)(ptFaceMax.x - ptStart.x);
-			tmpqj[(int)(ptFaceMax.x - ptStart.x)] = 0;
+			tmpqj[(int)(faceStart - start)] = (int)(faceEnd - start);
+			tmpqj[(int)(faceEnd - start)] = 0;
 		}
 		if (pts[0].IsEqual(DPoint3d::From(0, 0, 0)))
 			continue;
@@ -11208,16 +11233,20 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				DPoint3d tminP, tmaxP;
 				//计算指定元素描述符中元素的范围。
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) < 0)
-				{
-					tminP.x = 0;
-				}
 				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) == 0)
 				{
 					offset += tminP.x;
 				}
 				tmaxP.x -= offset;
 				tminP.x -= offset;
+				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) < 0)
+				{
+					tminP.x = 0;
+				}
+				if (COMPARE_VALUES_EPS(tmaxP.x, maxP.x, 50) > 0)
+				{
+					tmaxP.x = maxP.x;
+				}
 				tmpqj[(int)tminP.x] = (int)tmaxP.x;
 				tmpqj[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -11466,21 +11495,28 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
 				//tmpqj[m_ldfoordata.Ylenth - (int)tminP.z] = m_ldfoordata.Ylenth - (int)tmaxP.z;
 				//tmpqj[m_ldfoordata.Ylenth - (int)tmaxP.z] = 0;
-				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) < 0)
-				{
-					tminP.z = 0;
-				}
 				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) == 0)
 				{
 					offset += tminP.z;
 				}
 				tmaxP.z -= offset;
 				tminP.z -= offset;
+				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) < 0)
+				{
+					tminP.z = 0;
+				}
+				if (COMPARE_VALUES_EPS(tmaxP.z, maxP.z, 50) > 0)
+				{
+					tmaxP.z = maxP.z;
+				}
 				tmpqj[(int)tminP.z] = (int)tmaxP.z;
 				tmpqj[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
+
+		CalculateZCorner(tmpqj, parafaces, minP, maxP, false);
+
 		map<int, int>::iterator itr = tmpqj.begin();
 		for (; itr != tmpqj.end(); itr++)
 		{
@@ -11856,16 +11892,20 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				DPoint3d tminP, tmaxP;
 				//计算指定元素描述符中元素的范围。
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) < 0)
-				{
-					tminP.x = 0;
-				}
 				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) == 0)
 				{
 					offset += tminP.x;
 				}
 				tmaxP.x -= offset;
 				tminP.x -= offset;
+				if (COMPARE_VALUES_EPS(tminP.x, 0, 50) < 0)
+				{
+					tminP.x = 0;
+				}
+				if (COMPARE_VALUES_EPS(tmaxP.x, maxP.x, 50) > 0)
+				{
+					tmaxP.x = maxP.x;
+				}
 				tmpqj[(int)tminP.x] = (int)tmaxP.x;
 				tmpqj[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
@@ -12116,21 +12156,28 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
 				// tmpqj[m_ldfoordata.Ylenth - (int)tminP.z] = m_ldfoordata.Ylenth - (int)tmaxP.z;
 				// tmpqj[m_ldfoordata.Ylenth - (int)tmaxP.z] = 0;
-				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) < 0)
-				{
-					tminP.z = 0;
-				}
 				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) == 0)
 				{
 					offset += tminP.z;
 				}
 				tmaxP.z -= offset;
 				tminP.z -= offset;
+				if (COMPARE_VALUES_EPS(tminP.z, 0, 50) < 0)
+				{
+					tminP.z = 0;
+				}
+				if (COMPARE_VALUES_EPS(tmaxP.z, maxP.z, 50) > 0)
+				{
+					tmaxP.z = maxP.z;
+				}
 				tmpqj[(int)tminP.z] = (int)tmaxP.z;
 				tmpqj[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
+
+		CalculateZCorner(tmpqj, parafaces, minP, maxP, false);
+
 		map<int, int>::iterator itr = tmpqj.begin();
 		for (; itr != tmpqj.end(); itr++)
 		{
