@@ -3859,7 +3859,16 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			//vex->SetIP(ptStart);
 			//vex->SetType(RebarVertex::kStart);
 			//endTypesTmp.beg.SetptOrgin(ptStart);
-
+			vector<EditElementHandle*> alleehs;
+			for (auto wall : m_Allwalls)
+			{
+				EditElementHandle eehWall(wall.GetElementRef(), wall.GetDgnModelP());
+				alleehs.push_back(&eehWall);
+			}
+			alleehs.push_back(m_pOldElm);
+			CVector3D vector = endTypesTmp.beg.GetendNormal();
+			double length = endTypesTmp.beg.GetbendLen() + endTypesTmp.beg.GetbendRadius();
+			//JudgeBarLinesLegitimate(vec2, alleehs, endTypesTmp, lineEeh, m_pOldElm, vector, matrix, strMoveDis, length, strPt, STR_PTR, flag_str);
 
 			if (itrplus == map_pts.end())
 			{
@@ -3974,8 +3983,19 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 						//end
 						if (m_insidef.bEndAnhorsel)
 						{
-							vec1.ScaleToLength(m_insidef.dEndanchoroffset);
-							ptEnd.Add(vec1);
+							DPoint3d ptTest = ptEnd;
+							DVec3d vecTest = vec1;
+							vecTest.ScaleToLength(m_insidef.dEndanchoroffset);
+							ptTest.Add(vecTest);
+							if (!ISPointInHoles(m_Holeehs, ptTest))
+							{
+								vec1.ScaleToLength(m_insidef.dEndanchoroffset);
+								ptEnd.Add(vec1);
+							}
+							else
+							{
+								GetHoleRebarAnchor(ptEnd, ptStart, ptEnd, endTypesTmp.end);
+							}
 						}
 						if (m_insidef.calLen > 1.0) //防止没值时把Vec变为0 
 						{
@@ -13449,4 +13469,157 @@ void CamberedSurfaceRebarAssembly::CalculateUseHoles(DgnModelRefP modelRef)
 	}
 }
 
+/*
+* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
+* @param[in]	nowVec  判断是竖直方向还是水平方向
+* @param[in]	alleehs 周围元素
+* @param[in]	tmpendEndTypes 端部样式
+* @param[in]	lineEeh 钢筋线
+* @param[in]    Eleeh  开孔之前的实体（墙、板）
+* @param[in]	direction  锚入角度，方向
+* @param[in]	matrix  投影矩阵
+* @param[in]	MoveDis 保护层距离
+* @param[in]	lenth   锚入长度
+* @param[in]	Point   端点位置
+* @param[in]	Point2   修改端点位置
+* @param[in]	FLAGE   是否不需要端部样式，如果FLAGE=1表示不需要端部样式，如果FLAGE=2表示尾端点位置修改为Point2位置
+* @param[in/out]	data 配筋线数据
+* @author	ChenDong
+* @Date:	2024/10/17
+*/
+void PlaneRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec, vector<EditElementHandle*>alleehs, PIT::PITRebarEndTypes&  tmpendEndTypes,
+	EditElementHandle &lineEeh, EditElementHandle* Eleeh, CVector3D direction,
+	Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &FLAGE)
+{
+	bool is_str = false;//是否为起始点
+	DPoint3d using_pt;
+	DPoint3d mid_end_pt;//钢筋端部中点判断
+	vector<DPoint3d> tmppts;//实体交点
+	DPoint3d str_Pt = { 0,0,0 }, end_Pt = { 0,0,0 };
+	mdlElmdscr_extractEndPoints(&str_Pt, nullptr, &end_Pt, nullptr, lineEeh.GetElementDescrP(), ACTIVEMODEL);
+	double dSideCover = 0;
 
+	using_pt = Point;
+	movePoint(direction, using_pt, lenth);
+
+	//钢筋线端点和钢筋端点位置是否锚出
+	if (!ISPointInHoles(alleehs, Point) || !ISPointInHoles(alleehs, using_pt))
+	{
+		if (FLAGE == 0)//说明是起始点
+			is_str = true;
+		int flag = 0;
+		//端部样式是直角锚还是倾斜锚入
+		if (direction.x == floor(direction.x) && direction.y == floor(direction.y) && direction.z == floor(direction.z))
+		{
+			direction.Negate();
+			flag = 1;//端部弯弧为直角
+		}
+		else
+		{
+			direction.x = direction.x;
+			direction.y = -direction.y;
+			direction.z = direction.z;
+		}
+		using_pt = Point;
+		mid_end_pt = Point;
+		//方向取反再求一次位置
+		movePoint(direction, using_pt, lenth);
+		movePoint(direction, mid_end_pt, lenth / 2);
+		//如果钢筋线末端点没有锚入任何实体    
+		if (!ISPointInHoles(alleehs, Point))
+		{
+			FLAGE = 2;
+			//PITCommonTool::CPointTool::DrowOnePoint(Point, 1, 3);//绿
+			mdlElmdscr_extractEndPoints(&str_Pt, nullptr, &end_Pt, nullptr, lineEeh.GetElementDescrP(), ACTIVEMODEL);
+			//执行钢筋与原实体作交
+			GetIntersectPointsWithOldElm(tmppts, Eleeh, str_Pt, end_Pt, dSideCover, matrix);
+			//与原实体有交点
+			if (tmppts.size() > 1)
+			{
+				//回缩一个保护层的距离
+				CVector3D vectortepm = end_Pt - using_pt;
+				vectortepm.Normalize();
+				vectortepm.ScaleToLength(MoveDis);
+				using_pt.Add(vectortepm);
+				lenth = MoveDis + tmpendEndTypes.end.GetbendRadius();
+
+				if (is_str)//说明是起始点
+					Point2 = tmppts[tmppts.size() - 1];
+				else
+					Point2 = tmppts[tmppts.size() - 2];
+
+				if (COMPARE_VALUES_EPS(abs(nowVec.z), 1, EPS) == 0)//竖直方向上
+				{
+					if (is_str)
+						Point2.z = Point2.z + lenth;
+					else
+						Point2.z = Point2.z - lenth;
+				}
+
+				else if (COMPARE_VALUES_EPS(abs(nowVec.x), 1, 0.1) == 0 || COMPARE_VALUES_EPS(abs(nowVec.y), 1, 0.1) == 0)//水平方向上
+				{
+					if (is_str)
+						Point2.x = Point2.x + lenth;
+					else
+						Point2.x = Point2.x - lenth;
+				}
+				if (!ISPointInHoles(alleehs, Point2))//判断是否在实体内，不在则反向
+				{
+					direction.Negate();
+				}
+			}
+		}
+		//钢筋末端点仍然没有锚入任何实体，在实体内截断
+		else if (!ISPointInHoles(alleehs, using_pt) || !ISPointInHoles(alleehs, mid_end_pt))
+		{
+			if (flag == 1)//端部弯弧为直角
+			{
+				FLAGE = 2;
+				using_pt = Point;
+				DPoint3d end_pt = Point;
+				direction.Negate();//方向还原
+
+				Point2 = Point;
+				auto temp = Point;
+				movePoint(direction, using_pt, lenth);
+				GetIntersectPointsWithHoles(tmppts, alleehs, using_pt, temp, dSideCover, matrix);
+				GetIntersectPointsWithHolesByInsert(tmppts, alleehs, using_pt, Point, dSideCover, matrix);
+
+				//如果与原模型有交点
+				if (tmppts.size() > 0)
+				{
+					CVector3D vectortepm = end_pt - using_pt;
+					vectortepm.Normalize();
+					vectortepm.ScaleToLength(MoveDis);
+					using_pt.Add(vectortepm);
+
+					lenth = MoveDis + tmpendEndTypes.end.GetbendRadius();
+					using_pt = Point;
+					movePoint(direction, using_pt, lenth);
+					//PITCommonTool::CPointTool::DrowOnePoint(using_pt, 1, 1);//绿
+					if (!ISPointInHoles(alleehs, using_pt))
+					{
+						direction.Negate();//方向还原
+
+						lenth -= tmpendEndTypes.end.GetbendRadius();
+					}
+
+					if (is_str)//说明是起始点
+						tmpendEndTypes.beg.SetbendLen(lenth);
+					else
+						tmpendEndTypes.end.SetbendLen(lenth);
+				}
+			}
+			else//端部弯弧不为直角有可能会延伸出模型
+			{
+				FLAGE = 3;
+			}
+		}
+
+		if (is_str)//说明是起始点
+			tmpendEndTypes.beg.SetendNormal(direction);
+		else//说明是末端点
+			tmpendEndTypes.end.SetendNormal(direction);
+
+	}
+}
