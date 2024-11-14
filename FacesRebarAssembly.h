@@ -335,27 +335,6 @@ public:
 	* @Date:	2024/3/1
 	*/
 	void CutRebarAnchorLeng(Dpoint3d ptStr, CVector3D vecAnchor, int rebarLevel, double& dAnchorleng);
-	/*
-	* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
-	* @param[in]	nowVec  判断是竖直方向还是水平方向
-	* @param[in]	alleehs 周围元素
-	* @param[in]	tmpendEndTypes 端部样式
-	* @param[in]	lineEeh 钢筋线
-	* @param[in]    Eleeh  开孔之前的实体（墙、板）
-	* @param[in]	direction  锚入角度，方向
-	* @param[in]	matrix  投影矩阵
-	* @param[in]	MoveDis 保护层距离
-	* @param[in]	lenth   锚入长度
-	* @param[in]	Point   端点位置
-	* @param[in]	Point2   修改端点位置
-	* @param[in]	FLAGE   是否不需要端部样式，如果FLAGE=1表示不需要端部样式，如果FLAGE=2表示尾端点位置修改为Point2位置
-	* @param[in/out]	data 配筋线数据
-	* @author	ChenDong
-	* @Date:	2024/10/17
-	*/
-	void JudgeBarLinesLegitimate(CVector3D  nowVec, vector<EditElementHandle*>alleehs, PIT::PITRebarEndTypes& tmpendEndTypes,
-		EditElementHandle &lineEeh, EditElementHandle *Eleeh, CVector3D direction
-		, Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &FLAGE);
 	//集水坑
 	void CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double benrandis, double la0, double lae, double diameter, int irebarlevel, bool isInface = true, bool bisSumps = false, bool isYdir = false);
 	// 处理竖向钢筋对于Z型板的钢筋分区
