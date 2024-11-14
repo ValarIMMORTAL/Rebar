@@ -1196,8 +1196,11 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 	EditElementHandle ehWall(GetSelectedElement(), GetSelectedModel());
 	EditElementHandle Eleeh;
 	std::vector<EditElementHandle*> Holeehs;
+	if (!ehWall.IsValid())
+	{
+		return false;
+	}
 	EFT::GetSolidElementAndSolidHoles(ehWall, Eleeh, Holeehs);//获取开孔之前的墙体
-
 	if (Eleeh.IsValid()) // 与原实体相交(无孔洞)
 	{
 		//Eleeh.AddToModel();
@@ -2278,6 +2281,7 @@ RebarSetTag * STWallRebarAssembly::MakeRebars(ElementId & rebarSetId, BrStringCR
 	double adjustedSpacing = spacing;
 
 	EditElementHandle ehWall(GetSelectedElement(), GetSelectedModel());//自身
+
 	std::vector<EditElementHandle*> upflooreehs;
 	std::vector<EditElementHandle*> flooreehs;
 	std::vector<EditElementHandle*>Walleehs;
@@ -2373,15 +2377,18 @@ RebarSetTag * STWallRebarAssembly::MakeRebars(ElementId & rebarSetId, BrStringCR
 
 	EditElementHandle *eeh = new EditElementHandle();//顶板还需要加入自身
 	eeh->Duplicate(ehWall);
-	ISolidKernelEntityPtr entityPtr;
-	if (SolidUtil::Convert::ElementToBody(entityPtr, *eeh) == SUCCESS)
+	ISolidKernelEntityPtr entityPtr; 
+	if (ehWall.IsValid() && eeh->IsValid())
 	{
-		SolidUtil::Convert::BodyToElement(*eeh, *entityPtr, nullptr, *ACTIVEMODEL);
-		eeh->GetElementDescrP();
-		upflooreehs.push_back(eeh);
-		//Walleehs.push_back(eeh);
-		//downflooreehs.push_back(eeh);
-		alleehs.push_back(eeh);
+		if (SolidUtil::Convert::ElementToBody(entityPtr, *eeh) == SUCCESS)
+		{
+			SolidUtil::Convert::BodyToElement(*eeh, *entityPtr, nullptr, *ACTIVEMODEL);
+			eeh->GetElementDescrP();
+			upflooreehs.push_back(eeh);
+			//Walleehs.push_back(eeh);
+			//downflooreehs.push_back(eeh);
+			alleehs.push_back(eeh);
+		}
 	}
 
 	vector<PIT::PITRebarCurve> rebarCurves;
@@ -4328,6 +4335,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 	bool isInsidestr = false;
 	bool isHavefloorstr = false;
 	isHavefloorstr = CalculateBarLineDataByFloor(m_walldata.downfloorfaces, m_walldata.downfloorID, pt1, pt2, vecLine, m_walldata.downfloorth, vecOutwall, isInsidestr, diameterStr);
+	//测试代码显示当前的判断点的位置
 	double mgDisstr = 0;//锚固长度
 	double extendstr = 0;//延升长度
 	DPoint3d mgVecstr;//锚固方向
@@ -6025,7 +6033,8 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 						walldata.upfloorth = thick;
 						walldata.upfloorID.push_back(Same_Eles.at(i));
 					}
-					else  if ((maxP2.z < maxP.z && minP2.z <= minP.z)|| (maxP2.z < maxP.z && minP2.z >= minP.z))//判断是否为底板
+					else if ((maxP2.z >= maxP.z && minP2.z < minP.z) || (minP.z >= maxP2.z))//判断是否为底板
+						//if ((maxP2.z < maxP.z && minP2.z <= minP.z)|| (maxP2.z < maxP.z && minP2.z >= minP.z))//判断是否为底板
 					{
 						walldata.downfloorfaces.push_back(downface);
 						if (thick < walldata.downfloorth || walldata.downfloorth == 0)
@@ -6089,7 +6098,7 @@ bool STWallRebarAssembly::AnalyzingWallGeometricData(ElementHandleCR eh)
 {
 	double uor_now = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
 	double uor_ref = eh.GetModelRef()->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
-
+	auto type = JudgeElementType(eh);
 	DPoint3d FrontStr, FrontEnd;
 	DPoint3d BackStr, BackEnd;
 	std::vector<EditElementHandle*> Negs;
@@ -6113,6 +6122,7 @@ bool STWallRebarAssembly::AnalyzingWallGeometricData(ElementHandleCR eh)
 	m_walldata.ClearData();
 	//2、获取合并后的墙底面包含顶面投影和所有底面的合并
 	m_walldata.downFace = ExtractFacesTool::GetCombineDownFace(copyEleeh);
+
 	if (m_walldata.downFace != nullptr)
 	{
 		//mdlElmdscr_add(m_walldata.downFace);
@@ -6122,13 +6132,12 @@ bool STWallRebarAssembly::AnalyzingWallGeometricData(ElementHandleCR eh)
 	m_walldata.vecBackLine.clear();
 	ExtractFacesTool::GetFrontBackLinePoint(m_walldata.downFace, m_walldata.vecFontLine, m_walldata.vecBackLine, m_walldata.thickness);
 
-
 	DPoint3d minP2, maxP2;
 	//计算指定元素描述符中元素的范围。
 	mdlElmdscr_computeRange(&minP2, &maxP2, copyEleeh.GetElementDescrP(), NULL);
 	if (!Eleeh.IsValid())
 	{
-		mdlDialog_dmsgsPrint(L"非法的墙实体!");
+		//mdlDialog_dmsgsPrint(L"非法的墙实体!");
 		return false;
 	}
 	DPoint3d minPos;
