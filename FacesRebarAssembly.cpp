@@ -6108,14 +6108,15 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	double uor_ref = eeh.GetModelRef()->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
 
 	// 面配筋时求板的厚度
-	MSElementDescrP msDscp1 = eeh.GetElementDescrP();
+	// 遇到集水坑等被切割一部分的实体时，无法使用平行面距离作为厚度，厚度转移至AnalyzingFloorData计算
+	/*MSElementDescrP msDscp1 = eeh.GetElementDescrP();
 	if (msDscp1 == NULL)
 	{
 		return false;
 	}
-	Dpoint3d ptmin, ptmax;
-	mdlElmdscr_computeRange(&ptmin, &ptmax, msDscp1, nullptr);
-	Dpoint3d ptmid = Dpoint3d::From((ptmin.x + ptmax.x) / 2, (ptmin.y + ptmax.y) / 2, (ptmin.z + ptmax.z) / 2);
+
+	bool isWall = is_Wall(*m_Solid);
+	DVec3d vecNormal = DVec3d::From(0, 0, 1);
 	DPoint3d ptDefault = DPoint3d::From(0, 0, 1);
 	DVec3d vecfacenor;
 	mdlElmdscr_extractNormal(&vecfacenor, nullptr, msDscp1, &ptDefault);
@@ -6126,12 +6127,18 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	{
 		DVec3d vecface;
 		mdlElmdscr_extractNormal(&vecface, nullptr, allFaces[index]->GetElementDescrP(), &ptDefault);
-		if (abs(vecface.DotProduct(vecfacenor)) > 0.9)
+		if ((!isWall && abs(vecface.DotProduct(vecNormal)) > 0.9) ||//板只采用法线平行Z轴的面
+			(isWall && abs(vecface.DotProduct(vecfacenor)) > 0.9))//墙只采用选中面平行的面
 		{
 			allParalFaces.push_back(allFaces[index]);
 		}
 	}
-
+	Dpoint3d ptmin, ptmax;
+	if(!isWall && !allParalFaces.empty())//板只采用法线平行Z轴的面
+		mdlElmdscr_computeRange(&ptmin, &ptmax, allParalFaces[0]->GetElementDescrCP(), nullptr);
+	else
+		mdlElmdscr_computeRange(&ptmin, &ptmax, msDscp1, nullptr);
+	Dpoint3d ptmid = Dpoint3d::From((ptmin.x + ptmax.x) / 2, (ptmin.y + ptmax.y) / 2, (ptmin.z + ptmax.z) / 2);
 	double distance = 0.0;
 	for (size_t index = 0; index < allParalFaces.size(); index++)
 	{
@@ -6178,7 +6185,7 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	if (distance != 0)
 		m_slabThickness = distance;
 	//尽可能消除噪声
-	m_slabThickness = round(m_slabThickness / 10.0) * 10.0;
+	m_slabThickness = round(m_slabThickness / 100.0) * 100.0;*/
 
 	//面配筋时求板的厚度
 
@@ -6849,6 +6856,52 @@ bool PlaneRebarAssembly::AnalyzingFloorData(ElementHandleCR eh)
 		m_pOldElm = new EditElementHandle();
 	}
 	m_pOldElm->Duplicate(Eleeh);
+	//计算厚度
+	Dpoint3d ptmin, ptmax;
+	mdlElmdscr_computeRange(&ptmin, &ptmax, m_pOldElm->GetElementDescrP(), nullptr);
+	Dpoint3d ptmid = Dpoint3d::From((ptmin.x + ptmax.x) / 2, (ptmin.y + ptmax.y) / 2, (ptmin.z + ptmax.z) / 2);
+	double maxLength = ptmin.Distance(ptmax);
+	auto GetThickness = [&](DVec3d vec, Dpoint3d ptmid, double length) -> double
+	{
+		vector<DPoint3d> tmpptsTmp;
+		DPoint3d startPt, endPt;
+		startPt = endPt = ptmid;
+		vec.ScaleToLength(length);
+		endPt.Add(vec);
+		vec.Negate();
+		startPt.Add(vec);
+
+		if (!GetIntersectPointsWithOldElmOwner(tmpptsTmp, m_pOldElm, startPt, endPt, 0))
+			return -1;
+		return startPt.Distance(endPt);
+	};
+	// 分别计算三个方向上的厚度
+	DVec3d axisX = DVec3d::From(1, 0, 0);  // 平行于 X 轴
+	DVec3d axisY = DVec3d::From(0, 1, 0);  // 平行于 Y 轴
+	DVec3d axisZ = DVec3d::From(0, 0, 1);  // 平行于 Z 轴
+	// 计算三个方向的厚度
+	double thicknessX = GetThickness(axisX, ptmid, maxLength);
+	double thicknessY = GetThickness(axisY, ptmid, maxLength);
+	double thicknessZ = GetThickness(axisZ, ptmid, maxLength);
+	// 选择最小的有效厚度
+	double validThickness = -1;
+	if (thicknessX >= 0 && (validThickness == -1 || thicknessX < validThickness))
+	{
+		validThickness = thicknessX;
+	}
+	if (thicknessY >= 0 && (validThickness == -1 || thicknessY < validThickness))
+	{
+		validThickness = thicknessY;
+	}
+	if (thicknessZ >= 0 && (validThickness == -1 || thicknessZ < validThickness))
+	{
+		validThickness = thicknessZ;
+	}
+	if (validThickness >= 0)
+	{
+		m_slabThickness = round(validThickness / 100.0) * 100.0;;
+	}
+
 	DPoint3d minP2, maxP2;
 	//计算指定元素描述符中元素的范围。
 	MSElementDescrP copyEdp = copyEleeh.GetElementDescrP();
