@@ -3618,7 +3618,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			DPoint3d ptStart(itr->second);
 
 			DVec3d vec1 = itrplus->second - itr->second;
-			vec.Normalize();
+			vec1.Normalize();
 			DVec3d vec2 = itr->second - itrplus->second;
 			vec2.Normalize();
 			double dis1 = ptStart.Distance(ptStartBack);
@@ -3870,6 +3870,11 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			double length = endTypesTmp.beg.GetbendLen() + endTypesTmp.beg.GetbendRadius();
 			//JudgeBarLinesLegitimate(vec2, alleehs, endTypesTmp, lineEeh, m_pOldElm, vector, matrix, strMoveDis, length, strPt, STR_PTR, flag_str);
 
+
+			vec1 = itrplus->second - itr->second;
+			vec1.Normalize();
+			vec2 = itr->second - itrplus->second;
+			vec2.Normalize();
 			if (itrplus == map_pts.end())
 			{
 				break;
