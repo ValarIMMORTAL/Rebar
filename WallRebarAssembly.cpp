@@ -2833,6 +2833,7 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 		DPoint3d movept = ptstr;
 		vecOutwall.Scale(thick*uor_per_mm / 2);
 		movept.Add(vecOutwall);
+		vecLine.Scale(0.1);
 		movept.Add(vecLine);
 		//PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 4);//蓝
 		for (int i = 0; i < floorfaces.size(); i++)
@@ -2849,8 +2850,8 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 			range.high.y = range.high.y + 1;
 
 			//测试代码显示当前的判断点的位置
-            //PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
-            //PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 2);//黄
+            PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
+            PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 2);//黄
 			if (range.IsContainedXY(movept) && range.IsContainedXY(ptstr))//CurveVector::INOUT_On == pos1 || CurveVector::INOUT_In == pos1)//range.IsContainedXY(movept)
 			{
 				ishavetwoside = true;//内侧面
@@ -6033,8 +6034,8 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 						walldata.upfloorth = thick;
 						walldata.upfloorID.push_back(Same_Eles.at(i));
 					}
-					else if ((maxP2.z >= maxP.z && minP2.z < minP.z) || (minP.z >= maxP2.z))//判断是否为底板
-						//if ((maxP2.z < maxP.z && minP2.z <= minP.z)|| (maxP2.z < maxP.z && minP2.z >= minP.z))//判断是否为底板
+					else if ((maxP2.z < maxP.z && minP2.z <= minP.z)|| (maxP2.z < maxP.z && minP2.z >= minP.z)||
+						(maxP2.z >= maxP.z && minP2.z < minP.z) || (minP.z >= maxP2.z))//判断是否为底板
 					{
 						walldata.downfloorfaces.push_back(downface);
 						if (thick < walldata.downfloorth || walldata.downfloorth == 0)
