@@ -1285,8 +1285,9 @@ namespace Gallery
 				auto tmpitr1 = itr;
 				auto tmpitrnext = ++tmpitr1;
 				////////当钢筋线段太短时放弃生成curve,主要是异形板的斜墙周围出现极短的钢筋
-				if (tmpitrnext->first <  3 * GetPositiveCover() * uor_per_mm)
+				if (tmpitrnext->first <  1 * GetPositiveCover() * uor_per_mm)
 					break;
+
 				if ((GetvecDir().at(m_rebarlevel) == 0) && (m_xflag == 0))
 				{//保存横向的信息
 					// 存储正常钢筋的起始终点的x坐标
@@ -1509,9 +1510,8 @@ namespace Gallery
 										tmpendTypes.beg.SetbendLen(insideLae);
 									}
 								}
-								begflag = 2;
 							}
-
+							begflag = 2;
 						}
 					}
 				}
@@ -1640,7 +1640,7 @@ namespace Gallery
 					}
 				}
 				/*判断钢筋锚入出去之后是否在构件中，如果不在则反向*/
-				/*Dpoint3d ExtendPt = itr->second;
+				Dpoint3d ExtendPt = itr->second;
 				CVector3D NormalVec = tmpendTypes.beg.GetendNormal();
 				NormalVec.Normalize();
 				CVector3D vec_Up = CVector3D::From(0, 0, 1);
@@ -1652,7 +1652,8 @@ namespace Gallery
 
 				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt))
 					NormalVec.Negate();
-				tmpendTypes.beg.SetendNormal(NormalVec);*/
+				tmpendTypes.beg.SetendNormal(NormalVec);
+
 				tmpendTypes.beg.SetptOrgin(itr->second);
 				RebarVertexP vex;
 				vex = &rebar.PopVertices().NewElement();
@@ -1918,19 +1919,23 @@ namespace Gallery
 					}
 				}
 				/*判断钢筋锚入出去之后是否在构件中，如果不在则反向*/
-				//Dpoint3d ExtendPt_end = itrplus->second;
-				//CVector3D NormalVec_end = tmpendTypes.end.GetendNormal();
-				//NormalVec_end.Normalize();
-				///*CVector3D vec_Up = CVector3D::From(0, 0, 1);
-				//CVector3D vec_Down = CVector3D::From(0, 0, -1);*/
-				//if (COMPARE_VALUES_EPS(NormalVec_end, vec_Up, 0.01) == 0)
-				//	ExtendPt_end.z += tmpendTypes.end.GetbendLen();
-				//else if (COMPARE_VALUES_EPS(NormalVec_end, vec_Down, 0.01) == 0)
-				//	ExtendPt_end.z -= tmpendTypes.end.GetbendLen();
+				Dpoint3d ExtendPt_end = itrplus->second;
+				CVector3D NormalVec_end = tmpendTypes.end.GetendNormal();
+				NormalVec_end.Normalize();
+				CVector3D vec_str_Up = CVector3D::From(0, 0, 1);
+				CVector3D vec_str_Down = CVector3D::From(0, 0, -1);
 
-				//if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt_end))
-				//	NormalVec_end.Negate();
-				//tmpendTypes.end.SetendNormal(NormalVec_end);
+				//PITCommonTool::CPointTool::DrowOnePoint(ExtendPt_end, 1, 1);//绿
+	
+				if (COMPARE_VALUES_EPS(NormalVec_end, vec_str_Up, 0.01) == 0)
+					ExtendPt_end.z += tmpendTypes.end.GetbendLen();
+				else if (COMPARE_VALUES_EPS(NormalVec_end, vec_str_Down, 0.01) == 0)
+					ExtendPt_end.z -= tmpendTypes.end.GetbendLen();
+
+				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt_end))
+					NormalVec_end.Negate();
+
+				tmpendTypes.end.SetendNormal(NormalVec_end);
 				tmpendTypes.end.SetptOrgin(itrplus->second);
 
 				vex = &rebar.PopVertices().NewElement();
@@ -2449,6 +2454,8 @@ namespace Gallery
 					//在反方向添加一根钢筋
 					auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
 					auto  PtEnd = rebarCurves.front().GetVertices().At(1).GetIP();
+					//PITCommonTool::CPointTool::DrowOnePoint(PtStr, 1, 1);//红
+					//PITCommonTool::CPointTool::DrowOnePoint(PtEnd, 1, 2);//黄
 					rebarCurves.clear();
 					DPoint3d midPt = PtStr;
 					midPt.Add(PtEnd);
@@ -3427,6 +3434,7 @@ namespace Gallery
 			for (int i = 0; i < tmpdescrs.size(); i++)
 			{
 				/*过滤一些墙*/
+
 				DRange3d faceRange;
 				mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, tmpdescrs[i], NULL);
 				if (faceRange.XLength() < 0.6 * m_ldfoordata.Xlenth && faceRange.ZLength() < 0.6 * m_ldfoordata.Ylenth)
@@ -5100,25 +5108,32 @@ namespace Gallery
 					//mdlElmdscr_add(downface);
 					PITCommonTool::CSolidTool::SolidBoolWithFace(resultEdp, downface, Eleeh.GetElementDescrP(),
 						BOOLOPERATION_INTERSECT);
-					/*EditElementHandleP resultEdp = nullptr;
-					PITCommonTool::CSolidTool::SolidBoolWithFace(*resultEdp, eeh, tmpeeh, BOOLOPERATION_INTERSECT);*/
-					//
-					//mdlElmdscr_addByModelRef(downface, ACTIVEMODEL);
-					////mdlElmdscr_addByModelRef(Eleeh.GetElementDescrP(), ACTIVEMODEL);
-					//mdlElmdscr_add(tmpeeh.GetElementDescrP());
+
 					DRange3d faceRange, eehRange;
 					mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, downface, NULL);
 					mdlElmdscr_computeRange(&eehRange.low, &eehRange.high, tmpeeh.GetElementDescrP(), NULL);
-					int flag = -1;
-					if (eehRange.low.z <= faceRange.low.z && eehRange.high.z >= faceRange.high.z)
-					{
-						flag = 1;
-					}
 
-					if (nullptr == resultEdp  && flag == -1)
+					int wall_dir_flag = 0;	//墙方向
+					int fool_dir_flag = 0;	//板方向
+					auto wall_dir_x = eehRange.high.x - eehRange.low.x;
+					auto wall_dir_y = eehRange.high.y - eehRange.low.y;
+
+					auto fool_dir_x = faceRange.high.x - faceRange.low.x;
+					auto fool_dir_y = faceRange.high.y - faceRange.low.y;
+					if (COMPARE_VALUES(wall_dir_x, wall_dir_y) == 1)
+					{
+						wall_dir_flag = 1;
+					}
+					if (COMPARE_VALUES(wall_dir_x, wall_dir_y) == 1)
+					{
+						fool_dir_flag = 1;
+					}
+					//如果墙方向不一致，或者没有交点面，或者位置错误退出
+					if (eehRange.high.z > faceRange.low.z || nullptr == resultEdp || fool_dir_flag!= wall_dir_flag)
 					{
 						continue;
 					}
+
 					if (!ExtractFacesTool::GetFloorDownFace(Eleeh, upface, maxpt, false,downface))
 					{
 						continue;
@@ -5136,9 +5151,11 @@ namespace Gallery
 		//获取顶面墙
 		EditElementHandle eehup(upface, true, false, ACTIVEMODEL);
 		mdlElmdscr_computeRange(&minP, &maxP, upface, NULL);
+
 		ptCenter = minP;
 		ptCenter.Add(maxP);
 		ptCenter.Scale(0.5);
+
 		mdlTMatrix_getIdentity(&matrix);
 		mdlTMatrix_scale(&matrix, &matrix, 0.99999, 0.99999, 1.0);
 		mdlTMatrix_setOrigin(&matrix, &ptCenter);
@@ -5167,14 +5184,35 @@ namespace Gallery
 					std::vector<EditElementHandle*> Holeehs;
 					EFT::GetSolidElementAndSolidHoles(tmpeeh, Eleeh, Holeehs);
 					MSElementDescrP resultEdp = nullptr;
+
 					PITCommonTool::CSolidTool::SolidBoolWithFace(resultEdp, upface, Eleeh.GetElementDescrP(),
 						BOOLOPERATION_INTERSECT);
-					if (nullptr == resultEdp)
+
+					DRange3d faceRange, eehRange;
+					mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, upface, NULL);
+					mdlElmdscr_computeRange(&eehRange.low, &eehRange.high, tmpeeh.GetElementDescrP(), NULL);
+					int wall_dir_flag = 0;	//墙方向
+					int fool_dir_flag = 0;	//板方向
+					auto wall_dir_x = eehRange.high.x - eehRange.low.x;
+					auto wall_dir_y = eehRange.high.y - eehRange.low.y;
+
+					auto fool_dir_x = faceRange.high.x - faceRange.low.x;
+					auto fool_dir_y = faceRange.high.y - faceRange.low.y;
+					if (COMPARE_VALUES(wall_dir_x, wall_dir_y) == 1)
 					{
+						wall_dir_flag = 1;
+					}
+					if (COMPARE_VALUES(wall_dir_x, wall_dir_y) == 1)
+					{
+						fool_dir_flag = 1;
+					}
+					//如果墙方向不一致，或者没有交点面，或者位置错误退出
+					//判断两个range是否有公共的相交的位置
+					if (eehRange.low.z >= faceRange.high.z || nullptr == resultEdp || fool_dir_flag != wall_dir_flag) 
+					{
+						// 如果没有交集，跳过当前循环
 						continue;
 					}
-					if(!isCombineFloor)//不是合并板配筋直接存储墙与板相交的面
-						m_ldfoordata.upfaces[m_ldfoordata.upnum++] = resultEdp;
 					else
 					{
 						if (!ExtractFacesTool::GetFloorDownFace(Eleeh, dface, minpt, true, upface))

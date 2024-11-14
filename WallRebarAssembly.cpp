@@ -14132,11 +14132,6 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 	using_pt = Point;
 	movePoint(direction, using_pt, lenth);
 
-	//PITCommonTool::CPointTool::DrowOnePoint(using_pt, 1, 3);//红
-    //PITCommonTool::CPointTool::DrowOnePoint(Point, 1, 4);//黄
-	//PITCommonTool::CPointTool::DrowOnePoint(str_Pt, 1, 1);//红
-	//PITCommonTool::CPointTool::DrowOnePoint(end_Pt, 1, 2);//黄
-
 	//钢筋线端点和钢筋端点位置是否锚出
 	if (!ISPointInHoles(alleehs, Point) || !ISPointInHoles(alleehs, using_pt ))
 	{
@@ -14160,8 +14155,6 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 		//方向取反再求一次位置
 		STWallRebarAssembly::movePoint(direction, using_pt, lenth);
 		STWallRebarAssembly::movePoint(direction, mid_end_pt, lenth/2);
-		//PITCommonTool::CPointTool::DrowOnePoint(Point, 1, 3);//绿
-		//PITCommonTool::CPointTool::DrowOnePoint(mid_end_pt, 1, 4);//蓝
 		//如果钢筋线末端点没有锚入任何实体    
 		if (!ISPointInHoles(alleehs, Point))
 		{
@@ -14217,12 +14210,11 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 				direction.Negate();//方向还原
 				
 				Point2 = Point;
+				auto temp = Point;
 				movePoint(direction, using_pt, lenth);
-				GetIntersectPointsWithHoles(tmppts, alleehs, using_pt, Point, dSideCover, matrix);
+				GetIntersectPointsWithHoles(tmppts, alleehs, using_pt, temp, dSideCover, matrix);
 				GetIntersectPointsWithHolesByInsert(tmppts, alleehs, using_pt, Point, dSideCover, matrix);
 
-				//PITCommonTool::CPointTool::DrowOnePoint(Point, 1, 3);//绿
-                //PITCommonTool::CPointTool::DrowOnePoint(using_pt, 1, 4);//蓝
 				//如果与原模型有交点
 				if (tmppts.size() > 0)
 				{
@@ -14232,7 +14224,15 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 					using_pt.Add(vectortepm);
 
 					lenth = MoveDis + tmpendEndTypes.end.GetbendRadius();
-					//lenth = (double)Point.Distance(using_pt) - tmpendEndTypes.end.GetbendRadius();
+					using_pt = Point;
+					movePoint(direction, using_pt, lenth);
+					//PITCommonTool::CPointTool::DrowOnePoint(using_pt, 1, 1);//绿
+					if (!ISPointInHoles(alleehs, using_pt))
+					{
+						direction.Negate();//方向还原
+
+						lenth -= tmpendEndTypes.end.GetbendRadius();
+					}
 
 					if (is_str)//说明是起始点
 						tmpendEndTypes.beg.SetbendLen(lenth);
