@@ -142,6 +142,7 @@ MSElementDescrP WallRebarAssembly::GetElementDownFace(ElementHandleCR eeh, EditE
 
 	// 最小的Z
 	float min_z = FLT_MAX;
+	float max_z = -1000000000;
 	// 最小的面
 	ISubEntityPtr min_face = nullptr;
 	ISubEntityPtr max_face = nullptr;
@@ -165,7 +166,6 @@ MSElementDescrP WallRebarAssembly::GetElementDownFace(ElementHandleCR eeh, EditE
 		{
 			continue;
 		}
-
 		// 获得这个面的包围盒的z
 		DRange3d range;
 		if (SolidUtil::GetSubEntityRange(range, *subEntity) != SUCCESS) // 获取给定面或边的轴对齐边界框。 
@@ -178,8 +178,9 @@ MSElementDescrP WallRebarAssembly::GetElementDownFace(ElementHandleCR eeh, EditE
 			min_z = range.low.z;
 			min_face = subEntity;
 		}
-		else// 获取Z最大的底面
+		if (range.high.z > max_z)
 		{
+			max_z = range.high.z;
 			max_face = subEntity;
 		}
 	}
@@ -2850,8 +2851,8 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 			range.high.y = range.high.y + 1;
 
 			//测试代码显示当前的判断点的位置
-            PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
-            PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 2);//黄
+           // PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
+           // PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 2);//黄
 			if (range.IsContainedXY(movept) && range.IsContainedXY(ptstr))//CurveVector::INOUT_On == pos1 || CurveVector::INOUT_In == pos1)//range.IsContainedXY(movept)
 			{
 				ishavetwoside = true;//内侧面
@@ -6025,7 +6026,7 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 				{
 					DPoint3d minP2 = { 0 }, maxP2 = { 0 };
 					mdlElmdscr_computeRange(&minP2, &maxP2, tmpeeh.GetElementDescrP(), NULL);
-					//mdlElmdscr_add(downface);   //测试显示当前板的底面
+					mdlElmdscr_add(downface);   //测试显示当前板的底面
 					//计算板厚度
 					double thick = GetFloorThickness(tmpeeh);
 					if ((maxP2.z >= maxP.z && minP2.z > minP.z))//判断是否为顶板

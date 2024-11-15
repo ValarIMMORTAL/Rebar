@@ -9177,7 +9177,7 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							if (bIsin)
 							{
 								m_insidef.bStartAnhorsel = true;
-								m_insidef.dStartanchoroffset = distance/* - diameter * 2*/;
+								m_insidef.dStartanchoroffset = distance - diameter * 2;  
 							}
 						}
 						else
@@ -9191,7 +9191,7 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							if (bIsin)
 							{
 								m_insidef.bEndAnhorsel = true;
-								m_insidef.dEndanchoroffset = distance/* - diameter * 2*/;
+								m_insidef.dEndanchoroffset = distance - diameter * 2;
 							}
 						}
 					}

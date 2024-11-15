@@ -5129,7 +5129,7 @@ namespace Gallery
 						fool_dir_flag = 1;
 					}
 					//如果墙方向不一致，或者没有交点面，或者位置错误退出
-					if (eehRange.high.z > faceRange.low.z || nullptr == resultEdp || fool_dir_flag!= wall_dir_flag)
+					if (eehRange.high.z > faceRange.high.z || nullptr == resultEdp || fool_dir_flag!= wall_dir_flag)
 					{
 						continue;
 					}
