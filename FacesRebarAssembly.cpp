@@ -3859,8 +3859,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			//vex->SetIP(ptStart);
 			//vex->SetType(RebarVertex::kStart);
 			//endTypesTmp.beg.SetptOrgin(ptStart);
-
-
+			
 			vec1 = itrplus->second - itr->second;
 			vec1.Normalize();
 			vec2 = itr->second - itrplus->second;
@@ -4214,6 +4213,10 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 				double begBendLen = stod(GetMainRebars().at(m_curLevel).rebarSize) * GetLae();
 				endTypesTmp.beg.SetbendLen(begBendLen);
 			}
+
+			//检查钢筋末端锚固关系
+			CheckRebarAnchorage(ptStart, dSideCover, m_Alleehs, endTypesTmp.beg);
+
 			endTypesTmp.beg.SetptOrgin(ptStart);
 
 			// 集水坑有一个内侧面由于创建实体失败导致与整个补过孔洞的集水坑实体取交点再延长使得钢筋延申出集水坑
@@ -4394,6 +4397,10 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 					}
 				}
 			}
+
+			//检查钢筋末端锚固关系
+			CheckRebarAnchorage(ptEnd, dSideCover, m_Alleehs, endTypesTmp.end);
+			
 			endTypesTmp.end.SetptOrgin(ptEnd);
 
 			// START#61271 集水井用“集水井面配筋”功能配出来的钢筋锚固长度没有规避孔洞（已点选规避孔洞功能） ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
@@ -5030,6 +5037,13 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 		});
 		/*/////扫描板附近的所有墙/////*/
 
+		//整理自身以及附近所有实体
+		for (auto& wall : m_Allwalls)
+		{
+			EditElementHandle* eehWall = new EditElementHandle(wall.GetElementRef(), wall.GetDgnModelP());
+			m_Alleehs.push_back(eehWall);
+		}
+		m_Alleehs.push_back(m_pOldElm);
 
 		RebarSetTagArray rsetTags;
 		m_vecRebarStartEnd.clear();
@@ -5849,6 +5863,10 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				}
 			}
 		}
+
+		// 在使用完 m_Alleehs 后释放内存
+		FreeAll(m_Alleehs);
+		m_Alleehs.clear();  // 清空 vector
 
 		if (g_globalpara.Getrebarstyle() != 0)
 		{
@@ -13464,4 +13482,121 @@ void CamberedSurfaceRebarAssembly::CalculateUseHoles(DgnModelRefP modelRef)
 	}
 }
 
+/*
+	* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
+	* @param[in]	originPt  钢筋起始点
+	* @param[in]	dSideCover 侧向保护距离
+	* @param[in]	alleehs  所有实体集合
+	* @param[in/out]    tmpEndType  钢筋的末端类型
+	* @author	LiuSilei
+	* @Date:	2024/11/15
+	*/
+// 钢筋锚固检查与处理函数
+void PlaneRebarAssembly::CheckRebarAnchorage(
+	DPoint3d& originPt,    // 钢筋起始点
+	double dSideCover,  // 侧向保护距离
+	vector<EditElementHandle*> alleehs, // 所有实体集合
+	PIT::PITRebarEndType& tmpEndType // 钢筋的末端类型
+)
+{
+	CVector3D vec = tmpEndType.GetendNormal();
+	double length = tmpEndType.GetbendLen() + tmpEndType.GetbendRadius();
+	vector<DPoint3d> tmppts;
+	Transform matrix;
+	GetPlacement().AssignTo(matrix);
+	DPoint3d endTempPt = originPt;
+	DPoint3d endTempPtEx = originPt;
 
+	BrString strRebarSize(GetMainRebars().at(0).rebarSize);
+	double lastDiameter = 0.0;//上一层的钢筋直径
+	if (m_curLevel == 1)
+		lastDiameter = RebarCode::GetBarDiameter(strRebarSize, ACTIVEMODEL);
+	double moveDis = (GetConcrete().postiveCover * 2 * UOR_PER_MilliMeter) + lastDiameter + m_curreDiameter / 2;
+
+
+	// Step 1: 移动钢筋到新的位置，检查是否在实体内
+	movePoint(vec, endTempPt, length);
+	if (!ISPointInHoles(alleehs, endTempPt))
+	{
+		vec.Negate();  // 如果不在实体内，反转钢筋方向
+	}
+	movePoint(vec, endTempPtEx, length);
+
+	// Step 2: 如果锚固点依旧不在实体内，进行进一步检查
+	if (!ISPointInHoles(alleehs, endTempPtEx)) // 判断反转后是否没有锚入实体
+	{
+		vec.Negate();  // 反转方向
+
+		// Step 3: 如果锚固点与孔洞有交点，进行反转和截短处理
+		if (m_Holeehs.size() != 0)
+		{
+			GetIntersectPointsWithHoles(tmppts, m_Holeehs, originPt, endTempPt, dSideCover, matrix);
+			if (tmppts.size() <= 0)
+				GetIntersectPointsWithHolesByInsert(tmppts, m_Holeehs, originPt, endTempPt, dSideCover, matrix);
+		}
+
+		// Step 4: 如果交点存在，计算新的锚固点位置
+		if (tmppts.size() > 0)
+		{
+			double dis = (double)originPt.Distance(endTempPt);
+			if (dis != length)
+			{
+				CVector3D vectortepm = originPt - endTempPt;
+				vectortepm.Normalize();
+				vectortepm.ScaleToLength(moveDis);
+				endTempPt.Add(vectortepm);
+
+				// 重新计算距离，减去弯曲半径
+				dis = (double)originPt.Distance(endTempPt) - tmpEndType.GetbendRadius();
+
+				if (dis < 0) // 如果弯曲半径已超出范围，进行反转并截短
+				{
+					vec.Negate();
+					endTempPt = originPt;
+					endTempPtEx = originPt;
+					movePoint(vec, endTempPt, length);
+					GetIntersectPointsWithHoles(tmppts, alleehs, endTempPtEx, endTempPt, dSideCover, matrix);
+					GetIntersectPointsWithHolesByInsert(tmppts, alleehs, endTempPtEx, endTempPt, dSideCover, matrix);
+
+					if (tmppts.size() > 0)
+					{
+						vectortepm = originPt - endTempPtEx;
+						vectortepm.Normalize();
+						vectortepm.ScaleToLength(moveDis);
+						endTempPtEx.Add(vectortepm);
+						dis = (double)originPt.Distance(endTempPtEx) - tmpEndType.GetbendRadius();
+						tmpEndType.SetbendLen(dis);
+					}
+				}
+				else
+				{
+					tmpEndType.SetbendLen(dis);
+				}
+			}
+		}
+		// Step 5: 如果没有交点且未锚固，继续检查并截短
+		else if (!ISPointInHoles(alleehs, endTempPt))
+		{
+			endTempPt = originPt;
+			endTempPtEx = originPt;
+			movePoint(vec, endTempPt, length);
+			GetIntersectPointsWithHoles(tmppts, alleehs, endTempPtEx, endTempPt, dSideCover, matrix);
+			GetIntersectPointsWithHolesByInsert(tmppts, alleehs, endTempPtEx, endTempPt, dSideCover, matrix);
+
+			if (tmppts.size() > 0)
+			{
+				CVector3D vectortepm = originPt - endTempPtEx;
+				vectortepm.Normalize();
+				vectortepm.ScaleToLength(moveDis);
+				endTempPtEx.Add(vectortepm);
+				length = (double)originPt.Distance(endTempPtEx) - tmpEndType.GetbendRadius();
+				tmpEndType.SetbendLen(length);
+			}
+		}
+		else
+		{
+			vec.Negate();  // 反转方向
+		}
+	}
+	tmpEndType.SetendNormal(vec);
+}

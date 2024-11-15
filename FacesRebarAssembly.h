@@ -335,6 +335,22 @@ public:
 	* @Date:	2024/3/1
 	*/
 	void CutRebarAnchorLeng(Dpoint3d ptStr, CVector3D vecAnchor, int rebarLevel, double& dAnchorleng);
+	/*
+	* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
+	* @param[in]	originPt  钢筋起始点
+	* @param[in]	dSideCover 侧向保护距离
+	* @param[in]	alleehs  所有实体集合
+	* @param[in\out]    tmpEndType  钢筋的末端类型
+	* @author	LiuSilei
+	* @Date:	2024/11/15
+	*/
+	// 钢筋锚固检查与处理函数
+	void PlaneRebarAssembly::CheckRebarAnchorage(
+		DPoint3d& originPt,    // 钢筋起始点
+		double dSideCover,  // 侧向保护距离
+		vector<EditElementHandle*> alleehs, // 所有实体集合
+		PIT::PITRebarEndType& tmpEndType // 钢筋的末端类型
+		);
 	//集水坑
 	void CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double benrandis, double la0, double lae, double diameter, int irebarlevel, bool isInface = true, bool bisSumps = false, bool isYdir = false);
 	// 处理竖向钢筋对于Z型板的钢筋分区
@@ -645,6 +661,7 @@ public:
 	EditElementHandle* m_zCorner = nullptr;//Z型板拐角需要配置额外的钢筋
 
 	vector<ElementHandle> m_Allwalls;//保留板边附近所有的墙
+	vector<EditElementHandle*> m_Alleehs;//自身以及附近所有实体
 	bool m_strDelete = false;//外侧面钢筋靠近墙面的起始钢筋是否删除，配合墙钢筋生成
 
 	bool m_endDelete = false;//外侧面钢筋终始钢筋是否删除，配合墙钢筋生成
