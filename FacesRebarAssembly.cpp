@@ -3910,7 +3910,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 									{
 										//ptEnd.z -= m_dTopOffset;
 										vec2.ScaleToLength(m_dTopOffset);
-										ptEnd.Add(vec);
+										ptEnd.Add(vec2);
 									}
 								}
 								else
@@ -5084,6 +5084,9 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 
 		for (int i = 0; i < iRebarLevelNum; ++i)
 		{
+			bool isVertical = fabs(m_LineSeg2.GetLineVec().DotProduct(DVec3d::From(0, 0, 1))) > 0.9;
+			if (isVertical)//竖直面钢筋层次交换
+				i = iRebarLevelNum - 1 - i;
 			m_curLevel = i;
 			m_holeRebarInfo.ClearData();
 			DVec3d vecRebar = DVec3d::From(1, 0, 0);
@@ -5375,16 +5378,17 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				DVec3d vec = m_LineSeg1.GetLineVec();
 				offset += levelspacing;
 
-				if (0 == i)	//首层偏移当前钢筋直径
-				{
-					offset += diameter * 0.5;
-				}
-				else
+				if (0 < i && !isVertical)
 				{
 					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);	//上一层钢筋直径
 					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
-					offset += diameter * 0.5;		//偏移当前层钢筋的半径
 				}
+				else if (iRebarLevelNum - 1 > i && isVertical)
+				{
+					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i + 1).rebarSize, modelRef);	//上一层钢筋直径
+					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
+				}
+				offset += diameter * 0.5;
 
 				lineSeg2.PerpendicularOffset(offset, GetfaceNormal());
 				//ChangeRebarLine(lineSeg2);
@@ -5541,7 +5545,8 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				}
 				else
 				{
-					tag = MakeRebars(PopSetIds().at(i), lineSeg2, linesegment1, rebarDir, strRebarSize, linesegment1.GetLength(), spacing, startOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+					PopvecSetId().push_back(0);
+					tag = MakeRebars(PopvecSetId().back(), lineSeg2, linesegment1, rebarDir, strRebarSize, linesegment1.GetLength(), spacing, startOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 					if (NULL != tag)
 					{
 						tag->SetBarSetTag(i + 1);
@@ -5686,16 +5691,17 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 
 				}
 				offset += levelspacing;
-				if (0 == i)	//首层偏移当前钢筋直径
-				{
-					offset += diameter * 0.5;
-				}
-				else
+				if (0 < i && !isVertical)
 				{
 					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);	//上一层钢筋直径
 					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
-					offset += diameter * 0.5;		//偏移当前层钢筋的半径
 				}
+				else if (iRebarLevelNum - 1 > i && isVertical)
+				{
+					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i + 1).rebarSize, modelRef);	//上一层钢筋直径
+					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
+				}
+				offset += diameter * 0.5;
 
 				lineSeg1.PerpendicularOffset(offset, GetfaceNormal());
 
@@ -5840,6 +5846,8 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 					m++;
 				}
 			}
+			if (isVertical)//竖向面钢筋层次交换
+				i = iRebarLevelNum - 1 - i;
 		}
 
 		for (auto itr = mapRebarPoint.begin(); itr != mapRebarPoint.end(); itr++)
@@ -6592,6 +6600,8 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	{
 		DVec3d vec1 = lineSeg1.GetLineVec();
 		DVec3d vec2 = lineSeg2.GetLineVec();
+		double length1 = lineSeg1.GetLength();
+		double length2 = lineSeg2.GetLength();
 		Dpoint3d ptSeg1Start = lineSeg1.GetLineStartPoint();
 		Dpoint3d ptSeg1End = lineSeg1.GetLineEndPoint();
 		Dpoint3d ptSeg2Start = lineSeg2.GetLineStartPoint();
@@ -6599,31 +6609,19 @@ bool PlaneRebarAssembly::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 		if (vec1.DotProduct(DVec3d::From(-1, 0, 0)) > 0.9)
 		{
 			ptSeg2Start = ptSeg1End;
-			ptSeg2End.x = ptSeg1End.x;
-			if(fabs(vec2.DotProduct(DVec3d::From(0, 1, 0))) > 0.9)//较长的平面两边有一定高度差，尽可能同步修改
-				ptSeg2End.z = ptSeg1End.z;
-			else
-				ptSeg2End.y = ptSeg1End.y;
+			movePoint(vec1, ptSeg2End, length1);
 			SwapLineSeg(lineSeg1, lineSeg2, ptSeg1Start, ptSeg1End, ptSeg2Start, ptSeg2End);
 		}
 		else if (vec1.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
 		{
 			ptSeg2Start = ptSeg1End;
-			ptSeg2End.y = ptSeg1End.y;
-			if (fabs(vec2.DotProduct(DVec3d::From(1, 0, 0))) > 0.9)
-				ptSeg2End.z = ptSeg1End.z;
-			else
-				ptSeg2End.x = ptSeg1End.x;
+			movePoint(vec1, ptSeg2End, length1);
 			SwapLineSeg(lineSeg1, lineSeg2, ptSeg1Start, ptSeg1End, ptSeg2Start, ptSeg2End);
 		}
 		else if (vec1.DotProduct(DVec3d::From(0, 0, -1)) > 0.9)
 		{
 			ptSeg2Start = ptSeg1End;
-			ptSeg2End.z = ptSeg1End.z;
-			if (fabs(vec2.DotProduct(DVec3d::From(0, 1, 0))) > 0.9)
-				ptSeg2End.x = ptSeg1End.x;
-			else
-				ptSeg2End.y = ptSeg1End.y;
+			movePoint(vec1, ptSeg2End, length1);
 			SwapLineSeg(lineSeg1, lineSeg2, ptSeg1Start, ptSeg1End, ptSeg2Start, ptSeg2End);
 		}
 	};
@@ -9586,11 +9584,11 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							m_verSlabFaceInfo.strtype.rotateAngle = angel;
 							m_verSlabFaceInfo.strtype.endPtInfo.value1 = bendradius;
 							m_verSlabFaceInfo.strtype.endPtInfo.value3 = dAnchorLeng;
-							m_verSlabFaceInfo.bStartAnhorsel = true;
-							m_verSlabFaceInfo.dStartanchoroffset = - diameter;
+							//m_verSlabFaceInfo.bStartAnhorsel = true;
+							//m_verSlabFaceInfo.dStartanchoroffset = - diameter;
 							if (bIsin)
 							{
-								//m_verSlabFaceInfo.bStartAnhorsel = true;
+								m_verSlabFaceInfo.bStartAnhorsel = true;
 								m_verSlabFaceInfo.dStartanchoroffset = distance - diameter * 2;
 							}
 						}
@@ -9601,11 +9599,11 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							m_verSlabFaceInfo.endtype.rotateAngle = angel;
 							m_verSlabFaceInfo.endtype.endPtInfo.value1 = bendradius;
 							m_verSlabFaceInfo.endtype.endPtInfo.value3 = dAnchorLeng;
-							m_verSlabFaceInfo.bEndAnhorsel = true;
-							m_verSlabFaceInfo.dEndanchoroffset = - diameter;
+							//m_verSlabFaceInfo.bEndAnhorsel = true;
+							//m_verSlabFaceInfo.dEndanchoroffset = - diameter;
 							if (bIsin)
 							{
-								//m_verSlabFaceInfo.bEndAnhorsel = true;
+								m_verSlabFaceInfo.bEndAnhorsel = true;
 								m_verSlabFaceInfo.dEndanchoroffset = distance - diameter * 2;
 							}
 						}

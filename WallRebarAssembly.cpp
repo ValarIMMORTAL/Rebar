@@ -2853,7 +2853,11 @@ void ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref
 			//测试代码显示当前的判断点的位置
            // PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
            // PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 2);//黄
-			if (range.IsContainedXY(movept) && range.IsContainedXY(ptstr))//CurveVector::INOUT_On == pos1 || CurveVector::INOUT_In == pos1)//range.IsContainedXY(movept)
+			if (movept.z < range.low.z)
+			{
+				movept.z += thick * uor_per_mm;
+			}
+			if (range.IsContainedXY(movept)) //&& range.IsContainedXY(ptstr))//CurveVector::INOUT_On == pos1 || CurveVector::INOUT_In == pos1)//range.IsContainedXY(movept)
 			{
 				ishavetwoside = true;//内侧面
 				break;
@@ -6026,7 +6030,7 @@ void GetUpDownFloorFaces(WallRebarAssembly::WallData& walldata, EditElementHandl
 				{
 					DPoint3d minP2 = { 0 }, maxP2 = { 0 };
 					mdlElmdscr_computeRange(&minP2, &maxP2, tmpeeh.GetElementDescrP(), NULL);
-					mdlElmdscr_add(downface);   //测试显示当前板的底面
+					//mdlElmdscr_add(downface);   //测试显示当前板的底面
 					//计算板厚度
 					double thick = GetFloorThickness(tmpeeh);
 					if ((maxP2.z >= maxP.z && minP2.z > minP.z))//判断是否为顶板
