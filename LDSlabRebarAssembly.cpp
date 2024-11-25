@@ -1643,39 +1643,39 @@ namespace Gallery
 				Dpoint3d ExtendPt = itr->second;
 				CVector3D NormalVec = tmpendTypes.beg.GetendNormal();
 				NormalVec.Normalize();
+				auto length = tmpendTypes.beg.GetbendLen();
 				CVector3D vec_Up = CVector3D::From(0, 0, 1);
 				CVector3D vec_Down = CVector3D::From(0, 0, -1);
 				if (COMPARE_VALUES_EPS(NormalVec, vec_Up, 0.01) == 0)
 					ExtendPt.z += tmpendTypes.beg.GetbendLen();
 				else if(COMPARE_VALUES_EPS(NormalVec, vec_Down, 0.01) == 0)
 					ExtendPt.z -= tmpendTypes.beg.GetbendLen();
-
 				auto move_point([&](CVector3D vec, Dpoint3d &point, double length) -> void {
 					vec.Normalize();          // 归一化向量
 					vec.ScaleToLength(length); // 调整向量长度
 					point.Add(vec);           // 将向量叠加到点上
 				});
-
 				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt))
 				{
 					Dpoint3d  temp_pt = itr->second;
-					auto length = tmpendTypes.beg.GetbendLen();
+					NormalVec.Negate();
 					double bendLen = tmpendTypes.beg.GetbendLen() - tmpendTypes.beg.GetbendRadius();
-					move_point(NormalVec, temp_pt, 0.5*length);
-					//PITCommonTool::CPointTool::DrowOnePoint(temp_pt, 1, 3);//红
+					move_point(NormalVec, temp_pt, length);
 					if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 					{
 						NormalVec.Negate();
 						temp_pt = itr->second;
-						move_point(NormalVec, temp_pt, length);
+						move_point(NormalVec, temp_pt, bendLen);
 						if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 						{
 							temp_pt = itr->second;
-							move_point(NormalVec, temp_pt, 0.5*length);
+							NormalVec.Negate();
+							move_point(NormalVec, temp_pt, length);
 							
 							if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 							{
 								NormalVec.Negate();
+								bendLen-= tmpendTypes.beg.GetbendRadius();
 								tmpendTypes.beg.SetbendLen(bendLen);
 							}
 							else
@@ -1684,6 +1684,22 @@ namespace Gallery
 					}
 					else
 					tmpendTypes.beg.SetbendLen(bendLen);
+				}
+				else 
+				{
+					EditElementHandle testeeh(GetSelectedElement(), GetSelectedModel());
+					EditElementHandle * ptr = &testeeh;
+					if (ISPointInElement(ptr, ExtendPt))
+					{
+						Dpoint3d  temp_pt = itr->second;
+						NormalVec.Negate();
+						move_point(NormalVec, temp_pt, length);
+
+						if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
+						{
+							NormalVec.Negate();
+						}
+					}
 				}
 				tmpendTypes.beg.SetendNormal(NormalVec);
 				tmpendTypes.beg.SetptOrgin(itr->second);
@@ -1954,6 +1970,7 @@ namespace Gallery
 				Dpoint3d ExtendPt_end = itrplus->second; 
 				CVector3D NormalVec_end = tmpendTypes.end.GetendNormal();
 				NormalVec_end.Normalize();
+				auto length_end = tmpendTypes.end.GetbendLen();
 				CVector3D vec_str_Up = CVector3D::From(0, 0, 1);
 				CVector3D vec_str_Down = CVector3D::From(0, 0, -1);
 
@@ -1967,23 +1984,24 @@ namespace Gallery
 				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt_end))
 				{
 					Dpoint3d  temp_pt = itrplus->second;
-					auto length = tmpendTypes.end.GetbendLen();
+					
 					double bendLen = tmpendTypes.end.GetbendLen() - tmpendTypes.end.GetbendRadius();
-					move_point(NormalVec_end, temp_pt, 0.5*length);
-					//PITCommonTool::CPointTool::DrowOnePoint(temp_pt, 1, 3);//红
+					move_point(NormalVec_end, temp_pt, length_end);
 					if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 					{
 						NormalVec_end.Negate();
 						temp_pt = itrplus->second;
-						move_point(NormalVec_end, temp_pt, length);
+						move_point(NormalVec_end, temp_pt, length_end);
 						if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 						{
 							temp_pt = itrplus->second;
-							move_point(NormalVec_end, temp_pt, 0.5*length);
+							NormalVec_end.Negate();
+							move_point(NormalVec_end, temp_pt, bendLen);
 
 							if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 							{
 								NormalVec_end.Negate();
+								bendLen -= tmpendTypes.end.GetbendRadius();
 								tmpendTypes.end.SetbendLen(bendLen);
 							}
 							else
@@ -1992,6 +2010,22 @@ namespace Gallery
 					}
 					else
 						tmpendTypes.end.SetbendLen(bendLen);
+				}
+				else
+				{
+					EditElementHandle testeeh(GetSelectedElement(), GetSelectedModel());
+					EditElementHandle * ptr = &testeeh;
+					if (ISPointInElement(ptr, ExtendPt_end))
+					{
+						Dpoint3d  temp_pt = itrplus->second;
+						NormalVec_end.Negate();
+						move_point(NormalVec_end, temp_pt, length_end);
+
+						if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
+						{
+							NormalVec_end.Negate();
+						}
+					}
 				}
 
 				tmpendTypes.end.SetendNormal(NormalVec_end);
@@ -3853,8 +3887,8 @@ namespace Gallery
 					DPoint3d tminP, tmaxP;
 					//计算指定元素描述符中元素的范围。
 					mdlElmdscr_computeRange(&tminP, &tmaxP, tmpdescrs[i], NULL);
-
-					if ((int)tmaxP.x <= (int)maxP.x  && (int)tminP.x >= (int)minP.x)
+					/*如果板的最长位置大于墙的最长位置，板的最短位置小于墙的最短位置误差100*/
+					if (((int)tmaxP.x <= (int)maxP.x + 100) && ((int)tminP.x + 100) >= (int)minP.x)
 					{
 						tmpqj[(int)tminP.x] = (int)tmaxP.x;
 						tmpqj[(int)tmaxP.x] = 0;
@@ -4372,7 +4406,7 @@ namespace Gallery
 				m_outsidef.strval = m_outsidef.pos[j].strval;
 				m_outsidef.endval = m_outsidef.pos[j].endval;
 
-				if (minLength == nowLen && nowLen != maxLength)//最边缘的外侧面的起始和终端两条钢筋需要删除
+				if (nowLen < 1201 * UOR_PER_MilliMeter && nowLen != maxLength)//(minLength == nowLen && nowLen != maxLength)//最边缘的外侧面的起始和终端两条钢筋需要删除
 				{
 					m_strDelete = true;
 					m_endDelete = true;
@@ -4792,7 +4826,7 @@ namespace Gallery
 					m_isdown = true;
 					/*frontlevel++;
 					tmpLevel = frontlevel;*/
-					if (m_ldfoordata.downnum > 0)//下部有墙，下部面为内侧面
+					if (m_ldfoordata.downnum >=2)//下部有墙，下部面为内侧面
 					{
 						//a、如果下部有墙，下部面为内侧面
 						//钢筋方向VEC处理
@@ -4871,7 +4905,7 @@ namespace Gallery
 					}
 					else
 					{
-						if (m_ldfoordata.downnum > 0)//下部有墙，后面层为外侧面
+						if (m_ldfoordata.downnum >= 2)//下部有墙，后面层为外侧面
 						{
 							//b、如果上部没有墙，上部面为外侧面
 							 //钢筋方向VEC处理

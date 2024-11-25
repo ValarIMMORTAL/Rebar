@@ -277,6 +277,7 @@ public:
 	~PlaneRebarAssembly();
 
 private:
+	//设置内侧面减去两个墙面之后的偏移距离
 	double InsideFace_OffsetLength(DPoint3dCR RebarlineMidPt);
 	//获取rebarcurve,主要是钢筋线与面拉伸的实体相交，然后在钢筋两端设置事先求出的端部样式
 	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes);
@@ -316,7 +317,7 @@ public:
 	int GetFaceType(MSElementDescrP face,MSElementDescrP upface[40], int upfacenum, MSElementDescrP downface[40], int downfacenum,int i, DVec3d vecRebar);
 	void ChangeRebarLine(PIT:: LineSegment& lineSeg);
 	//bisSumps是否是集水坑
-	void CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg,double benrandis,double la0,double lae, double diameter, int irebarlevel, bool isInface = true,bool bisSumps = false);
+	void CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg,double benrandis,double la0,double lae, double diameter, double diameterPre, int irebarlevel, bool isInface = true,bool bisSumps = false);
 	//钢筋遇到孔洞时，求出端部锚固信息，包括长度，方向。
 	bool GetHoleRebarAnchor(Dpoint3d ptstart, Dpoint3d ptend, Dpoint3d curPt, PIT::PITRebarEndType& endtype);
 
@@ -353,8 +354,17 @@ public:
 		);
 	//集水坑
 	void CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double benrandis, double la0, double lae, double diameter, int irebarlevel, bool isInface = true, bool bisSumps = false, bool isYdir = false);
-	// 处理竖向钢筋对于Z型板的钢筋分区
-	bool CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP, bool isXDir = true);
+	/*
+	* @desc:		处理钢筋对于Z型板的钢筋分区。如果本面更长则进行分区，无论长短都需要在拐角增加平面
+	* @param[in]	sectionPairs  钢筋分区
+	* @param[in]	parafaces 平行墙
+	* @param[in]	minP  最小点
+	* @param[in]	maxP  最大点
+	* @param[in]    isXDir  钢筋分布方向
+	* @author	LiuSilei
+	* @Date:	2024/10/30
+	*/
+	bool CalculateZCorner(map<int, int>& sectionPairs, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP, bool isXDir = true);
 	//分析内面钢筋信息，包括端部样式等
 	void CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		MSElementDescrP tmpupfaces[40],
@@ -472,12 +482,12 @@ public:
 
 	struct OutSideQuJianInfo
 	{
-		int str = 0;
-		int end = 0;
+		int str = 0;//区间起点
+		int end = 0;//区间终点
 		bool addstr = false;//起始位置是否需要加钢筋
 		bool addend = false;//终止位置是否需要加钢筋
-		int strval = 0;
-		int endval = 0;
+		int strval = 0;//起点可延伸的距离
+		int endval = 0;//终点可延伸的距离
 	};
 	struct OutSideFaceInfo//外侧面计算得到的配筋信息，每一个外侧面
 	{
@@ -661,7 +671,7 @@ public:
 	EditElementHandle* m_zCorner = nullptr;//Z型板拐角需要配置额外的钢筋
 
 	vector<ElementHandle> m_Allwalls;//保留板边附近所有的墙
-	vector<EditElementHandle*> m_Alleehs;//自身以及附近所有实体
+	vector<EditElementHandle*> m_allEehs;//自身以及附近所有实体
 	bool m_strDelete = false;//外侧面钢筋靠近墙面的起始钢筋是否删除，配合墙钢筋生成
 
 	bool m_endDelete = false;//外侧面钢筋终始钢筋是否删除，配合墙钢筋生成

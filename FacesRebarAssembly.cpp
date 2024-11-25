@@ -3746,34 +3746,10 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 							else
 							{
 								GetHoleRebarAnchor(ptStart, itrplus->second, ptStart, endTypesTmp.beg);
-								//CVector3D vetor;
-								//if (isUpRebar)// 钢筋层在配筋面上面
-								//{
-								//	vetor = CVector3D::From(0, 0, 1);
-								//}
-								//else// 钢筋层在配筋面下面
-								//{
-								//	vetor = CVector3D::From(0, 0, -1);
-								//}
-								//endtype.SetType(PITRebarEndType::kBend);
-								//double startbendRadius = RebarCode::GetPinRadius(m_holeRebarInfo.brstring, ACTIVEMODEL, false);//value 1
-								//double diameter = RebarCode::GetBarDiameter(m_holeRebarInfo.brstring, ACTIVEMODEL);//value 3
-								//BrString strRebarSize(GetMainRebars().at(0).rebarSize);
-								//double lastDiameter = 0.0;//上一层的钢筋直径
-								//if (m_curLevel == 1)
-								//	lastDiameter = RebarCode::GetBarDiameter(strRebarSize, ACTIVEMODEL);
-
-								//double startbendLen = m_slabThickness - (GetConcrete().postiveCover * 2 * UOR_PER_MilliMeter) - lastDiameter - m_curreDiameter / 2 - startbendRadius;
-
-								//endtype.SetendNormal(vetor);
-								//endtype.SetbendLen(startbendLen);
-								//endtype.SetbendRadius(startbendRadius);
-								/*CVector3D changedNormal = endTypesTmp.beg.GetendNormal();
-								if()*/
 							}
 
 						}
-						if (m_insidef.calLen > 1.0) //防止没值时把Vec变为0 
+						else if (m_insidef.calLen > 1.0) //防止没值时把Vec变为0 
 						{
 							m_insidef.calLen = WallRebars_OffsetLength(ptStart);
 							vec1.ScaleToLength(m_insidef.calLen);
@@ -3804,7 +3780,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 							vec2.ScaleToLength(m_outsidef.dStartanchoroffset);
 							ptStart.Add(vec2);
 						}
-						if (m_outsidef.calLen > 1.0) //防止反正没值时把Vec变为0 
+						else if (m_outsidef.calLen > 1.0) //防止反正没值时把Vec变为0 
 						{
 							vec1.ScaleToLength(m_outsidef.calLen);
 							ptStart.Add(vec1);
@@ -3991,8 +3967,9 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 								GetHoleRebarAnchor(ptEnd, ptStart, ptEnd, endTypesTmp.end);
 							}
 						}
-						if (m_insidef.calLen > 1.0) //防止没值时把Vec变为0 
+						else if (m_insidef.calLen > 1.0) //防止没值时把Vec变为0 
 						{
+							m_insidef.calLen = WallRebars_OffsetLength(ptEnd);
 							vec2.ScaleToLength(m_insidef.calLen);
 							ptEnd.Add(vec2);
 						}
@@ -4020,7 +3997,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 							vec1.ScaleToLength(m_outsidef.dEndanchoroffset);
 							ptEnd.Add(vec1);
 						}
-						if (m_outsidef.calLen > 1.0) //防止没值时把Vec变为0 
+						else if (m_outsidef.calLen > 1.0) //防止没值时把Vec变为0 
 						{
 							vec2.ScaleToLength(m_outsidef.calLen);
 							ptEnd.Add(vec2);
@@ -4215,7 +4192,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			}
 
 			//检查钢筋末端锚固关系
-			CheckRebarAnchorage(ptStart, dSideCover, m_Alleehs, endTypesTmp.beg);
+			CheckRebarAnchorage(ptStart, dSideCover, m_allEehs, endTypesTmp.beg);
 
 			endTypesTmp.beg.SetptOrgin(ptStart);
 
@@ -4399,7 +4376,7 @@ bool PlaneRebarAssembly::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, cons
 			}
 
 			//检查钢筋末端锚固关系
-			CheckRebarAnchorage(ptEnd, dSideCover, m_Alleehs, endTypesTmp.end);
+			CheckRebarAnchorage(ptEnd, dSideCover, m_allEehs, endTypesTmp.end);
 			
 			endTypesTmp.end.SetptOrgin(ptEnd);
 
@@ -4690,24 +4667,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 	//	rebarLine.PerpendicularOffset(sideCov, vec.GetLineVec());
 	vector<PITRebarCurve>     rebarCurvesNum;
 	int j = 0;
-	double endTypeStartOffset = endType[0].offset * uor_per_mm;
-	double endTypEendOffset = endType[1].offset * uor_per_mm;
-	if (endType[0].endType != 0 && endType[0].endType != 7)	//端部弯曲时额外偏移钢筋半径
-		endTypeStartOffset += diameter * 0.5;
-	if (endType[1].endType != 0 && endType[1].endType != 7)	//端部弯曲时额外偏移钢筋半径
-		endTypEendOffset += diameter * 0.5;
-
-	if (m_sidetype == SideType::Out)//外侧面钢筋处理
-	{
-		endTypeStartOffset = endTypeStartOffset + m_outsidef.calLen;
-		endTypEendOffset = endTypEendOffset + m_outsidef.calLen;
-	}
-	if (m_sidetype == SideType::In)//内侧面钢筋处理
-	{
-		endTypeStartOffset = endTypeStartOffset + m_insidef.calLen;
-		endTypEendOffset = endTypEendOffset + m_insidef.calLen;
-	}
-
+	
 	// 	EditElementHandle eeh;
 	// 	LineHandler::CreateLineElement(eeh, NULL, rebarLine.GetLineSeg(), true, *ACTIVEMODEL);
 	// 	eeh.AddToModel();
@@ -4730,21 +4690,7 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 	start.SetbendLen(startbendLen);
 	start.SetbendRadius(startbendRadius);
 	start.SetendNormal(vecEndNormal[0]);
-	//rebarLine.Shorten(sideCov + endTypeStartOffset,true);
-	//rebarLine.Shorten(/*sideCov + */endTypeStartOffset, true);
 	start.SetptOrgin(rebarLine.GetLineStartPoint());
-	//if (endType[0].endType == 4)
-	//{
-	//	rebarLine.Shorten(startbendRadius + 0.5*diameter, true);
-	//}
-
-	//rebarLine.Shorten(sideCov + endTypEendOffset, false);
-	//rebarLine.Shorten(/*sideCov + */endTypEendOffset, false);
-	//if (endType[1].endType == 4)
-	//{
-	//	rebarLine.Shorten(endbendRadius + 0.5*diameter, false);
-	//}
-
 
 	end.SetType((PITRebarEndType::Type)endTypeEnd.GetType());
 	if (endTypeEnd.GetType() == PITRebarEndType::kCustom)
@@ -4814,11 +4760,11 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 			if ((i == 0 && m_insidef.strval && m_sidetype == SideType::In) || (i == 0 && m_outsidef.strval && m_sidetype == SideType::Out))
 			{
 				//在反方向添加一根钢筋
-				auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
-				auto  PtEnd = rebarCurves.front().GetVertices().At(1).GetIP();
+				auto  ptStr = rebarCurves.front().GetVertices().At(0).GetIP();
+				auto  ptEnd = rebarCurves.front().GetVertices().At(1).GetIP();
 				rebarCurves.clear();
-				DPoint3d midPt = PtStr;
-				midPt.Add(PtEnd);
+				DPoint3d midPt = ptStr;
+				midPt.Add(ptEnd);
 				midPt.Scale(0.5);
 				if (dir == 0)//x
 					midPt.y -= 2 * GetConcrete().sideCover * uor_per_mm;
@@ -4830,11 +4776,11 @@ RebarSetTag* PlaneRebarAssembly::MakeRebars
 			else if ((i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
 			{
 				//在反方向添加一根钢筋
-				auto  PtStr = rebarCurves.front().GetVertices().At(0).GetIP();
-				auto  PtEnd = rebarCurves.front().GetVertices().At(1).GetIP();
+				auto  ptStr = rebarCurves.front().GetVertices().At(0).GetIP();
+				auto  ptEnd = rebarCurves.front().GetVertices().At(1).GetIP();
 				rebarCurves.clear();
-				DPoint3d midPt = PtStr;
-				midPt.Add(PtEnd);
+				DPoint3d midPt = ptStr;
+				midPt.Add(ptEnd);
 				midPt.Scale(0.5);
 				if (dir == 0)//x
 					midPt.y += 2 * GetConcrete().sideCover * uor_per_mm;
@@ -5041,9 +4987,9 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 		for (auto& wall : m_Allwalls)
 		{
 			EditElementHandle* eehWall = new EditElementHandle(wall.GetElementRef(), wall.GetDgnModelP());
-			m_Alleehs.push_back(eehWall);
+			m_allEehs.push_back(eehWall);
 		}
-		m_Alleehs.push_back(m_pOldElm);
+		m_allEehs.push_back(m_pOldElm);
 
 		RebarSetTagArray rsetTags;
 		m_vecRebarStartEnd.clear();
@@ -5082,11 +5028,35 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 		}
 		// end
 
+		// 面配筋竖直面配置方式优化，调换层次数据
+		if(abs(m_LineSeg2.GetLineVec().DotProduct(DVec3d::From(0, 0, -1))) > 0.9)
+		{
+			vector<PIT::ConcreteRebar> mainRebarsData = PopMainRebars();
+			// 在反转之前，保存需要保持的数据
+			vector<int> rebarLevels(mainRebarsData.size());
+			vector<int> rebarDirs(mainRebarsData.size());
+			bool isParallelToY = m_LineSeg1.GetLineVec().IsParallelTo(DVec3d::UnitY());
+			for (size_t i = 0; i < mainRebarsData.size(); ++i) {
+				rebarLevels[i] = mainRebarsData[i].rebarLevel;
+				if (isParallelToY)
+					rebarDirs[i] = mainRebarsData[i].rebarDir;
+			}
+
+			// 反转整个vector
+			reverse(mainRebarsData.begin(), mainRebarsData.end());
+
+			// 恢复被保存的字段
+			for (size_t i = 0; i < mainRebarsData.size(); ++i) {
+				mainRebarsData[i].rebarLevel = rebarLevels[i];
+				if (isParallelToY)
+					mainRebarsData[i].rebarDir = rebarDirs[i];
+			}
+
+			this->SetMainRebars(mainRebarsData);
+		}
+
 		for (int i = 0; i < iRebarLevelNum; ++i)
 		{
-			bool isVertical = fabs(m_LineSeg2.GetLineVec().DotProduct(DVec3d::From(0, 0, 1))) > 0.9;
-			if (isVertical)//竖直面钢筋层次交换
-				i = iRebarLevelNum - 1 - i;
 			m_curLevel = i;
 			m_holeRebarInfo.ClearData();
 			DVec3d vecRebar = DVec3d::From(1, 0, 0);
@@ -5117,6 +5087,8 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 			m_holeRebarInfo.brstring = strRebarSize;
 			double diameter = RebarCode::GetBarDiameter(strRebarSize, modelRef);
 			m_curreDiameter = diameter;
+			BrString strRebarSizePre(GetMainRebars().at(iRebarLevelNum - 1 -i).rebarSize);
+			double diameterPre = RebarCode::GetBarDiameter(strRebarSizePre, ACTIVEMODEL);
 			double spacing = GetMainRebars().at(i).spacing * uor_per_mm;
 			double startOffset = GetMainRebars().at(i).startOffset * uor_per_mm;
 			double endOffset = GetMainRebars().at(i).endOffset * uor_per_mm;
@@ -5189,7 +5161,7 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 								LaE = 15 * diameter;
 							}
 							double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
-							CreateAnchorBySelf(tmpAnchordescrs, linseg, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false, m_bisSump);
+							CreateAnchorBySelf(tmpAnchordescrs, linseg, bendradius, la0/*15 * diameter*/, LaE, diameter, diameterPre, i, false, m_bisSump);
 							//AnalyzeFloorNorFaceData();
 						}
 						else
@@ -5378,17 +5350,16 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				DVec3d vec = m_LineSeg1.GetLineVec();
 				offset += levelspacing;
 
-				if (0 < i && !isVertical)
+				if (0 == i)	//首层偏移当前钢筋直径
+				{
+					offset += diameter * 0.5;
+				}
+				else
 				{
 					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);	//上一层钢筋直径
 					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
+					offset += diameter * 0.5;		//偏移当前层钢筋的半径
 				}
-				else if (iRebarLevelNum - 1 > i && isVertical)
-				{
-					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i + 1).rebarSize, modelRef);	//上一层钢筋直径
-					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
-				}
-				offset += diameter * 0.5;
 
 				lineSeg2.PerpendicularOffset(offset, GetfaceNormal());
 				//ChangeRebarLine(lineSeg2);
@@ -5545,8 +5516,7 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 				}
 				else
 				{
-					PopvecSetId().push_back(0);
-					tag = MakeRebars(PopvecSetId().back(), lineSeg2, linesegment1, rebarDir, strRebarSize, linesegment1.GetLength(), spacing, startOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
+					tag = MakeRebars(PopSetIds().at(i), lineSeg2, linesegment1, rebarDir, strRebarSize, linesegment1.GetLength(), spacing, startOffset, endOffset, GetMainRebars().at(i).rebarLevel, GetMainRebars().at(i).rebarType, DataExchange, vecEndType, vecEndNormal, modelRef);
 					if (NULL != tag)
 					{
 						tag->SetBarSetTag(i + 1);
@@ -5691,17 +5661,16 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 
 				}
 				offset += levelspacing;
-				if (0 < i && !isVertical)
+				if (0 == i)	//首层偏移当前钢筋直径
+				{
+					offset += diameter * 0.5;
+				}
+				else
 				{
 					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);	//上一层钢筋直径
 					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
+					offset += diameter * 0.5;		//偏移当前层钢筋的半径
 				}
-				else if (iRebarLevelNum - 1 > i && isVertical)
-				{
-					double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i + 1).rebarSize, modelRef);	//上一层钢筋直径
-					offset += diameterPre * 0.5;	//偏移上一层钢筋的半径
-				}
-				offset += diameter * 0.5;
 
 				lineSeg1.PerpendicularOffset(offset, GetfaceNormal());
 
@@ -5846,8 +5815,6 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 					m++;
 				}
 			}
-			if (isVertical)//竖向面钢筋层次交换
-				i = iRebarLevelNum - 1 - i;
 		}
 
 		for (auto itr = mapRebarPoint.begin(); itr != mapRebarPoint.end(); itr++)
@@ -5872,9 +5839,9 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 			}
 		}
 
-		// 在使用完 m_Alleehs 后释放内存
-		FreeAll(m_Alleehs);
-		m_Alleehs.clear();  // 清空 vector
+		// 在使用完 m_allEehs 后释放内存
+		FreeAll(m_allEehs);
+		m_allEehs.clear();  // 清空 vector
 
 		if (g_globalpara.Getrebarstyle() != 0)
 		{
@@ -5966,6 +5933,42 @@ bool PlaneRebarAssembly::is_Wall(const ElementHandle & element)
 
 double PlaneRebarAssembly::WallRebars_OffsetLength(DPoint3dCR RebarPt)
 {
+	auto GetDiameter = [&](std::vector<PIT::ConcreteRebar>& my_vecRebarData, ElementId contid) -> double
+	{
+		//获取sizekey
+		auto it = my_vecRebarData.begin();
+		for (; it != my_vecRebarData.end(); it++)
+		{
+			BrString strRebarSize = it->rebarSize;
+			if (strRebarSize != L"")
+			{
+				if (strRebarSize.Find(L"mm") != -1)
+				{
+					strRebarSize.Replace(L"mm", L"");
+				}
+			}
+			else
+			{
+				strRebarSize = XmlManager::s_alltypes[it->rebarType];
+			}
+			strcpy(it->rebarSize, CT2A(strRebarSize));
+			GetDiameterAddType(it->rebarSize, it->rebarType);
+		}
+		//获取sizekey
+		//墙的背面的纵筋直径
+		double diameter1 = 0.0;
+		double diameter2 = 0.0;
+		char rebarSize1[512] = "16C";
+		char rebarSize2[512] = "20C";
+		diameter1 = RebarCode::GetBarDiameter(rebarSize1, ACTIVEMODEL);
+		diameter2 = RebarCode::GetBarDiameter(rebarSize2, ACTIVEMODEL);
+		if ((contid != 0) && (my_vecRebarData.size() != 0))
+		{
+			diameter1 = RebarCode::GetBarDiameter(my_vecRebarData[0].rebarSize, ACTIVEMODEL);
+			diameter2 = RebarCode::GetBarDiameter(my_vecRebarData[1].rebarSize, ACTIVEMODEL);
+		}
+		return diameter1 + diameter2;
+	};
 	for (auto walleh : m_Allwalls)
 	{
 		DRange3d tmpWall_Range;
@@ -5981,43 +5984,22 @@ double PlaneRebarAssembly::WallRebars_OffsetLength(DPoint3dCR RebarPt)
 				GetElementXAttribute(walleh.GetElementId(), sizeof(ElementId), contid, ConcreteIDXAttribute, walleh.GetModelRef());
 			GetElementXAttribute(contid, sizeof(PIT::WallRebarInfo), my_wallRebarInfo, WallRebarInfoXAttribute, ACTIVEMODEL);
 			GetElementXAttribute(contid, my_vecRebarData, vecRebarDataXAttribute, ACTIVEMODEL);
-			//获取sizekey
-			auto it = my_vecRebarData.begin();
-			for (; it != my_vecRebarData.end(); it++)
-			{
-				BrString strRebarSize = it->rebarSize;
-				if (strRebarSize != L"")
-				{
-					if (strRebarSize.Find(L"mm") != -1)
-					{
-						strRebarSize.Replace(L"mm", L"");
-					}
-				}
-				else
-				{
-					strRebarSize = XmlManager::s_alltypes[it->rebarType];
-				}
-				strcpy(it->rebarSize, CT2A(strRebarSize));
-				GetDiameterAddType(it->rebarSize, it->rebarType);
-			}
-			//获取sizekey
-			//墙的背面的纵筋直径
-			double diameter1 = 0.0;
-			double diameter2 = 0.0;
-			char rebarSize1[512] = "16C";
-			char rebarSize2[512] = "20C";
-			diameter1 = RebarCode::GetBarDiameter(rebarSize1, ACTIVEMODEL);
-			diameter2 = RebarCode::GetBarDiameter(rebarSize2, ACTIVEMODEL);
-			if ((contid != 0) && (my_vecRebarData.size() != 0))
-			{
-				diameter1 = RebarCode::GetBarDiameter(my_vecRebarData[0].rebarSize, ACTIVEMODEL);
-				diameter2 = RebarCode::GetBarDiameter(my_vecRebarData[1].rebarSize, ACTIVEMODEL);
-			}
-
-			return diameter1 + diameter2;
+			double diameter = GetDiameter(my_vecRebarData, contid);
+			return diameter;
 		}
-
 	}
+	DRange3d face_Range;
+	mdlElmdscr_computeRange(&face_Range.low, &face_Range.high, m_face.GetElementDescrCP(), nullptr);
+	if (!face_Range.IsContainedXY(RebarPt))
+	{
+		//Z型板拐角钢筋可能没有锚固实际墙体，暂时使用本身钢筋信息
+		vector<PIT::ConcreteRebar> vecRebarData = GetMainRebars();
+		ElementId contid = 0;
+		GetElementXAttribute(m_pOldElm->GetElementId(), sizeof(ElementId), contid, ConcreteIDXAttribute, m_pOldElm->GetModelRef());
+		double diameter = GetDiameter(vecRebarData, contid);
+		return diameter;
+	}
+	
 	return 0.0;
 }
 
@@ -8371,7 +8353,7 @@ void PlaneRebarAssembly::ChangeRebarLine(PIT::LineSegment& lineSeg)
 
 
 
-void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double bendradius, double la0, double lae, double diameter, int irebarlevel, bool isInface, bool bisSumps)
+void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordescrs, PIT::LineSegment Lineseg, double bendradius, double la0, double lae, double diameter, double diameterPre, int irebarlevel, bool isInface, bool bisSumps)
 {
 	m_verSlabFaceInfo.ClearData();
 	double dSideCoverConcrete = GetConcrete().sideCover * UOR_PER_MilliMeter;
@@ -9143,37 +9125,6 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 
 					}
 
-					////将所有面转换到XOZ平面
-					//CVector3D ORIPT = GetPlacement().GetTranslation();
-					//CMatrix3D tmpmat = GetPlacement();
-					//Transform trans;
-					//tmpmat.AssignTo(trans);
-					//trans.InverseOf(trans);
-					//TransformInfo transinfo(trans);
-
-					//DPoint3d ptcenter = DPoint3d::From(0, 0, 0);
-					//DPoint3d facenormal = DPoint3d::From(0, 1, 0);
-					//Transform tran;
-					//mdlTMatrix_computeFlattenTransform(&tran, &ptcenter, &facenormal);
-					//TransformInfo tinfo(tran);
-					////mdlElmdscr_add(face);
-
-
-					//downface.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(downface, transinfo);
-					//downface.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(downface, tinfo);
-					////downface.AddToModel();
-					//EditElementHandle eehselect(m_face, true);
-					//eehselect.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(eehselect, transinfo);
-					//eehselect.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(eehselect, tinfo);
-					////eehselect.AddToModel();
-
-					//Dpoint3d ptSelectmin, ptSelectmax;
-					//mdlElmdscr_computeRange(&ptSelectmin, &ptSelectmax, eehselect.GetElementDescrCP(), nullptr);
-
-					//Dpoint3d ptfacemin, ptfacemax;
-					//mdlElmdscr_computeRange(&ptfacemin, &ptfacemax, downface.GetElementDescrCP(), nullptr);
-					//double distance = ptSelectmax.Distance(ptfacemax) + ptSelectmin.Distance(ptfacemin);
-
 					double dAnchorLeng = la0;
 					if (!bIsin)
 					{
@@ -9193,7 +9144,7 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							if (bIsin)
 							{
 								m_insidef.bStartAnhorsel = true;
-								m_insidef.dStartanchoroffset = distance - diameter * 2;  
+								m_insidef.dStartanchoroffset = distance - WallRebars_OffsetLength(ptStart);//diameter * 2;
 							}
 						}
 						else
@@ -9207,7 +9158,7 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							if (bIsin)
 							{
 								m_insidef.bEndAnhorsel = true;
-								m_insidef.dEndanchoroffset = distance - diameter * 2;
+								m_insidef.dEndanchoroffset = distance - WallRebars_OffsetLength(ptEnd);//diameter * 2;
 							}
 						}
 					}
@@ -9223,7 +9174,7 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							if (bIsin)
 							{
 								m_outsidef.bStartAnhorsel = true;
-								m_outsidef.dStartanchoroffset = distance - diameter * 2;
+								m_outsidef.dStartanchoroffset = distance - WallRebars_OffsetLength(ptStart);//diameter * 2;
 							}
 						}
 						else
@@ -9236,7 +9187,7 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							if (bIsin)
 							{
 								m_outsidef.bEndAnhorsel = true;
-								m_outsidef.dEndanchoroffset = distance - diameter * 2;
+								m_outsidef.dEndanchoroffset = distance - WallRebars_OffsetLength(ptEnd);//diameter * 2;
 							}
 						}
 					}
@@ -9390,34 +9341,34 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 						if (ptmid.DistanceXY(ptStart) < ptmid.DistanceXY(ptEnd))
 						{
 							m_vecEndNormalStart = VecAngle;
-							if (bIsin)
-							{
-								dAnchorLen = tan(angeTemp)* thickNess + distance;
-								m_insidef.bStartAnhorsel = true;
-								m_insidef.dStartanchoroffset = dAnchorLen - diameter * 2;
-							}
 							m_insidef.strtype.endType = 8;
 							m_insidef.strtype.rotateAngle = angel;
 							m_insidef.strtype.endPtInfo.value1 = bendradius;
 							m_insidef.strtype.endPtInfo.value3 = dAnchorLeng;
 							m_bStartAnhorselslantedFace = true;
 							m_insidef.m_bStartIsSlefAhol = true;
+							if (bIsin)
+							{
+								dAnchorLen = tan(angeTemp)* thickNess + distance;
+								m_insidef.bStartAnhorsel = true;
+								m_insidef.dStartanchoroffset = dAnchorLen - diameter * 2;
+							}
 						}
 						else
 						{
 							m_vecEndNormalEnd = VecAngle;
-							if (bIsin)
-							{
-								dAnchorLen = tan(angeTemp)* thickNess + distance;
-								m_insidef.bEndAnhorsel = true;
-								m_insidef.dEndanchoroffset = dAnchorLen - diameter * 2;
-							}
 							m_insidef.endtype.endType = 8;
 							m_insidef.endtype.rotateAngle = angel;
 							m_insidef.endtype.endPtInfo.value1 = bendradius;
 							m_insidef.endtype.endPtInfo.value3 = dAnchorLeng;
 							m_insidef.m_bEndIsSlefAhol = true;
 							m_bEndAnhorselslantedFace = true;
+							if (bIsin)
+							{
+								dAnchorLen = tan(angeTemp)* thickNess + distance;
+								m_insidef.bEndAnhorsel = true;
+								m_insidef.dEndanchoroffset = dAnchorLen - diameter * 2;
+							}
 						}
 					}
 					else
@@ -9426,34 +9377,34 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 						if (ptmid.DistanceXY(ptStart) < ptmid.DistanceXY(ptEnd))
 						{
 							m_vecEndNormalStart = VecAngle;
-							if (bIsin)
-							{
-								dAnchorLen = tan(angeTemp)* thickNess + distance;
-								m_outsidef.bStartAnhorsel = true;
-								m_outsidef.dStartanchoroffset = dAnchorLen - diameter * 2;
-							}
 							m_outsidef.strtype.endType = 8;
 							m_outsidef.strtype.rotateAngle = angel;
 							m_outsidef.strtype.endPtInfo.value1 = bendradius;
 							m_outsidef.strtype.endPtInfo.value3 = dAnchorLeng;
 							m_outsidef.m_bStartIsSlefAhol = true;
 							m_bStartAnhorselslantedFace = true;
+							if (bIsin)
+							{
+								dAnchorLen = tan(angeTemp)* thickNess + distance;
+								m_outsidef.bStartAnhorsel = true;
+								m_outsidef.dStartanchoroffset = dAnchorLen - diameter * 2;
+							}
 						}
 						else
 						{
 							m_vecEndNormalEnd = VecAngle;
-							if (bIsin)
-							{
-								dAnchorLen = tan(angeTemp)* thickNess + distance;
-								m_outsidef.bEndAnhorsel = true;
-								m_outsidef.dEndanchoroffset = dAnchorLen - diameter * 2;
-							}
 							m_outsidef.endtype.endType = 8;
 							m_outsidef.endtype.rotateAngle = angel;
 							m_outsidef.endtype.endPtInfo.value1 = bendradius;
 							m_outsidef.endtype.endPtInfo.value3 = dAnchorLeng;
 							m_outsidef.m_bEndIsSlefAhol = true;
 							m_bEndAnhorselslantedFace = true;
+							if (bIsin)
+							{
+								dAnchorLen = tan(angeTemp)* thickNess + distance;
+								m_outsidef.bEndAnhorsel = true;
+								m_outsidef.dEndanchoroffset = dAnchorLen - diameter * 2;
+							}
 						}
 					}
 
@@ -9584,12 +9535,12 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							m_verSlabFaceInfo.strtype.rotateAngle = angel;
 							m_verSlabFaceInfo.strtype.endPtInfo.value1 = bendradius;
 							m_verSlabFaceInfo.strtype.endPtInfo.value3 = dAnchorLeng;
-							//m_verSlabFaceInfo.bStartAnhorsel = true;
-							//m_verSlabFaceInfo.dStartanchoroffset = - diameter;
+							m_verSlabFaceInfo.bStartAnhorsel = true;
+							m_verSlabFaceInfo.dStartanchoroffset = - diameterPre;
 							if (bIsin)
 							{
-								m_verSlabFaceInfo.bStartAnhorsel = true;
-								m_verSlabFaceInfo.dStartanchoroffset = distance - diameter * 2;
+								//m_verSlabFaceInfo.bStartAnhorsel = true;
+								m_verSlabFaceInfo.dStartanchoroffset = distance - WallRebars_OffsetLength(ptStart);//diameter * 2;
 							}
 						}
 						else
@@ -9599,12 +9550,12 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 							m_verSlabFaceInfo.endtype.rotateAngle = angel;
 							m_verSlabFaceInfo.endtype.endPtInfo.value1 = bendradius;
 							m_verSlabFaceInfo.endtype.endPtInfo.value3 = dAnchorLeng;
-							//m_verSlabFaceInfo.bEndAnhorsel = true;
-							//m_verSlabFaceInfo.dEndanchoroffset = - diameter;
+							m_verSlabFaceInfo.bEndAnhorsel = true;
+							m_verSlabFaceInfo.dEndanchoroffset = - diameterPre;
 							if (bIsin)
 							{
-								m_verSlabFaceInfo.bEndAnhorsel = true;
-								m_verSlabFaceInfo.dEndanchoroffset = distance - diameter * 2;
+								//m_verSlabFaceInfo.bEndAnhorsel = true;
+								m_verSlabFaceInfo.dEndanchoroffset = distance - WallRebars_OffsetLength(ptEnd);//diameter * 2;
 							}
 						}
 					}
@@ -9884,36 +9835,6 @@ void PlaneRebarAssembly::CreateAnchorBySelf(vector<MSElementDescrP> tmpAnchordes
 
 					double thod = GetfaceNormal().AngleTo(VecAngle);
 					angel = thod / PI * 180;
-					//将所有面转换到XOZ平面
-					//CVector3D ORIPT = GetPlacement().GetTranslation();
-					//CMatrix3D tmpmat = GetPlacement();
-					//Transform trans;
-					//tmpmat.AssignTo(trans);
-					//trans.InverseOf(trans);
-					//TransformInfo transinfo(trans);
-
-					//DPoint3d ptcenter = DPoint3d::From(0, 0, 0);
-					//DPoint3d facenormal = DPoint3d::From(0, 1, 0);
-					//Transform tran;
-					//mdlTMatrix_computeFlattenTransform(&tran, &ptcenter, &facenormal);
-					//TransformInfo tinfo(tran);
-					////mdlElmdscr_add(face);
-
-
-					//downface.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(downface, transinfo);
-					//downface.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(downface, tinfo);
-					////downface.AddToModel();
-					//EditElementHandle eehselect(m_face, true);
-					//eehselect.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(eehselect, transinfo);
-					//eehselect.GetHandler(MISSING_HANDLER_PERMISSION_Transform).ApplyTransform(eehselect, tinfo);
-					////eehselect.AddToModel();
-
-					//Dpoint3d ptSelectmin, ptSelectmax;
-					//mdlElmdscr_computeRange(&ptSelectmin, &ptSelectmax, eehselect.GetElementDescrCP(), nullptr);
-
-					//Dpoint3d ptfacemin, ptfacemax;
-					//mdlElmdscr_computeRange(&ptfacemin, &ptfacemax, downface.GetElementDescrCP(), nullptr);
-					//double distance = ptSelectmax.Distance(ptfacemax) + ptSelectmin.Distance(ptfacemin);
 
 					double distance = thickNess / cos(angeTemp);
 
@@ -10916,8 +10837,8 @@ void PlaneRebarAssembly::CreateCatchpitBySelf(vector<MSElementDescrP> tmpAnchord
 
 }
 
-// 处理竖向钢筋对于Z型板的钢筋分区。如果本面更长则进行分区，无论长短都需要在拐角增加平面
-bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP, bool isXDir)
+// 处理钢筋对于Z型板的钢筋分区。如果本面更长则进行分区，无论长短都需要在拐角增加平面
+bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& sectionPairs, vector<MSElementDescrP>& parafaces, DPoint3d& minP, DPoint3d& maxP, bool isXDir)
 {
 	DPoint3d ptDefault = DPoint3d::From(0, 0, 1);
 	DVec3d vecfacenor;
@@ -10959,8 +10880,8 @@ bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElement
 			pts[2] = DPoint3d::From(ptFaceMin.x, ptFaceMax.y, ptFaceMin.z);
 			pts[3] = DPoint3d::From(ptStart.x, ptFaceMax.y, ptFaceMin.z);
 
-			tmpqj[0] = (int)(faceStart - start);
-			tmpqj[(int)(faceStart - start)] = 0;
+			sectionPairs[0] = (int)(faceStart - start);
+			sectionPairs[(int)(faceStart - start)] = 0;
 		}
 		else if (COMPARE_VALUES_EPS(start - faceStart, m_slabThickness, eps) == 0 && COMPARE_VALUES_EPS(faceEnd, end, eps) == 0) {
 			// 左短，从自身构建平面，扩大分区范围
@@ -10993,8 +10914,8 @@ bool PlaneRebarAssembly::CalculateZCorner(map<int, int>& tmpqj, vector<MSElement
 			pts[2] = DPoint3d::From(ptEnd.x, ptFaceMax.y, ptFaceMax.z);
 			pts[3] = DPoint3d::From(ptFaceMax.x, ptFaceMax.y, ptFaceMax.z);
 
-			tmpqj[(int)(faceStart - start)] = (int)(faceEnd - start);
-			tmpqj[(int)(faceEnd - start)] = 0;
+			sectionPairs[(int)(faceStart - start)] = (int)(faceEnd - start);
+			sectionPairs[(int)(faceEnd - start)] = 0;
 		}
 		if (pts[0].IsEqual(DPoint3d::From(0, 0, 0)))
 			continue;
@@ -11031,13 +10952,12 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 
 	if (i - 1 >= 0)
 	{
-		/*	WString  strSize = GetvecDirSize().at(i - 1);
-			if (strSize.find(L"mm") != WString::npos)
-			{
-				strSize.ReplaceAll(L"mm", L"");
-			}
-			diameterPre = RebarCode::GetBarDiameter(strSize, ACTIVEMODEL);*/
 		BrString strRebarSize1(GetMainRebars().at(i - 1).rebarSize);
+		diameterPre = RebarCode::GetBarDiameter(strRebarSize1, ACTIVEMODEL);
+	}
+	else if(i == 0)
+	{
+		BrString strRebarSize1(GetMainRebars().at(i + 1).rebarSize);
 		diameterPre = RebarCode::GetBarDiameter(strRebarSize1, ACTIVEMODEL);
 	}
 
@@ -11268,11 +11188,11 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		{
 			LaE = 15 * diameter;
 		}
-		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, La0, LaE, diameter, i);
+		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, La0, LaE, diameter, diameterPre, i);
 
 
 		//计算配筋区间值,平行墙处理
-		map<int, int>  tmpqj;
+		map<int, int>  sectionPairs;
 		double offset = 0;
 		if (COMPARE_VALUES_EPS(minP.x, 0, 50) == 0)
 		{
@@ -11280,8 +11200,8 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 			maxP.x -= offset;
 			minP.x -= offset;
 		}
-		tmpqj[(int)minP.x] = (int)maxP.x;//大面区间
-		tmpqj[(int)maxP.x] = 0;//大面区间
+		sectionPairs[(int)minP.x] = (int)maxP.x;//大面区间
+		sectionPairs[(int)maxP.x] = 0;//大面区间
 
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
@@ -11331,20 +11251,20 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				{
 					tmaxP.x = maxP.x;
 				}
-				tmpqj[(int)tminP.x] = (int)tmaxP.x;
-				tmpqj[(int)tmaxP.x] = 0;
+				sectionPairs[(int)tminP.x] = (int)tmaxP.x;
+				sectionPairs[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
 
-		CalculateZCorner(tmpqj, parafaces, minP, maxP);
+		CalculateZCorner(sectionPairs, parafaces, minP, maxP);
 
-		map<int, int>::iterator itr = tmpqj.begin();
-		for (; itr != tmpqj.end(); itr++)
+		map<int, int>::iterator itr = sectionPairs.begin();
+		for (; itr != sectionPairs.end(); itr++)
 		{
 			map<int, int>::iterator itrnex = itr;
 			itrnex++;
-			if (itrnex == tmpqj.end())
+			if (itrnex == sectionPairs.end())
 			{
 				break;
 			}
@@ -11526,11 +11446,11 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		{
 			LaE = 15 * diameter;
 		}
-		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg1, bendradius, La0, LaE, diameter, i);
+		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg1, bendradius, La0, LaE, diameter, diameterPre, i);
 
 
 		//计算配筋区间值,平行钢筋处理
-		map<int, int>  tmpqj;
+		map<int, int>  sectionPairs;
 		double offset = 0;
 		if (COMPARE_VALUES_EPS(minP.z, 0, 50) == 0)
 		{
@@ -11538,8 +11458,8 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 			maxP.z -= offset;
 			minP.z -= offset;
 		}
-		tmpqj[(int)minP.z] = (int)maxP.z;//大面区间
-		tmpqj[(int)maxP.z] = 0;//大面区间
+		sectionPairs[(int)minP.z] = (int)maxP.z;//大面区间
+		sectionPairs[(int)maxP.z] = 0;//大面区间
 		
 
 		vector<MSElementDescrP> parafaces;//平行墙
@@ -11593,20 +11513,20 @@ void PlaneRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 				{
 					tmaxP.z = maxP.z;
 				}
-				tmpqj[(int)tminP.z] = (int)tmaxP.z;
-				tmpqj[(int)tmaxP.z] = 0;
+				sectionPairs[(int)tminP.z] = (int)tmaxP.z;
+				sectionPairs[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
 
-		CalculateZCorner(tmpqj, parafaces, minP, maxP, false);
+		CalculateZCorner(sectionPairs, parafaces, minP, maxP, false);
 
-		map<int, int>::iterator itr = tmpqj.begin();
-		for (; itr != tmpqj.end(); itr++)
+		map<int, int>::iterator itr = sectionPairs.begin();
+		for (; itr != sectionPairs.end(); itr++)
 		{
 			map<int, int>::iterator itrnex = itr;
 			itrnex++;
-			if (itrnex == tmpqj.end())
+			if (itrnex == sectionPairs.end())
 			{
 				break;
 			}
@@ -11695,13 +11615,12 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 	}
 	if (i - 1 >= 0)
 	{
-		/*WString  strSize = GetvecDirSize().at(i - 1);
-		if (strSize.find(L"mm") != WString::npos)
-		{
-			strSize.ReplaceAll(L"mm", L"");
-		}
-		diameterPre = RebarCode::GetBarDiameter(strSize, ACTIVEMODEL);*/
 		BrString strRebarSize1(GetMainRebars().at(i - 1).rebarSize);
+		diameterPre = RebarCode::GetBarDiameter(strRebarSize1, ACTIVEMODEL);
+	}
+	else if (i == 0)
+	{
+		BrString strRebarSize1(GetMainRebars().at(i + 1).rebarSize);
 		diameterPre = RebarCode::GetBarDiameter(strRebarSize1, ACTIVEMODEL);
 	}
 
@@ -11878,10 +11797,10 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		}
 		if (m_ldfoordata.downnum > 0)//顶部外侧面
 		{
-			if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
-			{
-				m_outsidef.calLen = diameterPre;
-			}
+			// if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+			// {
+			// 	m_outsidef.calLen = diameterPre;
+			// }
 			double angel = 0;
 			double thod = GetfaceNormal().AngleTo(DVec3d::From(0, 0, -1));
 			angel = thod / PI * 180;
@@ -11902,10 +11821,10 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		}
 		else if (m_ldfoordata.upnum > 0)//底部外侧面
 		{
-			if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
-			{
-				m_outsidef.calLen = diameterPre;
-			}
+			// if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+			// {
+			// 	m_outsidef.calLen = diameterPre;
+			// }
 			double angel = 0;
 			double thod = GetfaceNormal().AngleTo(DVec3d::From(0, 0, 1));
 			angel = thod / PI * 180;
@@ -11929,10 +11848,10 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 			m_sidetype = SideType::Nor;
 		}
 		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
-		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
+		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg2, bendradius, la0/*15 * diameter*/, LaE, diameter, diameterPre, i, false);
 
 		//计算配筋区间值,平行墙处理
-		map<int, int>  tmpqj;
+		map<int, int>  sectionPairs;
 		double offset = 0;
 		if (COMPARE_VALUES_EPS(minP.x, 0, 50) == 0)
 		{
@@ -11940,8 +11859,8 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 			maxP.x -= offset;
 			minP.x -= offset;
 		}
-		tmpqj[(int)minP.x] = (int)maxP.x;//大面区间
-		tmpqj[(int)maxP.x] = 0;//大面区间
+		sectionPairs[(int)minP.x] = (int)maxP.x;//大面区间
+		sectionPairs[(int)maxP.x] = 0;//大面区间
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
 		{
@@ -11990,20 +11909,20 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				{
 					tmaxP.x = maxP.x;
 				}
-				tmpqj[(int)tminP.x] = (int)tmaxP.x;
-				tmpqj[(int)tmaxP.x] = 0;
+				sectionPairs[(int)tminP.x] = (int)tmaxP.x;
+				sectionPairs[(int)tmaxP.x] = 0;
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
 
-		CalculateZCorner(tmpqj, parafaces, minP, maxP);
+		CalculateZCorner(sectionPairs, parafaces, minP, maxP);
 
-		map<int, int>::iterator itr = tmpqj.begin();
-		for (; itr != tmpqj.end(); itr++)
+		map<int, int>::iterator itr = sectionPairs.begin();
+		for (; itr != sectionPairs.end(); itr++)
 		{
 			map<int, int>::iterator itrnex = itr;
 			itrnex++;
-			if (itrnex == tmpqj.end())
+			if (itrnex == sectionPairs.end())
 			{
 				break;
 			}
@@ -12135,10 +12054,10 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		}
 		if (m_ldfoordata.downnum > 0)//顶部外侧面
 		{
-			if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
-			{
-				m_outsidef.calLen = diameterPre;
-			}
+			// if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+			// {
+			// 	m_outsidef.calLen = diameterPre;
+			// }
 			double angel = 0;
 			double thod = GetfaceNormal().AngleTo(DVec3d::From(0, 0, -1));
 			angel = thod / PI * 180;
@@ -12159,10 +12078,10 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 		}
 		else if (m_ldfoordata.upnum > 0)//底部外侧面
 		{
-			if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
-			{
-				m_outsidef.calLen = diameterPre;
-			}
+			// if (i > 0 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+			// {
+			// 	m_outsidef.calLen = diameterPre;
+			// }
 			double angel = 0;
 			double thod = GetfaceNormal().AngleTo(DVec3d::From(0, 0, 1));
 			angel = thod / PI * 180;
@@ -12186,10 +12105,10 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 			m_sidetype = SideType::Nor;
 		}
 		double la0 = 15 * stod(GetMainRebars().at(i).rebarSize) * uor_per_mm;
-		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg1, bendradius, la0/*15 * diameter*/, LaE, diameter, i, false);
+		CreateAnchorBySelf(tmpAnchordescrs, m_LineSeg1, bendradius, la0/*15 * diameter*/, LaE, diameter, diameterPre, i, false);
 
 		//计算配筋区间值,平行钢筋处理
-		map<int, int>  tmpqj;
+		map<int, int>  sectionPairs;
 		double offset = 0;
 		if (COMPARE_VALUES_EPS(minP.z, 0, 50) == 0)
 		{
@@ -12197,8 +12116,8 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 			maxP.z -= offset;
 			minP.z -= offset;
 		}
-		tmpqj[(int)minP.z] = (int)maxP.z;//大面区间
-		tmpqj[(int)maxP.z] = 0;//大面区间
+		sectionPairs[(int)minP.z] = (int)maxP.z;//大面区间
+		sectionPairs[(int)maxP.z] = 0;//大面区间
 		vector<MSElementDescrP> parafaces;//平行墙
 		for (int i = 0; i < tmpdescrs.size(); i++)
 		{
@@ -12254,20 +12173,20 @@ void PlaneRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/
 				{
 					tmaxP.z = maxP.z;
 				}
-				tmpqj[(int)tminP.z] = (int)tmaxP.z;
-				tmpqj[(int)tmaxP.z] = 0;
+				sectionPairs[(int)tminP.z] = (int)tmaxP.z;
+				sectionPairs[(int)tmaxP.z] = 0;
 				parafaces.push_back(tmpdescrs[i]);
 			}
 		}
 
-		CalculateZCorner(tmpqj, parafaces, minP, maxP, false);
+		CalculateZCorner(sectionPairs, parafaces, minP, maxP, false);
 
-		map<int, int>::iterator itr = tmpqj.begin();
-		for (; itr != tmpqj.end(); itr++)
+		map<int, int>::iterator itr = sectionPairs.begin();
+		for (; itr != sectionPairs.end(); itr++)
 		{
 			map<int, int>::iterator itrnex = itr;
 			itrnex++;
-			if (itrnex == tmpqj.end())
+			if (itrnex == sectionPairs.end())
 			{
 				break;
 			}

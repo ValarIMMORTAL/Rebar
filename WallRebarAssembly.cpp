@@ -14127,14 +14127,14 @@ long STGWallRebarAssembly::GetStreamMap(BeStreamMap &map, int typeof /* = 0 */, 
 * @param[in]	lenth   锚入长度
 * @param[in]	Point   端点位置
 * @param[in]	Point2   修改端点位置
-* @param[in]	FLAGE   是否不需要端部样式，如果FLAGE=1表示不需要端部样式，如果FLAGE=2表示尾端点位置修改为Point2位置
+* @param[in]	str_or_end_FLAGE   是否不需要端部样式，如果FLAGE=1表示不需要端部样式，如果FLAGE=2表示尾端点位置修改为Point2位置
 * @param[in/out]	data 配筋线数据
 * @author	ChenDong
 * @Date:	2024/10/17
 */
 void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditElementHandle*>alleehs, PIT::PITRebarEndTypes&  tmpendEndTypes,
 	EditElementHandle &lineEeh,EditElementHandle* Eleeh, CVector3D direction,
-	Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &FLAGE)
+	Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &str_or_end_FLAGE)
 	{
 	bool is_str = false;//是否为起始点
 	DPoint3d using_pt;
@@ -14150,7 +14150,7 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 	//钢筋线端点和钢筋端点位置是否锚出
 	if (!ISPointInHoles(alleehs, Point) || !ISPointInHoles(alleehs, using_pt ))
 	{
-		if (FLAGE == 0)//说明是起始点
+		if (str_or_end_FLAGE == 0)//说明是起始点
 			is_str = true;
 		int flag = 0;
 		//端部样式是直角锚还是倾斜锚入
@@ -14173,7 +14173,7 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 		//如果钢筋线末端点没有锚入任何实体    
 		if (!ISPointInHoles(alleehs, Point))
 		{
-			FLAGE = 2;
+			str_or_end_FLAGE = 2;
 			//PITCommonTool::CPointTool::DrowOnePoint(Point, 1, 3);//绿
 			mdlElmdscr_extractEndPoints(&str_Pt, nullptr, &end_Pt, nullptr, lineEeh.GetElementDescrP(), ACTIVEMODEL);
 			//执行钢筋与原实体作交
@@ -14219,7 +14219,7 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 		{
 			if (flag == 1)//端部弯弧为直角
 			{
-				FLAGE = 2;
+				str_or_end_FLAGE = 2;
 				using_pt = Point;
 				DPoint3d end_pt = Point;
 				direction.Negate();//方向还原
@@ -14237,16 +14237,21 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 					vectortepm.Normalize();
 					vectortepm.ScaleToLength(MoveDis);
 					using_pt.Add(vectortepm);
-
-					lenth = MoveDis + tmpendEndTypes.end.GetbendRadius();
+					//获取延伸长度
+					auto temp_pt = Point;
+					temp_pt.z = 0;
+					tmppts[0].z = 0;
+					//钢筋线点到交点的距离包含一个保护层距离所以减二倍
+					lenth = mdlVec_distance(&tmppts[0], &temp_pt) - 2 * tmpendEndTypes.end.GetbendRadius();
+					//lenth = MoveDis + tmpendEndTypes.end.GetbendRadius();
 					using_pt = Point;
 					movePoint(direction, using_pt, lenth);
+
 					//PITCommonTool::CPointTool::DrowOnePoint(using_pt, 1, 1);//绿
 					if (!ISPointInHoles(alleehs, using_pt))
 					{
 						direction.Negate();//方向还原
-
-						lenth -= tmpendEndTypes.end.GetbendRadius();
+						//lenth -= tmpendEndTypes.end.GetbendRadius();
 					}
 
 					if (is_str)//说明是起始点
@@ -14257,7 +14262,7 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditE
 			}
 			else//端部弯弧不为直角有可能会延伸出模型
 			{
-				FLAGE = 3;
+				str_or_end_FLAGE = 3;
 			}
 		}
 

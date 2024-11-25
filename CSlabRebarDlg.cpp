@@ -246,7 +246,7 @@ BOOL CSlabRebarDlg::OnInitDialog()
 	this->SetWindowText(L"廊道板配筋");
 	if (m_isCombineSlab)
 		this->SetWindowText(L"廊道板合并配筋");
-	SetWindowPos(&this->wndNoTopMost, 0, 0, 0, 0, SWP_NOSIZE);//让对话框界面显示在最前端
+	SetWindowPos(&this->wndTopMost, 0, 0, 0, 0, SWP_NOSIZE);//让对话框界面显示在最前端
 	for each (auto var in g_listRebarSize)
 	{
 		m_ComboSize.AddString(var);

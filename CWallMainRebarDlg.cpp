@@ -373,7 +373,7 @@ void CWallMainRebarDlg::GetAllRebarData(std::vector<PIT::ConcreteRebar> &vecList
 {
 	if (m_isWall)
 		m_listMainRebar.SetisWall();
-	m_listMainRebar.GetAllRebarData(vecListData);//从列表读取钢筋数据
+	m_listMainRebar.GetAllRebarData(vecListData);
 	for (auto& it : vecListData)
 	{
 		if (g_wallRebarInfo.concrete.m_SlabRebarMethod == 2 && it.rebarDir == 1) //放射径向

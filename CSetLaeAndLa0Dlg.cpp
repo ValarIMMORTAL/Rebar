@@ -251,7 +251,6 @@ BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 	// 1、为 Tab Control 增加两个页面以及创建钢筋标准选择
-
 	// 根据 g_global_stander 的值来设置组合框的文本
 	if (g_global_stander == 1 || lastGlobalStander == 1) {
 		m_comboText = _T("核电厂混凝土结构技术标准");
@@ -265,7 +264,6 @@ BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 
 	m_tab.InsertItem(0, _T("搭接"));
 	m_tab.InsertItem(1, _T("锚固"));
-	g_global_stander = 0;
 	m_La0Dlg.Create(IDD_SetLa0, &m_tab);//搭接
 	m_LaeDlg.Create(IDD_SetLae, &m_tab);//锚固
 
@@ -284,8 +282,10 @@ BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 	//3、把对话框对象指针保存起来
 	pDialog[0] = &m_La0Dlg;
 	pDialog[1] = &m_LaeDlg;
-
-	//4、显示初始页面
+	//4、初始化页面
+	pDialog[0]->OnInitDialog();
+	pDialog[1]->OnInitDialog();
+	//5、显示初始页面
 	pDialog[0]->ShowWindow(SW_SHOW);
 	pDialog[1]->ShowWindow(SW_HIDE);
 
