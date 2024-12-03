@@ -44,11 +44,11 @@ BOOL CSetLa0::UpdateLaeListALL()
 	else if (g_global_stander == 1)
 	{
 		//3、根据CComboBox的值设置m_Condition
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 		//4、填写表格的值存到 m_TableData
-		SetListData_2();
+		SetListData_NuclearStandards();
 		//5、根据m_Condition的值设置表格的数据
-		UpdateLa0List_2();
+		UpdateLa0List_NuclearStandards();
 		//6、 读取XML数据
 		readXML();
 		//7、根据全局变量设置的值刷新到上一次设置的表格
@@ -204,9 +204,9 @@ void CSetLa0::UpdateComboBox()
 		}
 		if (g_global_stander == 1)
 		{
-			SetConditionData_2();
-			SetListData_2();
-			UpdateLa0List_2();
+			SetConditionData_NuclearStandards();
+			SetListData_NuclearStandards();
+			UpdateLa0List_NuclearStandards();
 		}
 		Save_gConcreteAndRebar_Grade();
 	}
@@ -252,7 +252,7 @@ void CSetLa0::SetConditionData()
 }
 
 //根据ComboBox的值设置Condition的值      核广电标准
-void CSetLa0::SetConditionData_2()
+void CSetLa0::SetConditionData_NuclearStandards()
 {
 	if ((m_Str_RebarDiameter == _T("<=25")))
 	{
@@ -306,7 +306,7 @@ void CSetLa0::Set_gConditionData()
 }
 
 //填充核广电标准表格数据
-void CSetLa0::SetListData_2()
+void CSetLa0::SetListData_NuclearStandards()
 {
 	//存第一行，每一列的数据
 	vector<vector<CString>> row1;
@@ -830,7 +830,7 @@ void CSetLa0::SetListData()
 
 
 //刷新表格数据
-void CSetLa0::UpdateLa0List_2()
+void CSetLa0::UpdateLa0List_NuclearStandards()
 {
 	if (g_global_stander != 1)
 	{
@@ -1026,7 +1026,7 @@ void CSetLa0::OnCbnSelchangeConcretegrade()
 		Set_gConditionData();
 	}
 	else
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 	Save_gConcreteAndRebar_Grade();
 
 	WriteXml();
@@ -1053,8 +1053,8 @@ void CSetLa0::OnCbnSelchangeOverlaparea()
 	}
 	else
 	{
-		SetConditionData_2();
-		UpdateLa0List_2();
+		SetConditionData_NuclearStandards();
+		UpdateLa0List_NuclearStandards();
 	}
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
@@ -1086,7 +1086,7 @@ void CSetLa0::OnCbnSelchangeRebargrade()
 	}
 	else
 	{
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 	}
 	Save_gConcreteAndRebar_Grade();
 
@@ -1114,8 +1114,8 @@ void CSetLa0::OnCbnSelchangeRebardiameter()
 	}
 	else
 	{
-		SetConditionData_2();
-		UpdateLa0List_2();
+		SetConditionData_NuclearStandards();
+		UpdateLa0List_NuclearStandards();
 	}
 
 	//SaveConcreteAndRebar_Grade();
@@ -1145,8 +1145,8 @@ void CSetLa0::OnCbnSelchangeSeismicgrade()
 	}
 	else
 	{
-		SetConditionData_2();
-		UpdateLa0List_2();
+		SetConditionData_NuclearStandards();
+		UpdateLa0List_NuclearStandards();
 	}
 	Save_gConcreteAndRebar_Grade();
 

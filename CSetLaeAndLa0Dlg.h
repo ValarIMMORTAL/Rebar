@@ -17,7 +17,7 @@ public:
 
 	virtual BOOL OnInitDialog();
 public:
-	static int    lastGlobalStander; // 静态变量 现在选择的钢筋标准 0国标，1是核工业标 
+	static int    s_lastGlobalStander; // 静态变量 现在选择的钢筋标准 0国标，1是核工业标 
 	CString       m_comboText;  //现在选择的钢筋标准 0国标，1是核工业标  
 	int			  m_CurSelTab;//现在选择的界面下标 0是搭接，1是锚固
 	CString       m_Str_Stander;		//钢筋标准

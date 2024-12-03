@@ -13,7 +13,7 @@
 
 extern StrLa0 g_StrLa0;
 extern StrLae g_StrLae;
-int CSetLaeAndLa0Dlg::lastGlobalStander = -1; // 定义并初始化静态变量
+int CSetLaeAndLa0Dlg::s_lastGlobalStander = -1; // 定义并初始化静态变量
 
 int g_global_stander = 0; // 定义并初始化全局变量
 
@@ -241,7 +241,7 @@ void CSetLaeAndLa0Dlg::OnClose() {
 			g_global_stander = 0;
 		}
 
-		lastGlobalStander = g_global_stander; // 保存最后的选择状态
+		s_lastGlobalStander = g_global_stander; // 保存最后的选择状态
 	}
 
 	CDialogEx::OnClose();
@@ -252,7 +252,7 @@ BOOL CSetLaeAndLa0Dlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 	// 1、为 Tab Control 增加两个页面以及创建钢筋标准选择
 	// 根据 g_global_stander 的值来设置组合框的文本
-	if (g_global_stander == 1 || lastGlobalStander == 1) {
+	if (g_global_stander == 1 || s_lastGlobalStander == 1) {
 		m_comboText = _T("核电厂混凝土结构技术标准");
 	}
 	else {

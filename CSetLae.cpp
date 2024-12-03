@@ -83,9 +83,9 @@ BOOL CSetLae::UpdateLaeListALL()
 	else if (g_global_stander == 1)
 	{
 		//3、根据CComboBox的值设置m_Condition
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 		//4、填写表格的值存到 m_TableData
-		SetListData_2();
+		SetListData_NuclearStandards();
 		//5、根据m_Condition的值设置表格的数据
 		UpdateLaeList();
 		//6、 读取XML数据
@@ -184,8 +184,8 @@ void CSetLae::UpdateComboBox()
 		}
 		if (g_global_stander == 1)
 		{
-			SetConditionData_2();
-			SetListData_2();
+			SetConditionData_NuclearStandards();
+			SetListData_NuclearStandards();
 		}
 		UpdateLaeList();
 		Save_gConcreteAndRebar_Grade();
@@ -216,7 +216,7 @@ void CSetLae::SetConditionData()
 }
 
 //根据ComboBox的值设置Condition的值      核广电标准
-void CSetLae::SetConditionData_2()
+void CSetLae::SetConditionData_NuclearStandards()
 {
 	if ((m_Str_RebarDiameter == _T("<=25")))
 	{
@@ -418,7 +418,7 @@ void CSetLae::SetListData()
 }
 
 //填充核广电标准表格数据
-void CSetLae::SetListData_2()
+void CSetLae::SetListData_NuclearStandards()
 {
 	//存第一行，每一列的数据
 	vector<vector<CString>> row1;
@@ -658,7 +658,7 @@ void CSetLae::OnCbnSelchangeSeismicgrade()
 		Set_gConditionData();
 	}
 	else
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 	UpdateLaeList();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
@@ -686,7 +686,7 @@ void CSetLae::OnCbnSelchangeConcretegrade()
 		Set_gConditionData();
 	}
 	else
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
 
@@ -714,7 +714,7 @@ void CSetLae::OnCbnSelchangeRebargrade()
 		Set_gConditionData();
 	}
 	else
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();
 
@@ -741,7 +741,7 @@ void CSetLae::OnCbnSelchangeRebardiameter()
 		Set_gConditionData();
 	}
 	else
-		SetConditionData_2();
+		SetConditionData_NuclearStandards();
 	UpdateLaeList();
 	//SaveConcreteAndRebar_Grade();
 	Save_gConcreteAndRebar_Grade();

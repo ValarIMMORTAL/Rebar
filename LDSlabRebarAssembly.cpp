@@ -1981,18 +1981,17 @@ namespace Gallery
 				else if (COMPARE_VALUES_EPS(NormalVec_end, vec_str_Down, 0.01) == 0)
 					ExtendPt_end.z -= tmpendTypes.end.GetbendLen();
 
-				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt_end))
+				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt_end))//是否端点锚出
 				{
 					Dpoint3d  temp_pt = itrplus->second;
-					
-					double bendLen = tmpendTypes.end.GetbendLen() - tmpendTypes.end.GetbendRadius();
+					double bendLen = tmpendTypes.end.GetbendLen() - tmpendTypes.end.GetbendRadius();//回缩一个保护层距离
 					move_point(NormalVec_end, temp_pt, length_end);
 					if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
 					{
 						NormalVec_end.Negate();
 						temp_pt = itrplus->second;
 						move_point(NormalVec_end, temp_pt, length_end);
-						if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))
+						if (!ISPointInHoles(m_ScanedAllWallsandFloor, temp_pt))//方向取反再判断一次
 						{
 							temp_pt = itrplus->second;
 							NormalVec_end.Negate();

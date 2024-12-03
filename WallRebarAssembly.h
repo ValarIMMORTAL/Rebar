@@ -140,7 +140,7 @@ public:
 	virtual ~WallRebarAssembly() {};
 	double m_width;
 public:
-	std::vector<EditElementHandle*> m_Around_Ele_Holeehs;//获取当前选择实体周围元素的孔洞
+	std::vector<EditElementHandle*> m_around_ele_holeEehs;//获取当前选择实体周围元素的孔洞
 	std::vector<EditElementHandle*> m_Holeehs;
 	std::vector<EditElementHandle*> m_Negs;
 	std::vector<EditElementHandle*> m_useHoleehs;//筛选后的孔洞
@@ -193,7 +193,7 @@ public:
 	static bool IsSmartSmartFeature(EditElementHandle& eeh);
 	void SetTieRebarInfo(TieReBarInfo const& tieRebarInfo);
 	const TieReBarInfo GetTieRebarInfo() const;
-
+	//获取当前实体z轴最大底面和z轴最小底面
 	static MSElementDescrP GetElementDownFace(ElementHandleCR eeh, EditElementHandleR DownFace, double* tHeight);
 	
 	void ClearLines();
@@ -342,26 +342,26 @@ public:
 		PIT::PITRebarEndTypes& pitRebarEndTypes, DgnModelRefP modelRef);
 
 	/*
-* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
-* @param[in]	nowVec  判断是竖直方向还是水平方向
-* @param[in]	alleehs 周围元素
-* @param[in]	tmpendEndTypes 端部样式
-* @param[in]	lineEeh 钢筋线
-* @param[in]    Eleeh  开孔之前的实体（墙、板）
-* @param[in]	direction  锚入角度，方向
-* @param[in]	matrix  投影矩阵
-* @param[in]	MoveDis 保护层距离
-* @param[in]	lenth   锚入长度
-* @param[in]	Point   端点位置
-* @param[in]	Point2   修改端点位置
-* @param[in]	FLAGE   是否不需要端部样式，如果FLAGE=1表示不需要端部样式，如果FLAGE=2表示尾端点位置修改为Point2位置
-* @param[in/out]	data 配筋线数据
-* @author	ChenDong
-* @Date:	2024/10/17
-*/
-	void JudgeBarLinesLegitimate(CVector3D  nowVec,vector<EditElementHandle*>alleehs, PIT::PITRebarEndTypes& tmpendEndTypes,
-		EditElementHandle &lineEeh,EditElementHandle *Eleeh, CVector3D direction
-		, Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &FLAGE);
+	* @desc:		根据周围元素和钢筋线的位置计算钢筋是否合法
+	* @param[in]	nowVec  判断是竖直方向还是水平方向
+	* @param[in]	alleehs 周围元素
+	* @param[in]	tmpendEndTypes 端部样式
+	* @param[in]	lineEeh 钢筋线
+	* @param[in]    Eleeh  开孔之前的实体（墙、板）
+	* @param[in]	anchored_vec  锚入角度，方向
+	* @param[in]	matrix  投影矩阵
+	* @param[in]	moveDis 保护层距离
+	* @param[in]	lenth   锚入长度
+	* @param[in]	ori_Point   原端点位置
+	* @param[in]	mov_Point   修改端点位置
+	* @param[in]	type_flag   是否不需要端部样式，如果FLAGE=1表示不需要端部样式，如果FLAGE=2表示尾端点位置修改为mov_Point位置
+	* @param[in/out]	data 配筋线数据
+	* @author	ChenDong
+	* @Date:	2024/10/17
+	*/
+	void JudgeBarLinesLegitimate(const CVector3D  nowVec,  vector<EditElementHandle*>alleehs,  PIT::PITRebarEndTypes& tmpendEndTypes,
+		EditElementHandle &lineEeh, EditElementHandle *Eleeh, CVector3D anchored_vec
+		, const Transform matrix,  double MoveDis,  double lenth, DPoint3d &Point, DPoint3d &Point2, int &type_Flag);
 
 	/*
 

@@ -39,14 +39,14 @@ public:
 	//根据ComboBox的值设置Condition的值
 	void SetConditionData();
 	//根据全局变量的值设置Condition的值
-	void Set_gConditionData();
-	void SetConditionData_2();
+	void Set_gConditionData();//国家标准
+	void SetConditionData_NuclearStandards();//核工业标准
 	//填充表格数据
-	void SetListData();
-	void SetListData_2();
+	void SetListData();//国家标准
+	void SetListData_NuclearStandards();//核工业标准
 	//刷新表格数据
-	void UpdateLa0List();
-	void UpdateLa0List_2();
+	void UpdateLa0List();//国家标准
+	void UpdateLa0List_NuclearStandards();//核工业标准
 	//保存表格里面的值
 	void SaveConcreteAndRebar_Grade();
 	//根据全局变量里面的钢筋等级保存表格里面的值

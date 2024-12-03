@@ -34,13 +34,13 @@ public:
 	//更新ComboBox的值
 	void UpdateComboBox();
 	//根据ComboBox的值设置Condition的值
-	void SetConditionData();
-	void SetConditionData_2();
+	void SetConditionData();//国家标准
+	void SetConditionData_NuclearStandards();//核工业标准
 	//根据全局变量的值设置Condition的值
 	void Set_gConditionData();
 	//填充表格数据
-	void SetListData();
-	void SetListData_2();
+	void SetListData();//国家标准
+	void SetListData_NuclearStandards();//核工业标准
 	//刷新表格数据
 	void UpdateLaeList();
 	//保存表格里面的值
