@@ -133,7 +133,7 @@
     <ClCompile>
       <AdditionalOptions>/Zm512 /bigobj</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\example\english;$(GalleryIntelligentRebar_INCLUDE);Sqlite3\include;..\PITGraphFunction\include;..\CommonId</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\Bentley\MicroStationCONNECTSDK\include;..\example\english;$(GalleryIntelligentRebar_INCLUDE);Sqlite3\include;..\PITGraphFunction\include;..\CommonId</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_AFXDLL;USTN_TYPEDEFS;USING_LICCLIENT_10;winNT;_REBARMA_DLL;SELECT_DLL;BE_MEMCONTROL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
