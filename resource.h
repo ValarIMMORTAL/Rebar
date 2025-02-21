@@ -459,7 +459,10 @@
 #define IDB_BITMAP24                    1418
 #define IDB_BITMAP_GalleryRebar         1418
 #define IDD_DIALOG_Catchpit_MainRebar   1419
+#define IDC_TAB_FacesRebarEx            1419
 #define IDD_DIALOG_CatchpitRebar        1420
+#define IDD_DIALOG_FacesRebarEx         1421
+#define IDD_DIALOG_FacesRebar_MainRebarEx 1422
 
 // Next default values for new objects
 // 
@@ -467,7 +470,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        1421
 #define _APS_NEXT_COMMAND_VALUE         1365
-#define _APS_NEXT_CONTROL_VALUE         1419
+#define _APS_NEXT_CONTROL_VALUE         1420
 #define _APS_NEXT_SYMED_VALUE           1367
 #endif
 #endif

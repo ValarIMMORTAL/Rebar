@@ -5,6 +5,8 @@
 |  $Copyright: (c) 2015 Bentley Systems, Incorporated. All rights reserved. $
 |
 +--------------------------------------------------------------------------------------*/
+#pragma once
+
 #include "GalleryIntelligentRebar.h"
 #include <DgnView\LocateSubEntityTool.h>   
 #include <PSolid\PSolidCoreAPI.h>

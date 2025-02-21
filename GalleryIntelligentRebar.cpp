@@ -31,6 +31,8 @@
 #include "HoleRebarAssembly.h"
 #include "SelectFaceTool.h"
 #include "CCheckLicenseTool.h"
+#include "CFacesRebarDlgEx.h"
+#include "SelectFaceToolEx.h"
 
 extern StrLa0 g_StrLa0;
 extern StrLae g_StrLae;
@@ -83,6 +85,22 @@ void FacesRebar(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityP
 	pFaceRebarDlg->SetDlgType(0);
 	pFaceRebarDlg->Create(IDD_DIALOG_FacesRebar);
 	pFaceRebarDlg->ShowWindow(SW_SHOW);
+}
+
+CFacesRebarDlgEx *pFaceRebarDlgEx = NULL;
+void FacesRebarEx(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityPtr> &faces)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	if (!pFaceRebarDlgEx == NULL)
+	{
+		delete pFaceRebarDlgEx;
+		pFaceRebarDlgEx = NULL;
+	}
+	pFaceRebarDlgEx = new CFacesRebarDlgEx(eeh, eehnew, faces, CWnd::FromHandle(MSWIND));
+	pFaceRebarDlgEx->SetIsHide(true);
+	pFaceRebarDlgEx->SetDlgType(0);
+	pFaceRebarDlgEx->Create(IDD_DIALOG_FacesRebarEx);
+	pFaceRebarDlgEx->ShowWindow(SW_SHOW);
 }
 
 extern RebarXmlInfo g_rebarXmlInfo;
@@ -499,6 +517,13 @@ Public void startFaceSelectTool(WCharCP unparsed)
 	SelectFaceTool::InstallNewInstance(1, 1);
 }
 
+//自适应面配筋工具
+Public void startFaceSelectToolEx(WCharCP unparsed)
+{
+	// NOTE: Call the method to create/install the tool, RefCounted classes don't have public constructors...
+	SelectFaceToolEx::InstallNewInstance(1, 1);
+}
+
 // Public void RebarSDK_Test(WCharCP unparsed)
 // {
 // 	mdlDialog_openModal(NULL, GetResourceHandle(), DIALOGID_WallRebar);
@@ -521,7 +546,7 @@ static MdlCommandNumber s_commandNumbers[] =
 	{(CmdHandler)SetLaeAndLa0, CMD_LDREBAR_GALLERY_SET_LAEANDLA0 },//设置搭接与锚固长度
 	{(CmdHandler)startFaceSelectTool, CMD_LDREBAR_GALLERY_FACEREBAR }, //面配筋
 	{(CmdHandler)Gallery::cmd_gallery_buttress, CMD_LDREBAR_GALLERY_SINGLE_BUTTRESS },//支墩配筋
-	{(CmdHandler)Gallery::cmd_Edge_settings, CMD_LDREBAR_GALLERY_EDAGEREBAR },//沿边加强筋
+	{(CmdHandler)startFaceSelectToolEx, CMD_LDREBAR_GALLERY_EDAGEREBAR },//沿边加强筋
 	{(CmdHandler)Gallery::TieRebarFaceTools, CMD_LDREBAR_GALLERY_FACETIEREBAR },//按面拉筋
 	{(CmdHandler)Gallery::StairsRebarSetting, CMD_LDREBAR_GALLERY_STAIRSREBAR },//楼梯配筋
 	{(CmdHandler)Gallery::HoleReinForcingRebarSetting, CMD_LDREBAR_GALLERY_HOLEREINFORCINGREBAR },//孔洞加强筋

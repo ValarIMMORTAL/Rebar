@@ -243,6 +243,12 @@
     </ClCompile>
     <ClCompile Include="CatchpitMainRebarDlg.cpp" />
     <ClCompile Include="CatchpitRebarDlg.cpp" />
+    <ClCompile Include="CFacesMainRebarDlgEx.cpp">
+      <Filter>MFC Classes\自适应面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesRebarDlgEx.cpp">
+      <Filter>MFC Classes\自适应面配筋</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -382,6 +388,18 @@
     </Filter>
     <Filter Include="MFC Classes\集水坑配筋">
       <UniqueIdentifier>{d4d883bb-36c6-45b1-bf8f-3aaeb54356db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\自适应面配筋">
+      <UniqueIdentifier>{8cf490fa-f05c-42fe-9734-8df16d82ae14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\MFC Resources">
+      <UniqueIdentifier>{6ea6615a-8a90-495c-a0fb-0a031b3bc8d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\MFC Resources\Images">
+      <UniqueIdentifier>{9eb4ca24-3568-4cf0-b7fb-72bfd5a8611d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\自适应面配筋">
+      <UniqueIdentifier>{7a9ca626-c062-4667-8f28-5aad4dd4e4d0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -746,5 +764,14 @@
     </ClInclude>
     <ClInclude Include="CatchpitMainRebarDlg.h" />
     <ClInclude Include="CatchpitRebarDlg.h" />
+    <ClInclude Include="SelectFaceToolEx.h">
+      <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesMainRebarDlgEx.h">
+      <Filter>MFC Classes\自适应面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesRebarDlgEx.h">
+      <Filter>MFC Classes\自适应面配筋</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

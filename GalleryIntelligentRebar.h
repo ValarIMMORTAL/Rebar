@@ -76,6 +76,7 @@ void PlaceWallRebar(WCharCP unparsed);
 
 void FacesRebar(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityPtr> &faces);
 
+void FacesRebarEx(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityPtr> &faces);
 //end
 // commands by name
 // void RebarSDK_Test(WCharCP);

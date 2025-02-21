@@ -189,7 +189,9 @@
     <ClCompile Include="CDoorHoleDlg.cpp" />
     <ClCompile Include="CEdgeLineRebarDlg.cpp" />
     <ClCompile Include="CFacesMainRebarDlg.cpp" />
+    <ClCompile Include="CFacesMainRebarDlgEx.cpp" />
     <ClCompile Include="CFacesRebarDlg.cpp" />
+    <ClCompile Include="CFacesRebarDlgEx.cpp" />
     <ClCompile Include="CFacesRebarEndTypeDlg.cpp" />
     <ClCompile Include="CFaceTieRebarToolAssembly.cpp" />
     <ClCompile Include="CHoleRebarListCtrl.cpp" />
@@ -327,7 +329,9 @@
     <ClInclude Include="CDoorHoleDlg.h" />
     <ClInclude Include="CEdgeLineRebarDlg.h" />
     <ClInclude Include="CFacesMainRebarDlg.h" />
+    <ClInclude Include="CFacesMainRebarDlgEx.h" />
     <ClInclude Include="CFacesRebarDlg.h" />
+    <ClInclude Include="CFacesRebarDlgEx.h" />
     <ClInclude Include="CFacesRebarEndTypeDlg.h" />
     <ClInclude Include="CFaceTieRebarToolAssembly.h" />
     <ClInclude Include="CHoleRebarListCtrl.h" />
@@ -388,6 +392,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="PickElementTool.h" />
     <ClInclude Include="SelectFaceTool.h" />
+    <ClInclude Include="SelectFaceToolEx.h" />
     <ClInclude Include="SelectRebarTool.h" />
     <ClInclude Include="SetParam.h" />
     <ClInclude Include="SingleRebarAssembly.h" />

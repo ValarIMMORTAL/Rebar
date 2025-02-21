@@ -10,6 +10,7 @@
 #include "CWallMainRebarDlg.h"
 #include "GallerySettingsMainRebarPage.h"
 #include "CFacesMainRebarDlg.h"
+#include "CFacesMainRebarDlgEx.h"
 #include "CatchpitMainRebarDlg.h"
 #include <Windows.h>
 
@@ -17,6 +18,7 @@ using namespace Gallery;
 
 extern CWallMainRebarDlg* g_wallMainDlg;
 extern CFacesMainRebarDlg* g_faceMainDlg;
+extern CFacesMainRebarDlgEx* g_faceMainDlgEx;
 extern CatchpitMainRebarDlg * g_CatchpitMainDlg;
 //extern SettingsMainRebarPage* g_settingMaindlg;
 
@@ -722,6 +724,16 @@ void C_RebarTemplate::OnBnClickedOk()
 		{
 			g_faceMainDlg = nullptr;
 			delete g_faceMainDlg;
+		}
+	}
+	else if (nullptr != g_faceMainDlgEx)
+	{
+		g_faceMainDlgEx->OnBnClickedUpdatadlg();
+		g_faceMainDlgEx->Save_templateName();
+		if (nullptr != g_faceMainDlgEx)
+		{
+			g_faceMainDlgEx = nullptr;
+			delete g_faceMainDlgEx;
 		}
 	}
 	else if (nullptr != g_CatchpitMainDlg)
