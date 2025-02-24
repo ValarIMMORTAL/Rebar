@@ -71,6 +71,7 @@ void SetLa0andLaeValue()
 	delete LaeData;
 
 }
+// 面配筋
 CFacesRebarDlg *pFaceRebarDlg = NULL;
 void FacesRebar(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityPtr> &faces)
 {
@@ -86,7 +87,7 @@ void FacesRebar(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityP
 	pFaceRebarDlg->Create(IDD_DIALOG_FacesRebar);
 	pFaceRebarDlg->ShowWindow(SW_SHOW);
 }
-
+// 自适应面配筋
 CFacesRebarDlgEx *pFaceRebarDlgEx = NULL;
 void FacesRebarEx(ElementHandleCR eeh, ElementId eehnew, const bvector<ISubEntityPtr> &faces)
 {

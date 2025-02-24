@@ -230,6 +230,7 @@
     <ClCompile Include="EdgeRebarAssembly.cpp" />
     <ClCompile Include="C_RebarTemplate.cpp" />
     <ClCompile Include="FacesRebarAssembly.cpp" />
+    <ClCompile Include="FacesRebarAssemblyEx.cpp" />
     <ClCompile Include="GallerySettings.cpp" />
     <ClCompile Include="GallerySettingsDialog.cpp" />
     <ClCompile Include="GallerySettingsMainRebarPage.cpp" />
@@ -367,6 +368,7 @@
     <ClInclude Include="EdgeRebarAssembly.h" />
     <ClInclude Include="C_RebarTemplate.h" />
     <ClInclude Include="FacesRebarAssembly.h" />
+    <ClInclude Include="FacesRebarAssemblyEx.h" />
     <ClInclude Include="GallerySettings.h" />
     <ClInclude Include="GallerySettingsDialog.h" />
     <ClInclude Include="GallerySettingsMainRebarPage.h" />

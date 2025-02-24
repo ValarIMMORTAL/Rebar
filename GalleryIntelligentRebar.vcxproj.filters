@@ -249,6 +249,9 @@
     <ClCompile Include="CFacesRebarDlgEx.cpp">
       <Filter>MFC Classes\自适应面配筋</Filter>
     </ClCompile>
+    <ClCompile Include="FacesRebarAssemblyEx.cpp">
+      <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -772,6 +775,9 @@
     </ClInclude>
     <ClInclude Include="CFacesRebarDlgEx.h">
       <Filter>MFC Classes\自适应面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="FacesRebarAssemblyEx.h">
+      <Filter>Helper Classes\自适应面配筋</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
