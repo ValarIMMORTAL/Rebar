@@ -67,6 +67,7 @@ public:
 
 protected:
 	void			Init();
+	void			movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
 
 protected:
 	virtual int		GetPolymorphic() const override { return REX_Type::kLastRebarElement + kRebarAssembly + PIT::PITRebarAssemblyEnum::Face; }

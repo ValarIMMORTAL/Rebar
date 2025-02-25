@@ -70,9 +70,6 @@
     <ClCompile Include="CACCDataSetDlg.cpp">
       <Filter>MFC Classes\Controls</Filter>
     </ClCompile>
-    <ClCompile Include="CRebarEndPointSetDlg.cpp">
-      <Filter>MFC Classes</Filter>
-    </ClCompile>
     <ClCompile Include="CTieRebarSetDlg.cpp">
       <Filter>MFC Classes</Filter>
     </ClCompile>
@@ -252,6 +249,9 @@
     <ClCompile Include="FacesRebarAssemblyEx.cpp">
       <Filter>Helper Classes\自适应面配筋</Filter>
     </ClCompile>
+    <ClCompile Include="CRebarEndPointSetDlg.cpp">
+      <Filter>MFC Classes\钢筋端部设置</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -403,6 +403,9 @@
     </Filter>
     <Filter Include="MFC Classes\自适应面配筋">
       <UniqueIdentifier>{7a9ca626-c062-4667-8f28-5aad4dd4e4d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\钢筋端部设置">
+      <UniqueIdentifier>{9b52872c-e4e2-4142-9193-d3cd62551f83}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -584,9 +587,6 @@
     </ClInclude>
     <ClInclude Include="CACCDataSetDlg.h">
       <Filter>MFC Classes\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="CRebarEndPointSetDlg.h">
-      <Filter>MFC Classes</Filter>
     </ClInclude>
     <ClInclude Include="CTieRebarSetDlg.h">
       <Filter>MFC Classes</Filter>
@@ -778,6 +778,9 @@
     </ClInclude>
     <ClInclude Include="FacesRebarAssemblyEx.h">
       <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CRebarEndPointSetDlg.h">
+      <Filter>MFC Classes\钢筋端部设置</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

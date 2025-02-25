@@ -27,8 +27,6 @@
 
 class FacesRebarAssembly : public PIT::PITRebarAssembly
 {
-
-
 public:
 	enum FaceType
 	{
@@ -74,8 +72,6 @@ public:
 
 	map<ElementHandle*, double> m_mapFloorAndHeight;//集水坑上面的板对应的高度
 
-	
-
 	RebarSetTagArray m_rsetTags;
 
 	int m_solidType = -1; //0：板，1为墙
@@ -104,6 +100,7 @@ public:
 
 protected:
 	void			Init();
+	void			movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
 
 protected:
 	virtual int		GetPolymorphic() const override { return REX_Type::kLastRebarElement + kRebarAssembly + PIT::PITRebarAssemblyEnum::Face; }

@@ -633,6 +633,16 @@ void CFacesMainRebarDlgEx::OnEnKillfocusEdit4()
 	m_EditLevel.GetWindowText(strLevelNum);
 	m_Concrete.rebarLevelNum = atoi(CT2A(strLevelNum));
 	UpdateRebarList();
+	CTabCtrl* pTabCtrl = (CTabCtrl*)GetParent();
+	if (pTabCtrl)
+	{
+		CFacesRebarDlgEx* pDlg = (CFacesRebarDlgEx*)pTabCtrl->GetParent();
+		if (pDlg)
+		{
+			pDlg->m_PageEndType.SetRearLevelNum(m_Concrete.rebarLevelNum);
+			pDlg->m_PageEndType.UpdateEndTypeList();
+		}
+	}
 }
 
 

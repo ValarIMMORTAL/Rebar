@@ -204,7 +204,7 @@ bool IsHaveParaWall(DPoint3d ptstr, DPoint3d ptend, MSElementDescrP tmpfaces[20]
 	return false;
 }
 
-void movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true)
+void FacesRebarAssembly::movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag)
 {
 	vec.Normalize();
 	if (!bFlag)

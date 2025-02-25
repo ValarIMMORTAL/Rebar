@@ -37,6 +37,16 @@ void FacesRebarAssemblyEx::Init()
 	memset(&m_Concrete, 0, sizeof(Concrete));
 }
 
+void FacesRebarAssemblyEx::movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag)
+{
+	vec.Normalize();
+	if (!bFlag)
+	{
+		vec.Negate();
+	}
+	vec.ScaleToLength(disLen);
+	movePt.Add(vec);
+}
 
 void FacesRebarAssemblyEx::ClearLines()
 {
@@ -2003,133 +2013,49 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 	double startbendRadius, endbendRadius;
 	double startbendLen, endbendLen;
 	double begStraightAnchorLen = 0, endStraightAnchorLen = 0;
-	switch (endType[0].endType)
+	auto ProcessEndType = [&](RebarEndType& endType, PIT::EndType const& srcEndType, BrStringCR sizeKey, DgnModelRefP modelRef, double& bendRadius, double& bendLen, double& straightAnchorLen)
 	{
-	case 0:	//无
-	case 1:	//弯曲
-	case 2:	//吊钩
-	case 3:	//折线
-		endTypeStart.SetType(RebarEndType::kNone);
+		switch (srcEndType.endType)
+		{
+		case 0: //无
+		case 1: //弯曲
+		case 2: //吊钩
+		case 3: //折线
+			endType.SetType(RebarEndType::kNone);
+			break;
+		case 7: //直锚
+			endType.SetType(RebarEndType::kLap);
+			straightAnchorLen = srcEndType.endPtInfo.value1; //锚入长度
+			break;
+		case 4: //90度弯钩
+		case 5: //135度弯钩
+		case 6: //180度弯钩
+		{
+			if (srcEndType.endType == 4) endType.SetType(RebarEndType::kBend);
+			else if (srcEndType.endType == 5) endType.SetType(RebarEndType::kCog);
+			else if (srcEndType.endType == 6) endType.SetType(RebarEndType::kHook);
+			bendRadius = srcEndType.endPtInfo.value1;
+			if (COMPARE_VALUES(bendRadius, 0) == 0)
+			{
+				bendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false); //乘以了30
+			}
+			bendLen = srcEndType.endPtInfo.value3; //预留长度
+			if (COMPARE_VALUES(bendLen, 0) == 0)
+			{
+				bendLen = RebarCode::GetBendLength(sizeKey, endType, modelRef); //乘以了100
+			}
+		}
 		break;
-	case 7:	//直锚
-		endTypeStart.SetType(RebarEndType::kLap);
-		begStraightAnchorLen = endType[0].endPtInfo.value1;	//锚入长度
-		break;
-	case 4:	//90度弯钩
-	{
-		endTypeStart.SetType(RebarEndType::kBend);
-		startbendRadius = endType[0].endPtInfo.value1;
-		if (COMPARE_VALUES(startbendRadius, 0) == 0)
-		{
-			startbendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false);	//乘以了30
+		case 8: //用户
+			endType.SetType(RebarEndType::kCustom);
+			break;
+		default:
+			break;
 		}
-		startbendLen = endType[0].endPtInfo.value3;//预留长度
-		if (COMPARE_VALUES(startbendLen, 0) == 0)
-		{
-			startbendLen = RebarCode::GetBendLength(sizeKey, endTypeStart, modelRef);	//乘以了100
-		}
-	}
-	break;
-	case 5:	//135度弯钩
-	{
-		endTypeStart.SetType(RebarEndType::kCog);
-		startbendRadius = endType[0].endPtInfo.value1;
-		if (COMPARE_VALUES(startbendRadius, 0) == 0)
-		{
-			startbendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false);	//乘以了30
-		}
-		startbendLen = endType[0].endPtInfo.value3;//预留长度
-		if (COMPARE_VALUES(startbendLen, 0) == 0)
-		{
-			startbendLen = RebarCode::GetBendLength(sizeKey, endTypeStart, modelRef);	//乘以了100
-		}
-	}
-	break;
-	case 6:	//180度弯钩
-	{
-		endTypeStart.SetType(RebarEndType::kHook);
-		startbendRadius = endType[0].endPtInfo.value1;
-		if (COMPARE_VALUES(startbendRadius, 0) == 0)
-		{
-			startbendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false);	//乘以了30
-		}
-		startbendLen = endType[0].endPtInfo.value3;//预留长度
-		if (COMPARE_VALUES(startbendLen, 0) == 0)
-		{
-			startbendLen = RebarCode::GetBendLength(sizeKey, endTypeStart, modelRef);	//乘以了100
-		}
-	}
-	break;
-	case 8:	//用户
-		endTypeStart.SetType(RebarEndType::kCustom);
-		break;
-	default:
-		break;
-	}
-
-	switch (endType[1].endType)
-	{
-	case 0:	//无
-	case 1:	//弯曲
-	case 2:	//吊钩
-	case 3:	//折线
-		endTypeEnd.SetType(RebarEndType::kNone);
-		break;
-	case 7:	//直锚
-		endTypeEnd.SetType(RebarEndType::kLap);
-		endStraightAnchorLen = endType[1].endPtInfo.value1;	//锚入长度
-		break;
-	case 4:	//90度弯钩
-	{
-		endTypeEnd.SetType(RebarEndType::kBend);
-		endbendRadius = endType[1].endPtInfo.value1;
-		if (COMPARE_VALUES(endbendRadius, 0) == 0)
-		{
-			endbendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false);	//乘以了30
-		}
-		endbendLen = endType[1].endPtInfo.value3;//预留长度
-		if (COMPARE_VALUES(endbendLen, 0) == 0)
-		{
-			endbendLen = RebarCode::GetBendLength(sizeKey, endTypeEnd, modelRef);	//乘以了100
-		}
-	}
-	break;
-	case 5:	//135度弯钩
-	{
-		endTypeEnd.SetType(RebarEndType::kCog);
-		endbendRadius = endType[1].endPtInfo.value1;
-		if (COMPARE_VALUES(endbendRadius, 0) == 0)
-		{
-			endbendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false);	//乘以了30
-		}
-		endbendLen = endType[1].endPtInfo.value3;//预留长度
-		if (COMPARE_VALUES(endbendLen, 0) == 0)
-		{
-			endbendLen = RebarCode::GetBendLength(sizeKey, endTypeEnd, modelRef);	//乘以了100
-		}
-	}
-	break;
-	case 6:	//180度弯钩
-	{
-		endTypeEnd.SetType(RebarEndType::kHook);
-		endbendRadius = endType[1].endPtInfo.value1;
-		if (COMPARE_VALUES(endbendRadius, 0) == 0)
-		{
-			endbendRadius = RebarCode::GetPinRadius(sizeKey, modelRef, false);	//乘以了30
-		}
-		endbendLen = endType[1].endPtInfo.value3;//预留长度
-		if (COMPARE_VALUES(endbendLen, 0) == 0)
-		{
-			endbendLen = RebarCode::GetBendLength(sizeKey, endTypeEnd, modelRef);	//乘以了100
-		}
-	}
-	break;
-	case 8:	//用户
-		endTypeEnd.SetType(RebarEndType::kCustom);
-		break;
-	default:
-		break;
-	}
+	};
+	// 使用新函数处理起始端和结束端
+	ProcessEndType(endTypeStart, endType[0], sizeKey, modelRef, startbendRadius, startbendLen, begStraightAnchorLen);
+	ProcessEndType(endTypeEnd, endType[1], sizeKey, modelRef, endbendRadius, endbendLen, endStraightAnchorLen);
 
 	double diameter = RebarCode::GetBarDiameter(sizeKey, modelRef);
 	double adjustedXLen, adjustedSpacing;
@@ -2900,8 +2826,18 @@ bool PlaneRebarAssemblyEx::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 	m_LineSeg1.SetLineSeg(DSegment3d::From(ptLine1[0], ptLine1[1]));
 	m_LineSeg2.SetLineSeg(DSegment3d::From(ptLine2[0], ptLine2[1]));
 
-	if (m_LineSeg1.GetLineVec().IsParallelTo(DVec3d::From(0, 0, 1)))
+	if (/*m_LineSeg1.GetLineVec().IsParallelTo(DVec3d::From(0,0,1))*/ abs(m_LineSeg1.GetLineVec().DotProduct(DVec3d::From(0, 0, 1))) > 0.9
+		|| (abs(m_LineSeg1.GetLineVec().DotProduct(DVec3d::From(0, 1, 0))) > 0.9 && abs(m_LineSeg2.GetLineVec().DotProduct(DVec3d::From(1, 0, 0))) > 0.9))
 	{
+		LineSegment segTmp = m_LineSeg2;
+		m_LineSeg2 = m_LineSeg1;
+		m_LineSeg1 = segTmp;
+	}
+	else if (COMPARE_VALUES_EPS(m_LineSeg1.GetLineStartPoint().x, m_LineSeg1.GetLineEndPoint().x, EPS) == 0
+		&& COMPARE_VALUES_EPS(m_LineSeg1.GetLineStartPoint().y, m_LineSeg1.GetLineEndPoint().y, EPS) != 0
+		&& m_LineSeg2.GetLineVec().IsParallelTo(DVec3d::From(1, 0, 0)))
+	{
+		//Added by chenxuan 面配筋横向竖向方向不对
 		LineSegment segTmp = m_LineSeg2;
 		m_LineSeg2 = m_LineSeg1;
 		m_LineSeg1 = segTmp;
@@ -2941,7 +2877,48 @@ bool PlaneRebarAssemblyEx::AnalyzingFaceGeometricData(EditElementHandleR eeh)
 		double dis2 = ptInFace.Distance(m_LineSeg1.GetLineEndPoint());
 		_bendPos = dis1 > dis2 ? 1 : 0;
 	}
-
+	// start确保向量是从绝对坐标系最低往最高
+	auto SwapLineSeg = [&](PIT::LineSegment& lineSeg1, PIT::LineSegment& lineSeg2,
+		Dpoint3d& ptSeg1Start, Dpoint3d& ptSeg1End, Dpoint3d& ptSeg2Start, Dpoint3d& ptSeg2End)
+	{
+		swap(ptSeg1Start, ptSeg1End);
+		lineSeg1.SetLineStartPoint(ptSeg1Start);
+		lineSeg1.SetLineEndPoint(ptSeg1End);
+		lineSeg2.SetLineStartPoint(ptSeg2Start);
+		lineSeg2.SetLineEndPoint(ptSeg2End);
+	};
+	auto StandardStartAndEnd = [&](PIT::LineSegment& lineSeg1, PIT::LineSegment& lineSeg2)
+	{
+		DVec3d vec1 = lineSeg1.GetLineVec();
+		DVec3d vec2 = lineSeg2.GetLineVec();
+		double length1 = lineSeg1.GetLength();
+		double length2 = lineSeg2.GetLength();
+		Dpoint3d ptSeg1Start = lineSeg1.GetLineStartPoint();
+		Dpoint3d ptSeg1End = lineSeg1.GetLineEndPoint();
+		Dpoint3d ptSeg2Start = lineSeg2.GetLineStartPoint();
+		Dpoint3d ptSeg2End = lineSeg2.GetLineEndPoint();
+		if (vec1.DotProduct(DVec3d::From(-1, 0, 0)) > 0.9)
+		{
+			ptSeg2Start = ptSeg1End;
+			movePoint(vec1, ptSeg2End, length1);
+			SwapLineSeg(lineSeg1, lineSeg2, ptSeg1Start, ptSeg1End, ptSeg2Start, ptSeg2End);
+		}
+		else if (vec1.DotProduct(DVec3d::From(0, -1, 0)) > 0.9)
+		{
+			ptSeg2Start = ptSeg1End;
+			movePoint(vec1, ptSeg2End, length1);
+			SwapLineSeg(lineSeg1, lineSeg2, ptSeg1Start, ptSeg1End, ptSeg2Start, ptSeg2End);
+		}
+		else if (vec1.DotProduct(DVec3d::From(0, 0, -1)) > 0.9)
+		{
+			ptSeg2Start = ptSeg1End;
+			movePoint(vec1, ptSeg2End, length1);
+			SwapLineSeg(lineSeg1, lineSeg2, ptSeg1Start, ptSeg1End, ptSeg2Start, ptSeg2End);
+		}
+	};
+	StandardStartAndEnd(m_LineSeg1, m_LineSeg2);
+	StandardStartAndEnd(m_LineSeg2, m_LineSeg1);
+	// end确保向量是从绝对坐标系最低往最高
 	PopvecFrontPts().push_back(m_LineSeg1.GetLineStartPoint());
 	PopvecFrontPts().push_back(m_LineSeg1.GetLineEndPoint());
 	return true;

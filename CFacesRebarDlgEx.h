@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CFacesMainRebarDlgEx.h"
+#include "CFacesRebarEndTypeDlg.h"
 #include "CommonFile.h"
 #include "FacesRebarAssemblyEx.h"
 #include "_USTATION.h"
@@ -43,7 +44,8 @@ public:
 
 	int m_CurSelTab;
 	CFacesMainRebarDlgEx				m_PageMainRebar;			//主要配筋
-	CDialog*							pDialog[1];					//用来保存对话框对象指针
+	CFacesRebarEndTypeDlg				m_PageEndType;				//端部样式
+	CDialog*							pDialog[2];					//用来保存对话框对象指针
 
 	CTabCtrl m_tab;
 	FacesRebarAssemblyEx * m_FaceRebarPtr;
@@ -107,7 +109,7 @@ private:
 
 };
 
-struct          SelectFaceTool3 : LocateSubEntityTool
+struct          SelectAnchorFaceTool : LocateSubEntityTool
 {
 	ElementHandle	_eh;
 	ElementId		_ehNew;
@@ -119,7 +121,7 @@ public:
 	/*---------------------------------------------------------------------------------**//**
 	* @bsimethod                                                              Bentley Systems
 	+---------------+---------------+---------------+---------------+---------------+------*/
-	SelectFaceTool3(int cmdName, int prompt, ElementHandleCR ehOld, ElementId ehNew, CFacesRebarDlgEx *ptr, int selectNum = 1) :_eh(ehOld), _ehNew(ehNew), _selectNum(selectNum), m_ptr(ptr)
+	SelectAnchorFaceTool(int cmdName, int prompt, ElementHandleCR ehOld, ElementId ehNew, CFacesRebarDlgEx *ptr, int selectNum = 1) :_eh(ehOld), _ehNew(ehNew), _selectNum(selectNum), m_ptr(ptr)
 	{
 		SetCmdName(cmdName, prompt);
 	}
@@ -185,7 +187,7 @@ protected:
 			_ExitTool();
 			return;
 		}*/
-		SelectFaceTool3* tool = new SelectFaceTool3(1, 1, _eh, _ehNew, m_ptr);
+		SelectAnchorFaceTool* tool = new SelectAnchorFaceTool(1, 1, _eh, _ehNew, m_ptr);
 		tool->InstallTool();
 	}
 
@@ -195,7 +197,7 @@ protected:
 		eehDel.DeleteFromModel();
 		mdlInput_sendSynchronizedKeyin(L"displayset clear", 0, INPUTQ_EOQ, NULL);
 		_ExitTool();*/
-		SelectFaceTool3* tool = new SelectFaceTool3(1, 1, _eh, _ehNew, m_ptr);
+		SelectAnchorFaceTool* tool = new SelectAnchorFaceTool(1, 1, _eh, _ehNew, m_ptr);
 		tool->InstallTool();
 		return true;
 	}

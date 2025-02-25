@@ -82,6 +82,8 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	m_PageMainRebar.SetListRowData(m_vecRebarData);
 	g_vecRebarData = m_vecRebarData;
 	m_PageMainRebar.SetSelectfaces(m_selectfaces);
+	m_PageEndType.SetListRowData(m_vecEndTypeData);
+	m_PageEndType.m_vecRebarData = m_vecRebarData;
 
 	m_PageMainRebar.SavePrt(this);
 
@@ -107,9 +109,11 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	// TODO:  在此添加额外的初始化
 	//为Tab Control增加两个页面
 	m_tab.InsertItem(0, _T("主要配筋"));
+	m_tab.InsertItem(1, _T("端部样式"));
 	//创建两个对话框
 	m_PageMainRebar.Create(IDD_DIALOG_FacesRebar_MainRebarEx, &m_tab);
 	m_PageMainRebar.SetSelectElement(_ehOld);
+	m_PageEndType.Create(IDD_DIALOG_FacesRebar_EndType, &m_tab);
 
 	//设定在Tab内显示的范围
 	CRect rc;
@@ -119,12 +123,15 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	rc.left += 0;
 	rc.right -= 0;
 	m_PageMainRebar.MoveWindow(&rc);
+	m_PageEndType.MoveWindow(&rc);
 
 	//把对话框对象指针保存起来
 	pDialog[0] = &m_PageMainRebar;
+	pDialog[1] = &m_PageEndType;
 
 	//显示初始页面
 	pDialog[0]->ShowWindow(SW_SHOW);
+	pDialog[1]->ShowWindow(SW_HIDE);
 
 	//保存当前选择
 	m_CurSelTab = 0;
@@ -268,6 +275,9 @@ void CFacesRebarDlgEx::PreviewRebarLines()
 	m_Concrete = m_PageMainRebar.GetConcreteData();
 	m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
 	m_PageMainRebar.SetListRowData(m_vecRebarData);
+	m_PageEndType.GetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
+	m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);	//主要获取端部样式中列表新数据
+	m_PageEndType.SetListRowData(m_vecEndTypeData);	//修改为新的数据
 
 
 	/**********************给sizekey附加型号******************************/
@@ -424,7 +434,45 @@ void CFacesRebarDlgEx::OnCbnSelchangeCombo2()
 void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	// TODO: 在此添加控件通知处理程序代码
-	//*pResult = 0;
+	//把当前的页面隐藏起来
+	pDialog[m_CurSelTab]->ShowWindow(SW_HIDE);
+	//得到新的页面索引
+	m_CurSelTab = m_tab.GetCurSel();
+
+	switch (m_CurSelTab)
+	{
+	case 0:
+	{
+		std::vector<PIT::EndType>	tmpvecEndTypeData;
+		m_PageEndType.GetListRowData(tmpvecEndTypeData);
+		m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);
+		m_PageEndType.SetListRowData(m_vecEndTypeData);
+		for (int i = 0; i < tmpvecEndTypeData.size(); i++)
+		{
+			if (m_vecEndTypeData.size() >= i + 1)
+			{
+				m_vecEndTypeData[i].endPtInfo = tmpvecEndTypeData[i].endPtInfo;
+			}
+		}
+		m_PageMainRebar.UpdateRebarList();
+	}
+	break;
+	case 1:
+	{
+		m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
+		m_PageMainRebar.SetListRowData(m_vecRebarData);
+		m_Concrete = m_PageMainRebar.GetConcreteData();
+		m_PageEndType.SetRearLevelNum(m_Concrete.rebarLevelNum);
+		m_PageEndType.m_vecRebarData = m_vecRebarData;
+		m_PageEndType.UpdateEndTypeList();
+	}
+	break;
+	default:
+		break;
+	}
+	//把新的页面显示出来
+	pDialog[m_CurSelTab]->ShowWindow(SW_SHOW);
+	*pResult = 0;
 }
 
 
@@ -462,7 +510,7 @@ void CFacesRebarDlgEx::OnEnChangeEdit1() // 间距
 void CFacesRebarDlgEx::OnBnClickedButton1()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	SelectFaceTool3* tool = new SelectFaceTool3(1, 1, _ehOld, _ehNew, this);
+	SelectAnchorFaceTool* tool = new SelectAnchorFaceTool(1, 1, _ehOld, _ehNew, this);
 	tool->InstallTool();
 }
 
@@ -478,6 +526,7 @@ void CFacesRebarDlgEx::OnBnClickedOk()
 	m_Concrete = m_PageMainRebar.GetConcreteData();
 	m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
 	m_PageMainRebar.SetListRowData(m_vecRebarData);
+	m_PageEndType.SetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
 
 
 	/***********************************给sizekey附加型号******************************************************/
