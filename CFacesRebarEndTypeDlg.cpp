@@ -204,6 +204,14 @@ LRESULT CFacesRebarEndTypeDlg::OnEndTypeButtonDown(WPARAM wParam, LPARAM lParam)
 
 	auto find = std::find(g_listEndType.begin(), g_listEndType.end(), strValue);
 	int nIndex = (int)std::distance(g_listEndType.begin(), find);
+	// 触发后立刻保存表格数据
+	std::vector<PIT::EndType> tmpvecEndTypeData;
+	m_ListEndType.GetAllRebarData(tmpvecEndTypeData);
+	for (int i = 0; i < tmpvecEndTypeData.size(); i++)
+	{
+		tmpvecEndTypeData[i].endPtInfo = m_vecEndType[i].endPtInfo;
+	}
+	m_vecEndType = tmpvecEndTypeData;
 
 	if (2 == msg->m_nColumn)
 	{

@@ -75,7 +75,7 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	GetElementXAttribute(contid, sizeof(PIT::Concrete), m_Concrete, ConcreteXAttribute, ACTIVEMODEL);
 	GetElementXAttribute(contid, m_vecRebarData, vecRebarDataXAttribute, ACTIVEMODEL);
 	m_vecEndTypeData.clear();
-	//GetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
+	GetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
 	
 	m_PageMainRebar.SetHide(m_isHide);
 	m_PageMainRebar.SetDlgType(m_FaceDlgType);
@@ -446,7 +446,6 @@ void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR *pNMHDR, LRESULT *pRes
 		std::vector<PIT::EndType>	tmpvecEndTypeData;
 		m_PageEndType.GetListRowData(tmpvecEndTypeData);
 		m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);
-		m_PageEndType.SetListRowData(m_vecEndTypeData);
 		for (int i = 0; i < tmpvecEndTypeData.size(); i++)
 		{
 			if (m_vecEndTypeData.size() >= i + 1)
@@ -454,6 +453,7 @@ void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR *pNMHDR, LRESULT *pRes
 				m_vecEndTypeData[i].endPtInfo = tmpvecEndTypeData[i].endPtInfo;
 			}
 		}
+		m_PageEndType.SetListRowData(m_vecEndTypeData);
 		m_PageMainRebar.UpdateRebarList();
 	}
 	break;
@@ -463,6 +463,7 @@ void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR *pNMHDR, LRESULT *pRes
 		m_PageMainRebar.SetListRowData(m_vecRebarData);
 		m_Concrete = m_PageMainRebar.GetConcreteData();
 		m_PageEndType.SetRearLevelNum(m_Concrete.rebarLevelNum);
+		m_PageEndType.SetListRowData(m_vecEndTypeData);
 		m_PageEndType.m_vecRebarData = m_vecRebarData;
 		m_PageEndType.UpdateEndTypeList();
 	}
@@ -665,7 +666,7 @@ void CFacesRebarDlgEx::OnBnClickedOk()
 	SetConcreteXAttribute(contid, ACTIVEMODEL);
 	//SetElementXAttribute(contid, sizeof(PIT::WallRebarInfo), &m_Concrete, WallRebarInfoXAttribute, ACTIVEMODEL);
 	//SetElementXAttribute(contid, m_vecRebarData, vecRebarDataXAttribute, ACTIVEMODEL);
-	//SetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
+	SetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
 	SetElementXAttribute(_ehOld.GetElementId(), sizeof(ElementId), &contid, ConcreteIDXAttribute, _ehOld.GetModelRef());
 	SetElementXAttribute(contid, g_vecRebarPtsNoHole, vecRebarPointsXAttribute, ACTIVEMODEL);
 	ElementId unionId = -1;
