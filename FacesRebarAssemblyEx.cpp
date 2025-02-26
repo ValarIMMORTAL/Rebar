@@ -1854,16 +1854,19 @@ bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, co
 	{
 		//将原平面往法向方向拉伸为一个实体
 		EditElementHandle eehSolid;
-		// 		DVec3d vec = GetfaceNormal();
-		// 		vec.ScaleToLength(100000);
-		// 		SolidHandler::CreateProjectionElement(eehSolid, NULL, m_face, m_LineSeg1.GetLineStartPoint(), vec, NULL, true, *ACTIVEMODEL);
-
 		ISolidKernelEntityPtr ptarget;
 		SolidUtil::Convert::ElementToBody(ptarget, m_face, true, true, true);
 		if (SUCCESS == SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm))
 		{
 			if (SUCCESS == SolidUtil::Convert::BodyToElement(eehSolid, *ptarget, NULL, *ACTIVEMODEL))
 			{
+				DRange3d range;
+				mdlElmdscr_computeRange(&range.low, &range.high, eehSolid.GetElementDescrP(), NULL);
+				DVec3d tmpVec = endPt - startPt;
+				tmpVec.ScaleToLength(5000 * UOR_PER_MilliMeter);
+				endPt.Add(tmpVec);
+				tmpVec.Negate();
+				startPt.Add(tmpVec);
 				GetIntersectPointsWithOldElm(tmpptsTmp, &eehSolid, startPt, endPt, dSideCover);
 				if (tmpptsTmp.size() > 1)
 				{
