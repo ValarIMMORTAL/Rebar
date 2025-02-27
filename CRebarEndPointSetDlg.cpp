@@ -210,7 +210,9 @@ BOOL CRebarEndPointSetDlg::OnInitDialog()
 		{
 			RebarEndType endType;
 			endType.SetType(RebarEndType::kBend);
-			m_endPtInfo.value3 = RebarCode::GetBendLength(m_strRebarSize, endType,ACTIVEMODEL);
+			// m_endPtInfo.value3 = RebarCode::GetBendLength(m_strRebarSize, endType,ACTIVEMODEL);
+			double la_d = stod(m_strRebarSize.Get()) * uor_per_mm;
+			m_endPtInfo.value3 = la_d * 15;
 		}
 		if (COMPARE_VALUES(m_endPtInfo.value1, 0) == 0)
 		{
@@ -247,7 +249,9 @@ BOOL CRebarEndPointSetDlg::OnInitDialog()
 		{
 			RebarEndType endType;
 			endType.SetType(RebarEndType::kCog);
-			m_endPtInfo.value3 = RebarCode::GetBendLength(m_strRebarSize, endType, ACTIVEMODEL);
+			// m_endPtInfo.value3 = RebarCode::GetBendLength(m_strRebarSize, endType,ACTIVEMODEL);
+			double la_d = stod(m_strRebarSize.Get()) * uor_per_mm;
+			m_endPtInfo.value3 = la_d * 15;
 		}
 		if (COMPARE_VALUES(m_endPtInfo.value1, 0) == 0)
 		{
@@ -284,7 +288,9 @@ BOOL CRebarEndPointSetDlg::OnInitDialog()
 		{
 			RebarEndType endType;
 			endType.SetType(RebarEndType::kHook);
-			m_endPtInfo.value3 = RebarCode::GetBendLength(m_strRebarSize, endType, ACTIVEMODEL);
+			// m_endPtInfo.value3 = RebarCode::GetBendLength(m_strRebarSize, endType,ACTIVEMODEL);
+			double la_d = stod(m_strRebarSize.Get()) * uor_per_mm;
+			m_endPtInfo.value3 = la_d * 15;
 		}
 		if (COMPARE_VALUES(m_endPtInfo.value1, 0) == 0)
 		{

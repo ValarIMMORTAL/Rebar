@@ -2494,11 +2494,8 @@ bool PlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 
 bool PlaneRebarAssemblyEx::OnDoubleClick()
 {
-
 	ElementId testid = GetElementId();
 	PlaneRebarAssemblyEx* faceRebar = REA::Load<PlaneRebarAssemblyEx>(testid, ACTIVEMODEL);
-
-
 
 	ElementId tmpid = GetSelectedElement();
 	if (tmpid == 0)
