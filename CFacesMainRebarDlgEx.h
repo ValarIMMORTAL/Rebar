@@ -99,11 +99,10 @@ public:
 	}
 	void GetListRowData(std::vector<PIT::ConcreteRebar> &vecListData) {
 		vecListData = m_vecRebarData;
-	};
-	virtual BOOL OnInitDialog();
-
+	}
 
 protected:
+	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 	DECLARE_MESSAGE_MAP()
@@ -111,6 +110,7 @@ protected:
 private:
 	void InitUIData();
 	CDialogEx *			m_FaceDlgPtr;
+	CToolTipCtrl m_ToolTip;
 	PIT::Concrete	m_Concrete;
 	std::vector<PIT::ConcreteRebar> m_vecRebarData;
 

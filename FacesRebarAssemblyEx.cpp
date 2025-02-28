@@ -88,13 +88,13 @@ void FacesRebarAssemblyEx::DrawPreviewLines()
 				EditElementHandle eehStrPoint, eehEndPoint;
 				DrawPoint(point3ds[0], 1, eehStrPoint, ACTIVEMODEL);// 红色起点
 				DrawPoint(point3ds[point3ds.size() - 1], 4, eehEndPoint, ACTIVEMODEL);// 蓝色终点
-				m_allLines.push_back(eehStrPoint.GetElementRef());// 存储起点
-				m_allLines.push_back(eehEndPoint.GetElementRef());// 存储终点
+				m_allPreViewEehs.push_back(eehStrPoint.GetElementRef());// 存储起点
+				m_allPreViewEehs.push_back(eehEndPoint.GetElementRef());// 存储终点
 				EditElementHandle eeh;
 				// LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(strPoint, endPoint), true, *ACTIVEMODEL);
 				LineStringHandler::CreateLineStringElement(eeh, nullptr, point3ds.data(), point3ds.size(), true, *ACTIVEMODEL);
 				eeh.AddToModel();
-				m_allLines.push_back(eeh.GetElementRef());//存储所有画线
+				m_allPreViewEehs.push_back(eeh.GetElementRef());//存储所有画线
 			}
 		}
 	}
@@ -104,7 +104,7 @@ void FacesRebarAssemblyEx::ClearLines()
 {
 	if (m_isClearLine)
 	{
-		for (ElementRefP tmpeeh : m_allLines)
+		for (ElementRefP tmpeeh : m_allPreViewEehs)
 		{
 			if (tmpeeh != nullptr)
 			{
@@ -112,7 +112,7 @@ void FacesRebarAssemblyEx::ClearLines()
 				eeh.DeleteFromModel();
 			}
 		}
-		m_allLines.clear();
+		m_allPreViewEehs.clear();
 	}
 }
 
@@ -3485,7 +3485,7 @@ bool CamberedSurfaceRebarAssemblyEx::makeArcWallRebarCurve(vector<PIT::PITRebarC
 			if (g_FacePreviewButtonsDown)
 			{//预览状态下画线,并存储线
 				arceeh1.AddToModel();
-				m_allLines.push_back(arceeh1.GetElementRef());
+				m_allPreViewEehs.push_back(arceeh1.GetElementRef());
 			}
 			rebar.push_back(trebar);
 		}

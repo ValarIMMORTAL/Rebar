@@ -61,7 +61,7 @@ public:
 public:
 	vector<vector<DSegment3d> > m_vecRebarStartEnd;	//规避了孔洞的所有点
 	vector<vector<PIT::PITRebarCurve>> m_vecRebarCurvePt;	//钢筋预览线的所有点
-	vector<ElementRefP> m_allLines;//预览按钮按下后的所有钢筋线
+	vector<ElementRefP> m_allPreViewEehs;//预览按钮按下后的所有钢筋线点元素
 	vector<vector<DSegment3d> > m_vecAllRebarStartEnd;//未规避孔洞的所有点
 	void ClearLines();
 	bool m_isClearLine = true;

@@ -227,7 +227,7 @@ void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh
 
 		if (g_FacePreviewButtonsDown)
 		{
-			faceRebar->m_allLines.clear();
+			faceRebar->m_allPreViewEehs.clear();
 		}
 		CVector3D vecTmp = m_PageMainRebar.GetvecFaceNormal(iIndex);
 		DVec3d dvec = DVec3d::From(vecTmp.x, vecTmp.y, vecTmp.z);
@@ -243,7 +243,7 @@ void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh
 		faceRebar->Save(modelRef); // must save after creating rebars
 		contid = faceRebar->FetchConcrete();
 		iIndex++;
-		std::copy(faceRebar->m_allLines.begin(), faceRebar->m_allLines.end(), std::back_inserter(vctAllLines));//将多个面的画线依次存起来，最后赋值给m_FaceRebarPtr->m_AllLines
+		std::copy(faceRebar->m_allPreViewEehs.begin(), faceRebar->m_allPreViewEehs.end(), std::back_inserter(vctAllLines));//将多个面的画线依次存起来，最后赋值给m_FaceRebarPtr->m_AllLines
 		if (newFace != nullptr)
 		{
 			mdlElmdscr_freeAll(&newFace);
@@ -253,7 +253,7 @@ void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh
 	if (g_FacePreviewButtonsDown)
 	{
 		m_FaceRebarPtr = faceRebar;
-		m_FaceRebarPtr->m_allLines = vctAllLines;
+		m_FaceRebarPtr->m_allPreViewEehs = vctAllLines;
 	}
 	if (faceRebar != nullptr)
 	{
@@ -275,9 +275,9 @@ void CFacesRebarDlgEx::PreviewRebarLines()
 	m_Concrete = m_PageMainRebar.GetConcreteData();
 	m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
 	m_PageMainRebar.SetListRowData(m_vecRebarData);
-	m_PageEndType.GetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
+	/*m_PageEndType.GetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
 	m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);	//主要获取端部样式中列表新数据
-	m_PageEndType.SetListRowData(m_vecEndTypeData);	//修改为新的数据
+	m_PageEndType.SetListRowData(m_vecEndTypeData);	//修改为新的数据*/
 
 	// 清空上次的预览线
 	if (m_FaceRebarPtr)
@@ -531,7 +531,7 @@ void CFacesRebarDlgEx::OnBnClickedOk()
 	m_Concrete = m_PageMainRebar.GetConcreteData();
 	m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
 	m_PageMainRebar.SetListRowData(m_vecRebarData);
-	m_PageEndType.SetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
+	// m_PageEndType.SetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
 
 
 	/***********************************给sizekey附加型号******************************************************/
