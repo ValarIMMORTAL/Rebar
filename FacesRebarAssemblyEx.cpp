@@ -12,12 +12,15 @@
 #include "ElementAttribute.h"
 #include "ExtractFacesTool.h"
 #include "FacesRebarAssemblyEx.h"
+
+#include <CPointTool.h>
+
 #include "PITMSCECommon.h"
 #include "XmlHelper.h"
 #include "SelectRebarTool.h"
 
 using namespace PIT;
-extern bool FacePreviewButtonsDown;
+extern bool g_FacePreviewButtonsDown;
 
 FacesRebarAssemblyEx::FacesRebarAssemblyEx(ElementId id, DgnModelRefP modelRef) :
 	PITRebarAssembly(id, modelRef)
@@ -46,6 +49,55 @@ void FacesRebarAssemblyEx::movePoint(DPoint3d vec, DPoint3d& movePt, double disL
 	}
 	vec.ScaleToLength(disLen);
 	movePt.Add(vec);
+}
+
+void FacesRebarAssemblyEx::DrawPoint(const DPoint3d& point, int color, EditElementHandle& eehPoint, DgnModelRefP modelRef)
+{
+	// 创建点串（包含一个点）
+	bvector<DPoint3d> pointArray = { point };
+	PointStringHandler::CreatePointStringElement(eehPoint, nullptr, pointArray.data(), nullptr, pointArray.size(), false, true, *modelRef);
+
+	// 设置颜色 & 图层
+	ElementPropertiesSetterPtr prop = ElementPropertiesSetter::Create();
+	prop->SetWeight(10);
+	prop->SetColor(color);
+	prop->Apply(eehPoint);
+
+	// 添加到模型
+	eehPoint.AddToModel();
+}
+
+/**
+ * @brief 绘制预览线
+ *
+ * 该函数在全局变量g_FacePreviewButtonsDown为true时执行，绘制钢筋的预览线。
+ * 遍历存储了钢筋起始点和结束点的m_vecRebarStartEnd向量，
+ * 对于每个元素，创建并添加线段到模型中，并将这些线段存储在m_allLines向量里以便后续使用。
+ */
+void FacesRebarAssemblyEx::DrawPreviewLines()
+{
+	if (g_FacePreviewButtonsDown)//画预览线
+	{
+		// 原来的预览线只绘制起止点，遇到弯锚钢筋时会出现问题，如果发现没有绘制预览线，参考单面配筋的预览线点采集方式
+		for (auto rebarCurves : m_vecRebarCurvePt)
+		{
+			for (auto rebarCurve : rebarCurves)
+			{
+				bvector<DPoint3d> point3ds;
+				rebarCurve.GetIps(point3ds);
+				EditElementHandle eehStrPoint, eehEndPoint;
+				DrawPoint(point3ds[0], 1, eehStrPoint, ACTIVEMODEL);// 红色起点
+				DrawPoint(point3ds[point3ds.size() - 1], 4, eehEndPoint, ACTIVEMODEL);// 蓝色终点
+				m_allLines.push_back(eehStrPoint.GetElementRef());// 存储起点
+				m_allLines.push_back(eehEndPoint.GetElementRef());// 存储终点
+				EditElementHandle eeh;
+				// LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(strPoint, endPoint), true, *ACTIVEMODEL);
+				LineStringHandler::CreateLineStringElement(eeh, nullptr, point3ds.data(), point3ds.size(), true, *ACTIVEMODEL);
+				eeh.AddToModel();
+				m_allLines.push_back(eeh.GetElementRef());//存储所有画线
+			}
+		}
+	}
 }
 
 void FacesRebarAssemblyEx::ClearLines()
@@ -920,87 +972,87 @@ bool MultiPlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebar
 		}
 	}
 
-	//for (size_t i = 0; i < vecPtRebars.size(); i++)
-	//{
-	//	vecPtRebars.at(i).GetStartPoint(startPt);
-	//	vecPtRebars.at(i).GetEndPoint(endPt);
-	//	GetIntersectPointsWithHoles(tmppts, m_useHoleehs, startPt, endPt, dSideCover);
-	//	map<int, DPoint3d> map_pts;
-	//	bool isStr = false;
-	//	for (DPoint3d pt : tmppts)
-	//	{
-	//		if (ExtractFacesTool::IsPointInLine(pt, startPt, endPt, ACTIVEMODEL, isStr))
-	//		{
-	//			int dis = (int)startPt.Distance(pt);
-	//			if (map_pts.find(dis) != map_pts.end())
-	//			{
-	//				dis = dis + 1;
-	//			}
-	//			map_pts[dis] = pt;
-	//		}
-	//	}
-	//	if (map_pts.find(0) != map_pts.end())
-	//	{
-	//		map_pts[1] = startPt;
-	//	}
-	//	else
-	//	{
-	//		map_pts[0] = startPt;
-	//	}
-	//	int dis = (int)startPt.Distance(endPt);
-	//	if (map_pts.find(dis) == map_pts.end())
-	//	{
-	//		map_pts[dis] = endPt;
-	//	}
-	//	else
-	//	{
-	//		dis = dis + 1;
-	//		map_pts[dis] = endPt;
-	//	}
+	/*for (size_t i = 0; i < vecPtRebars.size(); i++)
+	{
+		vecPtRebars.at(i).GetStartPoint(startPt);
+		vecPtRebars.at(i).GetEndPoint(endPt);
+		GetIntersectPointsWithHoles(tmppts, m_useHoleehs, startPt, endPt, dSideCover);
+		map<int, DPoint3d> map_pts;
+		bool isStr = false;
+		for (DPoint3d pt : tmppts)
+		{
+			if (ExtractFacesTool::IsPointInLine(pt, startPt, endPt, ACTIVEMODEL, isStr))
+			{
+				int dis = (int)startPt.Distance(pt);
+				if (map_pts.find(dis) != map_pts.end())
+				{
+					dis = dis + 1;
+				}
+				map_pts[dis] = pt;
+			}
+		}
+		if (map_pts.find(0) != map_pts.end())
+		{
+			map_pts[1] = startPt;
+		}
+		else
+		{
+			map_pts[0] = startPt;
+		}
+		int dis = (int)startPt.Distance(endPt);
+		if (map_pts.find(dis) == map_pts.end())
+		{
+			map_pts[dis] = endPt;
+		}
+		else
+		{
+			dis = dis + 1;
+			map_pts[dis] = endPt;
+		}
 
 
 
-	//	for (map<int, DPoint3d>::iterator itr = map_pts.begin(); itr != map_pts.end(); itr++)
-	//	{
-	//		PITRebarEndTypes endTypesTmp = endTypes;
-	//		PITRebarCurve rebar;
-	//		RebarVertexP vex;
-	//		DPoint3d ptStart(itr->second);
-	//		vex = &rebar.PopVertices().NewElement();
-	//		vex->SetIP(itr->second);
-	//		vex->SetType(RebarVertex::kStart);
-	//		endTypesTmp.beg.SetptOrgin(itr->second);
+		for (map<int, DPoint3d>::iterator itr = map_pts.begin(); itr != map_pts.end(); itr++)
+		{
+			PITRebarEndTypes endTypesTmp = endTypes;
+			PITRebarCurve rebar;
+			RebarVertexP vex;
+			DPoint3d ptStart(itr->second);
+			vex = &rebar.PopVertices().NewElement();
+			vex->SetIP(itr->second);
+			vex->SetType(RebarVertex::kStart);
+			endTypesTmp.beg.SetptOrgin(itr->second);
 
-	//		map<int, DPoint3d>::iterator itrplus = ++itr;
-	//		if (itrplus == map_pts.end())
-	//		{
-	//			break;
-	//		}
+			map<int, DPoint3d>::iterator itrplus = ++itr;
+			if (itrplus == map_pts.end())
+			{
+				break;
+			}
 
-	//		endTypesTmp.end.SetptOrgin(itrplus->second);
+			endTypesTmp.end.SetptOrgin(itrplus->second);
 
-	//		DPoint3d ptEnd(itrplus->second);
-	//		vex = &rebar.PopVertices().NewElement();
-	//		vex->SetIP(itrplus->second);
-	//		vex->SetType(RebarVertex::kEnd);
+			DPoint3d ptEnd(itrplus->second);
+			vex = &rebar.PopVertices().NewElement();
+			vex->SetIP(itrplus->second);
+			vex->SetType(RebarVertex::kEnd);
 
-	//		double dis1 = ptStart.Distance(ptStartBack);
-	//		if (COMPARE_VALUES_EPS(dis1, 0, 1) != 0)
-	//		{
-	//			endTypesTmp.beg.SetType(PITRebarEndType::kNone);
-	//		}
-	//		double dis2 = ptEnd.Distance(ptEndBack);
+			double dis1 = ptStart.Distance(ptStartBack);
+			if (COMPARE_VALUES_EPS(dis1, 0, 1) != 0)
+			{
+				endTypesTmp.beg.SetType(PITRebarEndType::kNone);
+			}
+			double dis2 = ptEnd.Distance(ptEndBack);
 
-	//		if (COMPARE_VALUES_EPS(dis2, 0, 1) != 0)
-	//		{
-	//			endTypesTmp.end.SetType(PITRebarEndType::kNone);
-	//		}
-	//		// 			EditElementHandle eeh;
-	//		// 			LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptStart, ptEnd), true, *ACTIVEMODEL);
-	//		// 			eeh.AddToModel();
-	//		rebar.EvaluateEndTypes(endTypesTmp);
-	//		//		rebar.EvaluateEndTypes(endTypes, bendRadius, bendLen + bendRadius, &endNormal);
-	//		rebars.push_back(rebar);
+			if (COMPARE_VALUES_EPS(dis2, 0, 1) != 0)
+			{
+				endTypesTmp.end.SetType(PITRebarEndType::kNone);
+			}
+			// 			EditElementHandle eeh;
+			// 			LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptStart, ptEnd), true, *ACTIVEMODEL);
+			// 			eeh.AddToModel();
+			rebar.EvaluateEndTypes(endTypesTmp);
+			//		rebar.EvaluateEndTypes(endTypes, bendRadius, bendLen + bendRadius, &endNormal);
+			rebars.push_back(rebar);*/
 	return true;
 }
 
@@ -1403,7 +1455,7 @@ RebarSetTag* MultiPlaneRebarAssemblyEx::MakeRebars
 		// 		eeh.AddToModel();
 
 		RebarElementP rebarElement = NULL;
-		if (!FacePreviewButtonsDown)//预览状态下不生成钢筋
+		if (!g_FacePreviewButtonsDown)//预览状态下不生成钢筋
 		{
 			rebarElement = rebarSet->AssignRebarElement(j, numRebar, symb, modelRef);
 		}
@@ -1715,22 +1767,7 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 		}
 	}
 
-	if (FacePreviewButtonsDown)//画预览线
-	{
-		for (auto it = m_vecRebarStartEnd.begin(); it != m_vecRebarStartEnd.end(); it++)
-		{
-			vector<DSegment3d> vcttemp(*it);
-			for (int x = 0; x < vcttemp.size(); x++)
-			{
-				DPoint3d strPoint = DPoint3d::From(vcttemp[x].point[0].x, vcttemp[x].point[0].y, vcttemp[x].point[0].z);
-				DPoint3d endPoint = DPoint3d::From(vcttemp[x].point[1].x, vcttemp[x].point[1].y, vcttemp[x].point[1].z);
-				EditElementHandle eeh;
-				LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(strPoint, endPoint), true, *ACTIVEMODEL);
-				eeh.AddToModel();
-				m_allLines.push_back(eeh.GetElementRef());//存储所有画线
-			}
-		}
-	}
+	DrawPreviewLines();
 
 	if (g_globalpara.Getrebarstyle() != 0)
 	{
@@ -2184,7 +2221,7 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 		// 		eeh.AddToModel();
 
 		RebarElementP rebarElement = NULL;
-		if (!FacePreviewButtonsDown)//预览标志，预览状态下不要生成钢筋
+		if (!g_FacePreviewButtonsDown)//预览标志，预览状态下不要生成钢筋
 		{
 			rebarElement = rebarSet->AssignRebarElement(j, numRebar, symb, modelRef);
 		}
@@ -2225,6 +2262,7 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 		j++;
 	}
 
+	m_vecRebarCurvePt.push_back(rebarCurvesNum);
 	m_vecRebarStartEnd.push_back(vecStartEnd);
 	RebarSetData setdata;
 	setdata.SetNumber(numRebar);
@@ -2467,22 +2505,7 @@ bool PlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 		g_vecRebarPtsNoHole.insert(g_vecRebarPtsNoHole.end(), itr->second.begin(), itr->second.end());
 	}
 
-	if (FacePreviewButtonsDown)
-	{
-		for (auto it = m_vecRebarStartEnd.begin(); it != m_vecRebarStartEnd.end(); it++)
-		{
-			vector<DSegment3d> vcttemp(*it);
-			for (int x = 0; x < vcttemp.size(); x++)
-			{
-				DPoint3d strPoint = DPoint3d::From(vcttemp[x].point[0].x, vcttemp[x].point[0].y, vcttemp[x].point[0].z);
-				DPoint3d endPoint = DPoint3d::From(vcttemp[x].point[1].x, vcttemp[x].point[1].y, vcttemp[x].point[1].z);
-				EditElementHandle eeh;
-				LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(strPoint, endPoint), true, *ACTIVEMODEL);
-				eeh.AddToModel();
-				m_allLines.push_back(eeh.GetElementRef());//存储所有画线
-			}
-		}
-	}
+	DrawPreviewLines();
 
 	if (g_globalpara.Getrebarstyle() != 0)
 	{
@@ -3459,7 +3482,7 @@ bool CamberedSurfaceRebarAssemblyEx::makeArcWallRebarCurve(vector<PIT::PITRebarC
 		{
 			EditElementHandle arceeh1;
 			ArcHandler::CreateArcElement(arceeh1, nullptr, DEllipse3d::FromPointsOnArc(tmpstr, tmpMid, tmpend), true, *ACTIVEMODEL);
-			if (FacePreviewButtonsDown)
+			if (g_FacePreviewButtonsDown)
 			{//预览状态下画线,并存储线
 				arceeh1.AddToModel();
 				m_allLines.push_back(arceeh1.GetElementRef());
@@ -3748,22 +3771,7 @@ bool CamberedSurfaceRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 		}
 	}
 
-	if (FacePreviewButtonsDown)
-	{
-		for (auto it = m_vecRebarStartEnd.begin(); it != m_vecRebarStartEnd.end(); it++)//这里只画了直线，弧线在MakeRebars_Arc里面画完了
-		{
-			vector<DSegment3d> vcttemp(*it);
-			for (int x = 0; x < vcttemp.size(); x++)
-			{
-				DPoint3d strPoint = DPoint3d::From(vcttemp[x].point[0].x, vcttemp[x].point[0].y, vcttemp[x].point[0].z);
-				DPoint3d endPoint = DPoint3d::From(vcttemp[x].point[1].x, vcttemp[x].point[1].y, vcttemp[x].point[1].z);
-				EditElementHandle eeh;
-				LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(strPoint, endPoint), true, *ACTIVEMODEL);
-				eeh.AddToModel();
-				m_allLines.push_back(eeh.GetElementRef());//存储所有直线
-			}
-		}
-	}
+	DrawPreviewLines();
 
 	if (g_globalpara.Getrebarstyle() != 0)
 	{
@@ -3883,7 +3891,7 @@ RebarSetTag* CamberedSurfaceRebarAssemblyEx::MakeRebars_Line
 		vecStartEnd.push_back(DSegment3d::From(ptstr, ptend));
 
 		RebarElementP rebarElement = NULL;
-		if (!FacePreviewButtonsDown)
+		if (!g_FacePreviewButtonsDown)
 		{
 			rebarElement = rebarSet->AssignRebarElement(j, numRebar, symb, modelRef);
 		}
@@ -4027,7 +4035,7 @@ RebarSetTag * CamberedSurfaceRebarAssemblyEx::MakeRebars_Arc(ElementId & rebarSe
 		PITRebarCurve rebarCurve = rebarCurvesNum[j];
 
 		RebarElementP rebarElement = NULL;
-		if (!FacePreviewButtonsDown)//预览标志
+		if (!g_FacePreviewButtonsDown)//预览标志
 		{
 			rebarElement = rebarSet->AssignRebarElement(j, numRebar, symb, modelRef);
 		}

@@ -60,6 +60,7 @@ public:
 
 public:
 	vector<vector<DSegment3d> > m_vecRebarStartEnd;	//规避了孔洞的所有点
+	vector<vector<PIT::PITRebarCurve>> m_vecRebarCurvePt;	//钢筋预览线的所有点
 	vector<ElementRefP> m_allLines;//预览按钮按下后的所有钢筋线
 	vector<vector<DSegment3d> > m_vecAllRebarStartEnd;//未规避孔洞的所有点
 	void ClearLines();
@@ -68,6 +69,8 @@ public:
 protected:
 	void			Init();
 	void			movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
+	void			DrawPoint(const DPoint3d& point, int color, EditElementHandle& eehPoint, DgnModelRefP modelRef);
+	void			DrawPreviewLines();
 
 protected:
 	virtual int		GetPolymorphic() const override { return REX_Type::kLastRebarElement + kRebarAssembly + PIT::PITRebarAssemblyEnum::Face; }

@@ -325,7 +325,16 @@ BOOL CRebarEndPointSetDlg::OnInitDialog()
 		if (COMPARE_VALUES(m_endPtInfo.value1, 0) == 0)
 		{
 			//int iRebarSize = atoi(m_strRebarSize);
-			m_endPtInfo.value1 = g_globalpara.m_alength.at((string)m_strRebarSize) * uor_per_mm;
+			//m_endPtInfo.value1 = g_globalpara.m_alength.at((string)m_strRebarSize) * uor_per_mm;
+			if (g_globalpara.m_alength.find((string)m_strRebarSize) != g_globalpara.m_alength.end())
+			{
+				auto iter = g_globalpara.m_alength.find((string)m_strRebarSize);
+				m_endPtInfo.value1 = iter->second * uor_per_mm;
+			}
+			else
+			{
+				m_endPtInfo.value1 = 0.0;
+			}
 		}
 		strValue1.Format(L"%.2f", m_endPtInfo.value1 / uor_per_mm);//长度
 	}
@@ -539,7 +548,15 @@ void CRebarEndPointSetDlg::OnBnClickedButtonLoad()
 	{
 		double defaultValue;
 		//int iRebarSize = atoi(m_strRebarSize);
-		defaultValue = g_globalpara.m_alength.at((string)m_strRebarSize);
+		if (g_globalpara.m_alength.find((string)m_strRebarSize) != g_globalpara.m_alength.end())
+		{
+			auto iter = g_globalpara.m_alength.find((string)m_strRebarSize);
+			defaultValue = iter->second;
+		}
+		else
+		{
+			defaultValue = 0.0;
+		}
 		strValue1.Format(L"%.2f", defaultValue);//长度
 	}
 	break;

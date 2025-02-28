@@ -279,7 +279,11 @@ void CFacesRebarDlgEx::PreviewRebarLines()
 	m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);	//主要获取端部样式中列表新数据
 	m_PageEndType.SetListRowData(m_vecEndTypeData);	//修改为新的数据
 
-
+	// 清空上次的预览线
+	if (m_FaceRebarPtr)
+	{
+		m_FaceRebarPtr->ClearLines();
+	}
 	/**********************给sizekey附加型号******************************/
 	auto it = m_vecRebarData.begin();
 	for (; it != m_vecRebarData.end(); it++)
