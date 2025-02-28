@@ -252,6 +252,12 @@
     <ClCompile Include="CRebarEndPointSetDlg.cpp">
       <Filter>MFC Classes\钢筋端部设置</Filter>
     </ClCompile>
+    <ClCompile Include="PlaneRebarAssemblyEx.cpp">
+      <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiPlaneRebarAssemblyEx.cpp">
+      <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -781,6 +787,12 @@
     </ClInclude>
     <ClInclude Include="CRebarEndPointSetDlg.h">
       <Filter>MFC Classes\钢筋端部设置</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneRebarAssemblyEx.h">
+      <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiPlaneRebarAssemblyEx.h">
+      <Filter>Helper Classes\自适应面配筋</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

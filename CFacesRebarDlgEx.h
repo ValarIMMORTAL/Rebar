@@ -4,6 +4,7 @@
 #include "CFacesRebarEndTypeDlg.h"
 #include "CommonFile.h"
 #include "FacesRebarAssemblyEx.h"
+#include "PlaneRebarAssemblyEx.h"
 #include "_USTATION.h"
 #include "GalleryIntelligentRebar.h"
 
@@ -48,7 +49,7 @@ public:
 	CDialog*							pDialog[2];					//用来保存对话框对象指针
 
 	CTabCtrl m_tab;
-	FacesRebarAssemblyEx * m_FaceRebarPtr;
+	FacesRebarAssemblyEx* m_FaceRebarPtr;
 
 	void SetSelectElement(ElementHandleCR eh) { _ehOld = eh; }
 	ElementHandle GetSelectElement() { return _ehOld; }

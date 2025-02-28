@@ -212,9 +212,9 @@ void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh
 		case FacesRebarAssemblyEx::Plane:
 			faceRebar = REA::Create<PlaneRebarAssemblyEx>(ACTIVEMODEL, eeh.GetElementId(), eeh.GetModelRef());
 			break;
-		case FacesRebarAssemblyEx::CamberedSurface:
-			faceRebar = REA::Create<CamberedSurfaceRebarAssemblyEx>(ACTIVEMODEL, eeh.GetElementId(), eeh.GetModelRef());
-			break;
+		// case FacesRebarAssemblyEx::CamberedSurface:
+		// 	faceRebar = REA::Create<CamberedSurfaceRebarAssemblyEx>(ACTIVEMODEL, eeh.GetElementId(), eeh.GetModelRef());
+		// 	break;
 		default:
 			return;
 		}

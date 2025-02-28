@@ -241,6 +241,7 @@
     <ClCompile Include="ListCtrlCellEx.cpp" />
     <ClCompile Include="ListCtrlEx.cpp" />
     <ClCompile Include="MakeRebarHelper.cpp" />
+    <ClCompile Include="MultiPlaneRebarAssemblyEx.cpp" />
     <ClCompile Include="MySlabRebarAssembly.cpp" />
     <ClCompile Include="OBB.cpp" />
     <ClCompile Include="PITACCRebarAssembly.cpp" />
@@ -250,6 +251,7 @@
     <ClCompile Include="PITRebarCurve.cpp" />
     <ClCompile Include="PITRebarEndType.cpp" />
     <ClCompile Include="PickElementTool.cpp" />
+    <ClCompile Include="PlaneRebarAssemblyEx.cpp" />
     <ClCompile Include="PolygonHelper.cpp" />
     <ClCompile Include="RebarRexFactory.cpp" />
     <ClCompile Include="SelectRebarTool.cpp" />
@@ -381,6 +383,7 @@
     <ClInclude Include="ListCtrlCellEx.h" />
     <ClInclude Include="ListCtrlEx.h" />
     <ClInclude Include="MakeRebarHelper.h" />
+    <ClInclude Include="MultiPlaneRebarAssemblyEx.h" />
     <ClInclude Include="MySlabRebarAssembly.h" />
     <ClInclude Include="OBB.h" />
     <ClInclude Include="PITACCRebarAssembly.h" />
@@ -389,6 +392,7 @@
     <ClInclude Include="PITRebarAssembly.h" />
     <ClInclude Include="PITRebarCurve.h" />
     <ClInclude Include="PITRebarEndType.h" />
+    <ClInclude Include="PlaneRebarAssemblyEx.h" />
     <ClInclude Include="PolygonHelper.h" />
     <ClInclude Include="RebarRexFactory.h" />
     <ClInclude Include="resource.h" />
