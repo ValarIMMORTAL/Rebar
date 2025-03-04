@@ -23,7 +23,7 @@ PlaneRebarAssemblyEx::~PlaneRebarAssemblyEx()
 {
 }
 
-bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, const PIT::PITRebarEndTypes& endTypes)
+bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, const PIT::PITRebarEndTypes& endTypes, double endTypeStartOffset, double endTypeEndOffset)
 {
 	DPoint3d  startPt = endTypes.beg.GetptOrgin();
 	DPoint3d  endPt = endTypes.end.GetptOrgin();
@@ -125,33 +125,44 @@ bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, co
 			map_pts[dis] = endPt;
 		}
 
+		DVec3d vecTmp;
+		vecTmp.DifferenceOf(startPt, endPt);
+		vecTmp.Normalize();
+		// ±éÀú map_pts Éú³É¸Ö½î¶Î
 		for (map<int, DPoint3d>::iterator itr = map_pts.begin(); itr != map_pts.end(); itr++)
 		{
 			PITRebarEndTypes endTypesTmp = endTypes;
 			PITRebarCurve rebar;
 			RebarVertexP vex;
 			DPoint3d ptStart(itr->second);
+			// ¸Ö½îÆðµã¶Ë²¿Æ«ÒÆ
+			if (ptStart.IsEqual(map_pts.begin()->second) && i == 0)
+				ptStart.SumOf(ptStart, vecTmp, endTypeStartOffset);
 			vex = &rebar.PopVertices().NewElement();
-			vex->SetIP(itr->second);
+			vex->SetIP(ptStart);
 			vex->SetType(RebarVertex::kStart);
-			endTypesTmp.beg.SetptOrgin(itr->second);
+			endTypesTmp.beg.SetptOrgin(ptStart);
 
-			map<int, DPoint3d>::iterator itrplus = ++itr;
+			auto itrplus = ++itr;
 			if (itrplus == map_pts.end())
 			{
 				break;
 			}
 
-			endTypesTmp.end.SetptOrgin(itrplus->second);
-
+			vecTmp.Negate();
 			DPoint3d ptEnd(itrplus->second);
+			// ¸Ö½îÖÕµã¶Ë²¿Æ«ÒÆ
+			if (ptEnd.IsEqual((--map_pts.end())->second) && i == vecPtRebars.size() - 1)
+				ptEnd.SumOf(ptEnd, vecTmp, endTypeEndOffset);
 			vex = &rebar.PopVertices().NewElement();
-			vex->SetIP(itrplus->second);
+			vex->SetIP(ptEnd);
 			vex->SetType(RebarVertex::kEnd);
+			endTypesTmp.end.SetptOrgin(ptEnd);
 
 			// EditElementHandle eeh;
 			// LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptStart, ptEnd), true, *ACTIVEMODEL);
 			// eeh.AddToModel();
+			// Éú³É¸Ö½î¶Î²¢Ìí¼Óµ½ÁÐ±í
 			rebar.EvaluateEndTypes(endTypesTmp);
 			rebars.push_back(rebar);
 		}
@@ -272,11 +283,11 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 	vector<PITRebarCurve>     rebarCurvesNum;
 	int j = 0;
 	double endTypeStartOffset = endType[0].offset * uor_per_mm;
-	double endTypEendOffset = endType[1].offset * uor_per_mm;
+	double endTypeEndOffset = endType[1].offset * uor_per_mm;
 	if (endType[0].endType != 0 && endType[0].endType != 7)	//¶Ë²¿ÍäÇúÊ±¶îÍâÆ«ÒÆ¸Ö½î°ë¾¶
 		endTypeStartOffset += diameter * 0.5;
 	if (endType[1].endType != 0 && endType[1].endType != 7)	//¶Ë²¿ÍäÇúÊ±¶îÍâÆ«ÒÆ¸Ö½î°ë¾¶
-		endTypEendOffset += diameter * 0.5;
+		endTypeEndOffset += diameter * 0.5;
 
 	// 	EditElementHandle eeh;
 	// 	LineHandler::CreateLineElement(eeh, NULL, rebarLine.GetLineSeg(), true, *ACTIVEMODEL);
@@ -291,10 +302,10 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 	start.SetbendRadius(startbendRadius);
 	start.SetendNormal(vecEndNormal[0]);
 	//rebarLine.Shorten(sideCov + endTypeStartOffset,true);
-	rebarLine.Shorten(/*sideCov + */endTypeStartOffset, true);
+	//rebarLine.Shorten(/*sideCov + */endTypeStartOffset, true);
 	start.SetptOrgin(rebarLine.GetLineStartPoint());
 	//rebarLine.Shorten(sideCov + endTypEendOffset, false);
-	rebarLine.Shorten(/*sideCov + */endTypEendOffset, false);
+	//rebarLine.Shorten(/*sideCov + */endTypeEndOffset, false);
 
 	end.SetType((PITRebarEndType::Type)endTypeEnd.GetType());
 	end.Setangle(endType[1].rotateAngle);
@@ -327,7 +338,7 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 		endTypes.beg.SetptOrgin(rebarLine.GetLineStartPoint());
 		endTypes.end.SetptOrgin(rebarLine.GetLineEndPoint());
 
-		makeRebarCurve(rebarCurves, endTypes);
+		makeRebarCurve(rebarCurves, endTypes, endTypeStartOffset, endTypeEndOffset);
 
 		//		xPos += adjustedSpacing
 		DVec3d offsetVec = vec.GetLineVec();

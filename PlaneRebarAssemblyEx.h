@@ -21,7 +21,7 @@ private:
 	//根据钢筋点信息构建ebarCurve
 	//vector<PIT::PITRebarCurve>& rebar 得到的RebarCurve
 	//PIT::PITRebarEndTypes& endTypes 钢筋点信息和端部信息
-	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes);
+	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, const PIT::PITRebarEndTypes& endTypes, double endTypeStartOffset, double endTypeEndOffset);
 
 protected:
 	virtual int         GetPolymorphic() const override { return REX_Type::kLastRebarElement + kRebarAssembly + PIT::PITRebarAssemblyEnum::Plane; }
