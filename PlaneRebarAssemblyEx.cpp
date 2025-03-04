@@ -285,9 +285,9 @@ RebarSetTag* PlaneRebarAssemblyEx::MakeRebars
 	double endTypeStartOffset = endType[0].offset * uor_per_mm;
 	double endTypeEndOffset = endType[1].offset * uor_per_mm;
 	if (endType[0].endType != 0 && endType[0].endType != 7)	//¶Ë²¿ÍäÇúÊ±¶îÍâÆ«ÒÆ¸Ö½î°ë¾¶
-		endTypeStartOffset += diameter * 0.5;
+		endTypeStartOffset -= diameter * 0.5;
 	if (endType[1].endType != 0 && endType[1].endType != 7)	//¶Ë²¿ÍäÇúÊ±¶îÍâÆ«ÒÆ¸Ö½î°ë¾¶
-		endTypeEndOffset += diameter * 0.5;
+		endTypeEndOffset -= diameter * 0.5;
 
 	// 	EditElementHandle eeh;
 	// 	LineHandler::CreateLineElement(eeh, NULL, rebarLine.GetLineSeg(), true, *ACTIVEMODEL);
