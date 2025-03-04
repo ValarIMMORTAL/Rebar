@@ -53,7 +53,7 @@ void FacesRebarAssemblyEx::DrawPoint(const DPoint3d& point, int color, EditEleme
 {
 	// 创建点串（包含一个点）
 	bvector<DPoint3d> pointArray = { point };
-	PointStringHandler::CreatePointStringElement(eehPoint, nullptr, pointArray.data(), nullptr, pointArray.size(), false, true, *modelRef);
+	PointStringHandler::CreatePointStringElement(eehPoint, nullptr, pointArray.data(), nullptr, pointArray.size(), false, modelRef->Is3d(), *modelRef);
 
 	// 设置颜色 & 图层
 	ElementPropertiesSetterPtr prop = ElementPropertiesSetter::Create();

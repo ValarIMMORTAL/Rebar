@@ -54,24 +54,22 @@ bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, co
 		//将原平面往法向方向拉伸为一个实体
 		EditElementHandle eehSolid;
 		ISolidKernelEntityPtr ptarget;
-		SolidUtil::Convert::ElementToBody(ptarget, m_face, true, true, true);
-		if (SUCCESS == SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm))
+		if (SolidUtil::Convert::ElementToBody(ptarget, m_face, true, true, true) == SUCCESS &&
+			SolidUtil::Modify::ThickenSheet(ptarget, 5000.0 * uor_per_mm, 5000 * uor_per_mm) == SUCCESS &&
+			SolidUtil::Convert::BodyToElement(eehSolid, *ptarget, NULL, *ACTIVEMODEL) == SUCCESS)
 		{
-			if (SUCCESS == SolidUtil::Convert::BodyToElement(eehSolid, *ptarget, NULL, *ACTIVEMODEL))
+			DRange3d range;
+			mdlElmdscr_computeRange(&range.low, &range.high, eehSolid.GetElementDescrP(), NULL);
+			DVec3d tmpVec = endPt - startPt;
+			tmpVec.ScaleToLength(5000 * UOR_PER_MilliMeter);
+			endPt += tmpVec;
+			tmpVec.Negate();
+			startPt += tmpVec;
+			GetIntersectPointsWithOldElm(tmpptsTmp, &eehSolid, startPt, endPt, dSideCover);
+			if (tmpptsTmp.size() > 1)
 			{
-				DRange3d range;
-				mdlElmdscr_computeRange(&range.low, &range.high, eehSolid.GetElementDescrP(), NULL);
-				DVec3d tmpVec = endPt - startPt;
-				tmpVec.ScaleToLength(5000 * UOR_PER_MilliMeter);
-				endPt.Add(tmpVec);
-				tmpVec.Negate();
-				startPt.Add(tmpVec);
-				GetIntersectPointsWithOldElm(tmpptsTmp, &eehSolid, startPt, endPt, dSideCover);
-				if (tmpptsTmp.size() > 1)
-				{
-					// 存在交点为两个以上的情况
-					GetIntersectPointsWithSlabRebar(vecPtRebars, tmpptsTmp, startPt, endPt, &eehSolid, dSideCover);
-				}
+				// 存在交点为两个以上的情况
+				GetIntersectPointsWithSlabRebar(vecPtRebars, tmpptsTmp, startPt, endPt, &eehSolid, dSideCover);
 			}
 		}
 	}
@@ -84,7 +82,6 @@ bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, co
 
 		vecPtRebars.push_back(vecPt);
 	}
-
 
 	/*EditElementHandle eehline;
 	LineHandler::CreateLineElement(eehline, nullptr, DSegment3d::From(pt1[0], pt1[1]), true, *ACTIVEMODEL);
@@ -128,8 +125,6 @@ bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, co
 			map_pts[dis] = endPt;
 		}
 
-
-
 		for (map<int, DPoint3d>::iterator itr = map_pts.begin(); itr != map_pts.end(); itr++)
 		{
 			PITRebarEndTypes endTypesTmp = endTypes;
@@ -154,22 +149,10 @@ bool PlaneRebarAssemblyEx::makeRebarCurve(vector<PIT::PITRebarCurve>& rebars, co
 			vex->SetIP(itrplus->second);
 			vex->SetType(RebarVertex::kEnd);
 
-			/*double dis1 = ptStart.Distance(ptStartBack);
-			if (COMPARE_VALUES_EPS(dis1, 0, 1) != 0)
-			{
-				endTypesTmp.beg.SetType(PITRebarEndType::kNone);
-			}
-			double dis2 = ptEnd.Distance(ptEndBack);
-
-			if (COMPARE_VALUES_EPS(dis2, 0, 1) != 0)
-			{
-				endTypesTmp.end.SetType(PITRebarEndType::kNone);
-			}*/
-			// 			EditElementHandle eeh;
-			// 			LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptStart, ptEnd), true, *ACTIVEMODEL);
-			// 			eeh.AddToModel();
+			// EditElementHandle eeh;
+			// LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptStart, ptEnd), true, *ACTIVEMODEL);
+			// eeh.AddToModel();
 			rebar.EvaluateEndTypes(endTypesTmp);
-			//		rebar.EvaluateEndTypes(endTypes, bendRadius, bendLen + bendRadius, &endNormal);
 			rebars.push_back(rebar);
 		}
 	}
