@@ -52,7 +52,6 @@ BEGIN_MESSAGE_MAP(CFacesRebarDlgEx, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT1, &CFacesRebarDlgEx::OnEnChangeEdit1)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_FacesRebarEx, &CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex)
 	ON_STN_CLICKED(IDC_STATIC_WALLNAME, &CFacesRebarDlgEx::OnStnClickedStaticWallname)
-	ON_BN_CLICKED(IDC_BUTTON1, &CFacesRebarDlgEx::OnBnClickedButton1)
 	ON_BN_CLICKED(IDOK, &CFacesRebarDlgEx::OnBnClickedOk)
 	ON_BN_CLICKED(IDCANCEL, &CFacesRebarDlgEx::OnBnClickedCancel)
 END_MESSAGE_MAP()
@@ -510,13 +509,6 @@ void CFacesRebarDlgEx::OnEnChangeEdit1() // 间距
 
 	m_PageMainRebar.ChangeRebarSpacedata(m_WallSetInfo.spacing);
 	m_PageMainRebar.UpdateRebarList();
-}
-
-void CFacesRebarDlgEx::OnBnClickedButton1()
-{
-	// TODO: 在此添加控件通知处理程序代码
-	SelectAnchorFaceTool* tool = new SelectAnchorFaceTool(1, 1, _ehOld, _ehNew, this);
-	tool->InstallTool();
 }
 
 
