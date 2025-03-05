@@ -172,9 +172,6 @@
     <ClCompile Include="CFacesRebarDlg.cpp">
       <Filter>MFC Classes</Filter>
     </ClCompile>
-    <ClCompile Include="CFacesRebarEndTypeDlg.cpp">
-      <Filter>MFC Classes</Filter>
-    </ClCompile>
     <ClCompile Include="PITBimMSCEConvert.cpp">
       <Filter>Utility Files</Filter>
     </ClCompile>
@@ -250,13 +247,19 @@
       <Filter>Helper Classes\自适应面配筋</Filter>
     </ClCompile>
     <ClCompile Include="CRebarEndPointSetDlg.cpp">
-      <Filter>MFC Classes\钢筋端部设置</Filter>
+      <Filter>MFC Classes\钢筋端点属性</Filter>
     </ClCompile>
     <ClCompile Include="PlaneRebarAssemblyEx.cpp">
       <Filter>Helper Classes\自适应面配筋</Filter>
     </ClCompile>
     <ClCompile Include="MultiPlaneRebarAssemblyEx.cpp">
       <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesRebarEndTypeDlg.cpp">
+      <Filter>MFC Classes\面配筋钢筋端部样式</Filter>
+    </ClCompile>
+    <ClCompile Include="LineDrawingTool.cpp">
+      <Filter>MFC Classes\面配筋钢筋端部样式</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -410,8 +413,11 @@
     <Filter Include="MFC Classes\自适应面配筋">
       <UniqueIdentifier>{7a9ca626-c062-4667-8f28-5aad4dd4e4d0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="MFC Classes\钢筋端部设置">
+    <Filter Include="MFC Classes\钢筋端点属性">
       <UniqueIdentifier>{9b52872c-e4e2-4142-9193-d3cd62551f83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MFC Classes\面配筋钢筋端部样式">
+      <UniqueIdentifier>{701f6812-64ac-47b1-957d-994a7720fa7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -702,9 +708,6 @@
     <ClInclude Include="CFacesRebarDlg.h">
       <Filter>MFC Classes</Filter>
     </ClInclude>
-    <ClInclude Include="CFacesRebarEndTypeDlg.h">
-      <Filter>MFC Classes</Filter>
-    </ClInclude>
     <ClInclude Include="PITBimMSCEConvert.h">
       <Filter>Utility Files</Filter>
     </ClInclude>
@@ -786,13 +789,19 @@
       <Filter>Helper Classes\自适应面配筋</Filter>
     </ClInclude>
     <ClInclude Include="CRebarEndPointSetDlg.h">
-      <Filter>MFC Classes\钢筋端部设置</Filter>
+      <Filter>MFC Classes\钢筋端点属性</Filter>
     </ClInclude>
     <ClInclude Include="PlaneRebarAssemblyEx.h">
       <Filter>Helper Classes\自适应面配筋</Filter>
     </ClInclude>
     <ClInclude Include="MultiPlaneRebarAssemblyEx.h">
       <Filter>Helper Classes\自适应面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesRebarEndTypeDlg.h">
+      <Filter>MFC Classes\面配筋钢筋端部样式</Filter>
+    </ClInclude>
+    <ClInclude Include="LineDrawingTool.h">
+      <Filter>MFC Classes\面配筋钢筋端部样式</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -9,6 +9,7 @@
 #include "CommonFile.h"
 #include "CRebarEndPointSetDlg.h"
 #include "ElementAttribute.h"
+#include "LineDrawingTool.h"
 
 // CFacesRebarEndType 对话框
 
@@ -50,13 +51,14 @@ void CFacesRebarEndTypeDlg::InitUIData()
 	m_ListEndType.GetClientRect(&stRect);
 	double width = stRect.right - stRect.left;
 	//在列表控件中插入列
-	m_ListEndType.InsertColumn(0, _T("位置"), (int)(width / 7.0*1.25), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
-	m_ListEndType.InsertColumn(1, _T("类型"), (int)(width / 7.0), ListCtrlEx::ComboBox, LVCFMT_CENTER, ListCtrlEx::SortByString);
-	m_ListEndType.InsertColumn(2, _T("端点属性"), (int)(width / 7.0*0.75), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
-	m_ListEndType.InsertColumn(3, _T("偏移"), (int)(width / 7.0), ListCtrlEx::EditBox, LVCFMT_CENTER, ListCtrlEx::SortByString);
-	m_ListEndType.InsertColumn(4, _T("旋转角"), (int)(width / 7.0), ListCtrlEx::EditBox, LVCFMT_CENTER, ListCtrlEx::SortByString);
-	m_ListEndType.InsertColumn(5, _T("+90°"), (int)(width / 7.0), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
-	m_ListEndType.InsertColumn(6, _T("-90°"), (int)(width / 7.0), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(0, _T("位置"), (int)(width / 8.0 * 1.25), ListCtrlEx::Normal, LVCFMT_CENTER, ListCtrlEx::SortByDigit);
+	m_ListEndType.InsertColumn(1, _T("类型"), (int)(width / 8.0), ListCtrlEx::ComboBox, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(2, _T("端点属性"), (int)(width / 8.0 * 0.75), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(3, _T("偏移"), (int)(width / 8.0), ListCtrlEx::EditBox, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(4, _T("旋转角"), (int)(width / 8.0), ListCtrlEx::EditBox, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(5, _T("+90°"), (int)(width / 8.0), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(6, _T("-90°"), (int)(width / 8.0), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
+	m_ListEndType.InsertColumn(7, _T("手绘偏移"), (int)(width / 8.0), ListCtrlEx::Button, LVCFMT_CENTER, ListCtrlEx::SortByString);
 
 	UpdateEndTypeList();
 }
@@ -135,7 +137,7 @@ void CFacesRebarEndTypeDlg::UpdateEndTypeList()
 			m_ListEndType.SetItemText(i, 0, strIndex);
 		}
 
-		for (int j = 1; j < 7; ++j)
+		for (int j = 1; j < 8; ++j)
 		{
 			CString strValue;
 			switch (j)
@@ -169,6 +171,9 @@ void CFacesRebarEndTypeDlg::UpdateEndTypeList()
 			case 6:
 				strValue = _T("-90°");
 				break;
+			case 7:
+				strValue = _T("...");
+				break;
 			default:
 				break;
 			}
@@ -195,6 +200,15 @@ BOOL CFacesRebarEndTypeDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
+}
+
+void CFacesRebarEndTypeDlg::SetOffsetValue(int row, double length)
+{
+	if (row >= 0 && row < m_vecEndType.size())
+	{
+		m_vecEndType[row].offset = length;  // 更新偏移值，假设 offset 是成员变量
+		UpdateEndTypeList();  // 刷新表格显示
+	}
 }
 
 LRESULT CFacesRebarEndTypeDlg::OnEndTypeButtonDown(WPARAM wParam, LPARAM lParam)
@@ -234,6 +248,14 @@ LRESULT CFacesRebarEndTypeDlg::OnEndTypeButtonDown(WPARAM wParam, LPARAM lParam)
 		m_vecEndType[msg->m_nRow].rotateAngle -= 90;
 
 		UpdateEndTypeList();
+	}
+	else if (7 == msg->m_nColumn)  // 手绘偏移
+	{
+		// 保存当前编辑的行索引
+		m_nCurrentRow = msg->m_nRow;
+		// 创建并启动交互工具
+		LineDrawingTool* tool = new LineDrawingTool(0, 0, this);
+		tool->InstallTool();  // 启动手动绘制偏移长度工具
 	}
 
 	return 0;

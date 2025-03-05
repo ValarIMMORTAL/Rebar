@@ -238,6 +238,7 @@
     <ClCompile Include="GeneralFaceRebarAssembly.cpp" />
     <ClCompile Include="HoleRebarAssembly.cpp" />
     <ClCompile Include="LDSlabRebarAssembly.cpp" />
+    <ClCompile Include="LineDrawingTool.cpp" />
     <ClCompile Include="ListCtrlCellEx.cpp" />
     <ClCompile Include="ListCtrlEx.cpp" />
     <ClCompile Include="MakeRebarHelper.cpp" />
@@ -380,6 +381,7 @@
     <ClInclude Include="GeneralFaceRebarAssembly.h" />
     <ClInclude Include="HoleRebarAssembly.h" />
     <ClInclude Include="LDSlabRebarAssembly.h" />
+    <ClInclude Include="LineDrawingTool.h" />
     <ClInclude Include="ListCtrlCellEx.h" />
     <ClInclude Include="ListCtrlEx.h" />
     <ClInclude Include="MakeRebarHelper.h" />
