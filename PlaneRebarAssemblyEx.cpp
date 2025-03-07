@@ -494,6 +494,33 @@ bool PlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 	}
 	// end
 
+	// 面配筋竖直面配置方式优化，调换层次数据
+	if (abs(m_LineSeg2.GetLineVec().DotProduct(DVec3d::From(0, 0, -1))) > 0.9)
+	{
+		vector<PIT::ConcreteRebar> mainRebarsData = PopMainRebars();
+		// 在反转之前，保存需要保持的数据
+		vector<int> rebarLevels(mainRebarsData.size());
+		vector<int> rebarDirs(mainRebarsData.size());
+		bool isParallelToY = m_LineSeg1.GetLineVec().IsParallelTo(DVec3d::UnitY());
+		for (size_t i = 0; i < mainRebarsData.size(); ++i) {
+			rebarLevels[i] = mainRebarsData[i].rebarLevel;
+			if (isParallelToY)
+				rebarDirs[i] = mainRebarsData[i].rebarDir;
+		}
+
+		// 反转整个vector
+		reverse(mainRebarsData.begin(), mainRebarsData.end());
+
+		// 恢复被保存的字段
+		for (size_t i = 0; i < mainRebarsData.size(); ++i) {
+			mainRebarsData[i].rebarLevel = rebarLevels[i];
+			if (isParallelToY)
+				mainRebarsData[i].rebarDir = rebarDirs[i];
+		}
+
+		this->SetMainRebars(mainRebarsData);
+	}
+
 	for (int i = 0; i < iRebarLevelNum; ++i)
 	{
 		PopSetIds().push_back(0);

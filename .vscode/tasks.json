@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "bmake LayingOffRebar rebar",
+            "type": "process",
+            "command":"./build.cmd",
+            "group": "build"
+        },
+        {
+            "label": "bmake pit graph functions",
+            "type": "process",
+            "command":"./PITGraphFunction/build.cmd",
+            "group": "build"
+        }
+    ]
+}
