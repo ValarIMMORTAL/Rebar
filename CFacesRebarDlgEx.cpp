@@ -8,16 +8,18 @@
 
 #include "ConstantsDef.h"
 #include "FacesRebarAssemblyEx.h"
+#include "MultiPlaneRebarAssemblyEx.h"
 #include "PITBimMSCEConvert.h"
 #include "SelectFaceToolEx.h"
 
 // CFacesRebarDlgEx 对话框
 
-bool g_FacePreviewButtonsDown = false;//面配筋界面的预览按钮
+bool g_FacePreviewButtonsDown = false; //面配筋界面的预览按钮
 
 IMPLEMENT_DYNAMIC(CFacesRebarDlgEx, CDialogEx)
 
-CFacesRebarDlgEx::CFacesRebarDlgEx(ElementHandleCR ehOld, ElementId ehnew, const bvector<ISubEntityPtr>& faces, CWnd* pParent /*=nullptr*/)
+CFacesRebarDlgEx::CFacesRebarDlgEx(ElementHandleCR ehOld, ElementId ehnew, const bvector<ISubEntityPtr>& faces,
+                                   CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DIALOG_FacesRebarEx, pParent), _ehOld(ehOld), _ehNew(ehnew), m_selectfaces(faces), m_ConcreteId(0)
 {
 	m_FaceRebarPtr = NULL;
@@ -75,7 +77,7 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	GetElementXAttribute(contid, m_vecRebarData, vecRebarDataXAttribute, ACTIVEMODEL);
 	m_vecEndTypeData.clear();
 	GetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
-	
+
 	m_PageMainRebar.SetHide(m_isHide);
 	m_PageMainRebar.SetDlgType(m_FaceDlgType);
 	m_PageMainRebar.SetListRowData(m_vecRebarData);
@@ -102,8 +104,8 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	if (strRebarSize.Find(L"mm") == -1)
 		strRebarSize += "mm";
 	int nIndex = m_ComboSize.FindStringExact(0, strRebarSize);
-	m_ComboSize.SetCurSel(nIndex);//尺寸
-	m_ComboType.SetCurSel(m_WallSetInfo.rebarType);//型号
+	m_ComboSize.SetCurSel(nIndex); //尺寸
+	m_ComboType.SetCurSel(m_WallSetInfo.rebarType); //型号
 
 	// TODO:  在此添加额外的初始化
 	//为Tab Control增加两个页面
@@ -138,32 +140,21 @@ BOOL CFacesRebarDlgEx::OnInitDialog()
 	g_ConcreteId = m_ConcreteId;
 
 	ACCConcrete wallACConcrete;
-	int ret = GetElementXAttribute(_ehOld.GetElementId(), sizeof(ACCConcrete), wallACConcrete, ConcreteCoverXAttribute, _ehOld.GetModelRef());
-	if (ret == SUCCESS)	//关联构件配筋时存储过数据,优先使用关联构件设置的保护层
+	int ret = GetElementXAttribute(_ehOld.GetElementId(), sizeof(ACCConcrete), wallACConcrete, ConcreteCoverXAttribute,
+	                               _ehOld.GetModelRef());
+	if (ret == SUCCESS) //关联构件配筋时存储过数据,优先使用关联构件设置的保护层
 	{
 		m_Concrete.postiveCover = wallACConcrete.postiveOrTopCover;
 		m_Concrete.reverseCover = wallACConcrete.reverseOrBottomCover;
 		m_Concrete.sideCover = wallACConcrete.sideCover;
 	}
-	return TRUE;  // return TRUE unless you set the focus to a control
-				  // 异常: OCX 属性页应返回 FALSE
-}
-
-void CFacesRebarDlgEx::multiSlabOrWallRebar(EditElementHandleR eeh, DgnModelRefP modelRef)
-{
-}
-
-void CFacesRebarDlgEx::multiDiffThickSlabOrWallRebar(EditElementHandleR eeh, DgnModelRefP modelRef)
-{
-}
-
-void CFacesRebarDlgEx::perpendicularFaceReabr(vector<double>& vecDis, ElementId & contid, EditElementHandleR eeh, DgnModelRefP modelRef)
-{
+	return TRUE; // return TRUE unless you set the focus to a control
+	// 异常: OCX 属性页应返回 FALSE
 }
 
 void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef)
 {
-	FacesRebarAssemblyEx*  faceRebar = NULL;
+	FacesRebarAssemblyEx* faceRebar = NULL;
 	int iIndex = 0;
 
 	vector<ElementRefP> vctAllLines;
@@ -242,7 +233,8 @@ void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh
 		faceRebar->Save(modelRef); // must save after creating rebars
 		contid = faceRebar->FetchConcrete();
 		iIndex++;
-		std::copy(faceRebar->m_allPreViewEehs.begin(), faceRebar->m_allPreViewEehs.end(), std::back_inserter(vctAllLines));//将多个面的画线依次存起来，最后赋值给m_FaceRebarPtr->m_AllLines
+		std::copy(faceRebar->m_allPreViewEehs.begin(), faceRebar->m_allPreViewEehs.end(),
+		          std::back_inserter(vctAllLines)); //将多个面的画线依次存起来，最后赋值给m_FaceRebarPtr->m_AllLines
 		if (newFace != nullptr)
 		{
 			mdlElmdscr_freeAll(&newFace);
@@ -260,15 +252,85 @@ void CFacesRebarDlgEx::normalFaceRebar(ElementId& contid, EditElementHandleR eeh
 	}
 }
 
-void CFacesRebarDlgEx::multiFaceInlineRebar(ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef)
+void CFacesRebarDlgEx::multiFaceUnionReabr(ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef)
 {
+	FacesRebarAssemblyEx* faceRebar = REA::Create<MultiPlaneRebarAssemblyEx>(
+		ACTIVEMODEL, eeh.GetElementId(), eeh.GetModelRef());
+
+	int iIndex = 0;
+	for (ISubEntityPtr face : m_selectfaces)
+	{
+		EditElementHandle eehFace;
+		if (!PIT::ConvertToElement::SubEntityToElement(eehFace, face, modelRef))
+		{
+			iIndex++;
+			continue;
+		}
+		if (!eehFace.IsValid())
+			continue;
+		MSElementDescrP faceDescr = nullptr;
+		eehFace.GetElementDescrP()->Duplicate(&faceDescr);
+		DVec3d ptNormal;
+		DPoint3d ptDefault = DPoint3d::From(0, 0, 1);
+		mdlElmdscr_extractNormal(&ptNormal, nullptr, faceDescr, &ptDefault);
+
+		MSElementDescrP newFace = nullptr;
+		if (abs(ptDefault.DotProduct(ptNormal)) > 0.9/*ptDefault.IsParallelTo(ptNormal)*/)
+		{
+			ExtractFacesTool::GetOutLineFace(faceDescr, newFace);
+		}
+		else
+		{
+			ExtractFacesTool::GetFaceByHoleSubtractFace(faceDescr, newFace);
+		}
+		if (newFace == nullptr)
+		{
+			continue;
+		}
+		if (m_Concrete.isHandleHole == 0 && newFace != nullptr)
+		{
+			//mdlElmdscr_add(newFace);
+			eehFace.ReplaceElementDescr(newFace);
+		}
+
+		CVector3D vecTmp = m_PageMainRebar.GetvecFaceNormal(iIndex);
+		DVec3d dvec = DVec3d::From(vecTmp.x, vecTmp.y, vecTmp.z);
+		faceRebar->SetfaceNormal(dvec);
+		faceRebar->m_Solid = &eeh;
+		MultiPlaneRebarAssemblyEx* multiFace = dynamic_cast<MultiPlaneRebarAssemblyEx*>(faceRebar);
+		if (multiFace != nullptr)
+		{
+			EditElementHandle newEehFace;
+			newEehFace.Duplicate(eehFace);
+			multiFace->AddFace(newEehFace);
+		}
+		EditElementHandle newFaceEeh(newFace, true, false, ACTIVEMODEL);
+		faceRebar->AnalyzingFaceGeometricData(newFaceEeh);
+		iIndex++;
+	}
+
+	if (g_FacePreviewButtonsDown)
+	{
+		faceRebar->m_allPreViewEehs.clear(); //先清空所有画线
+	}
+	faceRebar->SetisReverse(false);
+	faceRebar->SetConcrete(m_Concrete);
+	faceRebar->SetMainRebars(m_vecRebarData);
+	faceRebar->SetRebarEndTypes(m_vecEndTypeData);
+	faceRebar->MakeRebars(modelRef);
+	faceRebar->Save(modelRef); // must save after creating rebars
+	contid = faceRebar->FetchConcrete();
+	if (g_FacePreviewButtonsDown)
+	{
+		m_FaceRebarPtr = faceRebar;
+	}
+	SetElementXAttribute(contid, faceRebar->PopvecFrontPts(), FrontPtsXAttribute, ACTIVEMODEL);
 }
 
-void CFacesRebarDlgEx::PreviewRebarLines()
+void CFacesRebarDlgEx::ProcessRebarData(bool isPreview)
 {
-	g_FacePreviewButtonsDown = true;
-	DgnModelRefP        modelRef = ACTIVEMODEL;
-	DgnModelRefP        tmpModel = _ehOld.GetModelRef();
+	DgnModelRefP modelRef = ACTIVEMODEL;
+	DgnModelRefP tmpModel = _ehOld.GetModelRef();
 	EditElementHandle eeh(_ehOld, _ehOld.GetModelRef());
 
 	m_Concrete = m_PageMainRebar.GetConcreteData();
@@ -278,12 +340,6 @@ void CFacesRebarDlgEx::PreviewRebarLines()
 	m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);	//主要获取端部样式中列表新数据
 	m_PageEndType.SetListRowData(m_vecEndTypeData);	//修改为新的数据*/
 
-	// 清空上次的预览线
-	if (m_FaceRebarPtr)
-	{
-		m_FaceRebarPtr->ClearLines();
-	}
-	/**********************给sizekey附加型号******************************/
 	auto it = m_vecRebarData.begin();
 	for (; it != m_vecRebarData.end(); it++)
 	{
@@ -295,103 +351,24 @@ void CFacesRebarDlgEx::PreviewRebarLines()
 				strRebarSize.Replace(L"mm", L"");
 			}
 		}
-		else
+		else if (XmlManager::s_alltypes.size() > 0)
 		{
 			strRebarSize = XmlManager::s_alltypes[it->rebarType];
 		}
 		strcpy(it->rebarSize, CT2A(strRebarSize));
 		GetDiameterAddType(it->rebarSize, it->rebarType);
 	}
-	/******************************给sizekey附加型号*****************************/
-
-	ElementId testid = 0;
-	GetElementXAttribute(eeh.GetElementId(), sizeof(ElementId), testid, ConcreteIDXAttribute, eeh.GetModelRef());
-	vector<double> vecDis;
-
-	// 多面联合配筋 || 多板联合配筋
-	if (!m_vvecUpFace.empty() || !m_vvecDownFace.empty())
-	{
-		//multiSlabOrWallRebar(eeh, modelRef);
-		std::vector<PIT::ConcreteRebar> frontRebarDatas;
-		std::vector<PIT::ConcreteRebar> backRebarDatas;
-		for (auto it : m_vecRebarData)
-		{
-			if (it.datachange == 0)
-			{
-				frontRebarDatas.push_back(it);
-			}
-			if (it.datachange == 2)
-			{
-				backRebarDatas.push_back(it);
-			}
-		}
-		if (frontRebarDatas.size() > 0)
-		{
-			m_Concrete.isSlabUpFaceUnionRebar = 1;
-			m_Concrete.rebarLevelNum = frontRebarDatas.size();
-			m_vecRebarData = frontRebarDatas;
-			multiDiffThickSlabOrWallRebar(eeh, modelRef);
-		}
-		if (backRebarDatas.size() > 0)
-		{
-			m_Concrete.isSlabUpFaceUnionRebar = 0;
-			m_Concrete.rebarLevelNum = backRebarDatas.size();
-			m_vecRebarData = backRebarDatas;
-			multiDiffThickSlabOrWallRebar(eeh, modelRef);
-		}
-		g_FacePreviewButtonsDown = false;
-		return;
-	}
-
-	if (m_selectfaces.size() > 2)
-	{
-		EditElementHandle eehFace1;
-		DPoint3d ptNormal1;
-		DPoint3d ptInFace1;
-		bool ret1 = PIT::ConvertToElement::SubEntityToElement(eehFace1, m_selectfaces[0], modelRef);
-		mdlElmdscr_extractNormal(&ptNormal1, &ptInFace1, eehFace1.GetElementDescrCP(), NULL);
-		for (int i = 1; i < (int)m_selectfaces.size() - 1; i += 2)
-		{
-			EditElementHandle eehFace2, eehFace3;
-			bool ret2 = PIT::ConvertToElement::SubEntityToElement(eehFace2, m_selectfaces[i], modelRef);
-			bool ret3 = PIT::ConvertToElement::SubEntityToElement(eehFace3, m_selectfaces[i + 1], modelRef);
-			if (ret2 && ret3)
-			{
-				DPoint3d ptNormal2, ptNormal3;
-				DPoint3d ptInFace2, ptInFace3;
-				mdlElmdscr_extractNormal(&ptNormal2, &ptInFace2, eehFace2.GetElementDescrCP(), NULL);
-				mdlElmdscr_extractNormal(&ptNormal3, &ptInFace3, eehFace3.GetElementDescrCP(), NULL);
-				if (ptNormal1.IsPerpendicularTo(ptNormal2) && ptNormal1.IsParallelTo(ptNormal3))
-				{
-					//计算第三个面与第一个面的距离
-					DPoint3d ptPro;
-					mdlVec_projectPointToPlane(&ptPro, &ptInFace1, &ptInFace3, &ptNormal3);
-					double dis = ptInFace1.Distance(ptPro);
-					vecDis.push_back(dis);
-				}
-
-				ptNormal1 = ptNormal3;
-				ptInFace1 = ptInFace3;
-			}
-		}
-	}
 
 	ElementId contid;
-	if (vecDis.size()) // 互相垂直面配筋（3个面及以上）
+	// 多面联合配筋
+	if (m_PageMainRebar.GetIsUnionFace() == true && m_selectfaces.size() > 1)
 	{
-		perpendicularFaceReabr(vecDis, contid, eeh, modelRef);
+		multiFaceUnionReabr(contid, eeh, modelRef);
 	}
+	// 单面或多面配筋
 	else
 	{
-		if (this->m_PageMainRebar.GetIsMergeRebar() && m_selectfaces.size() > 1) // 多个面
-		{
-			multiFaceInlineRebar(contid, eeh, modelRef);
-		}
-		else
-		{
-			normalFaceRebar(contid, eeh, modelRef); // 一个面
-		}
-
+		normalFaceRebar(contid, eeh, modelRef);
 	}
 
 	EditElementHandle eeh2(contid, ACTIVEMODEL);
@@ -404,12 +381,40 @@ void CFacesRebarDlgEx::PreviewRebarLines()
 	for (; it2 != m_vecRebarData.end(); it2++)
 	{
 		BrString strRebarSize = it2->rebarSize;
-		strRebarSize = strRebarSize.Left(strRebarSize.GetLength() - 1);	//删掉型号
+		strRebarSize = strRebarSize.Left(strRebarSize.GetLength() - 1); //删掉型号
 		strcpy(it2->rebarSize, CT2A(strRebarSize));
 	}
 	/***********************************给sizekey去除型号再保存到模型中 ******************************************************/
-
+	if (!isPreview)
+	{
+		SetConcreteXAttribute(contid, ACTIVEMODEL);
+		//SetElementXAttribute(contid, sizeof(PIT::WallRebarInfo), &m_Concrete, WallRebarInfoXAttribute, ACTIVEMODEL);
+		//SetElementXAttribute(contid, m_vecRebarData, vecRebarDataXAttribute, ACTIVEMODEL);
+		SetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
+		SetElementXAttribute(_ehOld.GetElementId(), sizeof(ElementId), &contid, ConcreteIDXAttribute,
+		                     _ehOld.GetModelRef());
+		SetElementXAttribute(contid, g_vecRebarPtsNoHole, vecRebarPointsXAttribute, ACTIVEMODEL);
+		ElementId unionId = -1;
+		GetElementXAttribute(_ehOld.GetElementId(), sizeof(ElementId), unionId, UnionWallIDXAttribute,
+		                     _ehOld.GetModelRef());
+		if (unionId != -1)
+		{
+			SetElementXAttribute(unionId, sizeof(ElementId), &contid, ConcreteIDXAttribute, ACTIVEMODEL);
+		}
+	}
 	m_PageMainRebar.DeleteFaceLine();
+}
+
+void CFacesRebarDlgEx::PreviewRebarLines()
+{
+	g_FacePreviewButtonsDown = true;
+
+	// 清空上次的预览线
+	if (m_FaceRebarPtr)
+	{
+		m_FaceRebarPtr->ClearLines();
+	}
+	ProcessRebarData(true);
 	g_FacePreviewButtonsDown = false;
 }
 
@@ -433,8 +438,7 @@ void CFacesRebarDlgEx::OnCbnSelchangeCombo2()
 }
 
 
-
-void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR *pNMHDR, LRESULT *pResult)
+void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//把当前的页面隐藏起来
@@ -445,32 +449,32 @@ void CFacesRebarDlgEx::OnTcnSelchangeTabFacerebarex(NMHDR *pNMHDR, LRESULT *pRes
 	switch (m_CurSelTab)
 	{
 	case 0:
-	{
-		std::vector<PIT::EndType>	tmpvecEndTypeData;
-		m_PageEndType.GetListRowData(tmpvecEndTypeData);
-		m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);
-		for (int i = 0; i < tmpvecEndTypeData.size(); i++)
 		{
-			if (m_vecEndTypeData.size() >= i + 1)
+			std::vector<PIT::EndType> tmpvecEndTypeData;
+			m_PageEndType.GetListRowData(tmpvecEndTypeData);
+			m_PageEndType.m_ListEndType.GetAllRebarData(m_vecEndTypeData);
+			for (int i = 0; i < tmpvecEndTypeData.size(); i++)
 			{
-				m_vecEndTypeData[i].endPtInfo = tmpvecEndTypeData[i].endPtInfo;
+				if (m_vecEndTypeData.size() >= i + 1)
+				{
+					m_vecEndTypeData[i].endPtInfo = tmpvecEndTypeData[i].endPtInfo;
+				}
 			}
+			m_PageEndType.SetListRowData(m_vecEndTypeData);
+			m_PageMainRebar.UpdateRebarList();
 		}
-		m_PageEndType.SetListRowData(m_vecEndTypeData);
-		m_PageMainRebar.UpdateRebarList();
-	}
-	break;
+		break;
 	case 1:
-	{
-		m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
-		m_PageMainRebar.SetListRowData(m_vecRebarData);
-		m_Concrete = m_PageMainRebar.GetConcreteData();
-		m_PageEndType.SetRearLevelNum(m_Concrete.rebarLevelNum);
-		m_PageEndType.SetListRowData(m_vecEndTypeData);
-		m_PageEndType.m_vecRebarData = m_vecRebarData;
-		m_PageEndType.UpdateEndTypeList();
-	}
-	break;
+		{
+			m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
+			m_PageMainRebar.SetListRowData(m_vecRebarData);
+			m_Concrete = m_PageMainRebar.GetConcreteData();
+			m_PageEndType.SetRearLevelNum(m_Concrete.rebarLevelNum);
+			m_PageEndType.SetListRowData(m_vecEndTypeData);
+			m_PageEndType.m_vecRebarData = m_vecRebarData;
+			m_PageEndType.UpdateEndTypeList();
+		}
+		break;
 	default:
 		break;
 	}
@@ -503,7 +507,7 @@ void CFacesRebarDlgEx::OnEnChangeEdit1() // 间距
 	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
 
 	// TODO:  在此添加控件通知处理程序代码
-	CString	strTemp = CString();
+	CString strTemp = CString();
 	m_EditSpace.GetWindowText(strTemp);
 	m_WallSetInfo.spacing = atof(CT2A(strTemp));
 
@@ -516,164 +520,8 @@ void CFacesRebarDlgEx::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	CDialogEx::OnOK();
-	DgnModelRefP        modelRef = ACTIVEMODEL;
-	DgnModelRefP        tmpModel = _ehOld.GetModelRef();
-	EditElementHandle eeh(_ehOld, _ehOld.GetModelRef());
-
-	m_Concrete = m_PageMainRebar.GetConcreteData();
-	m_PageMainRebar.m_listMainRebar.GetAllRebarData(m_vecRebarData);
-	m_PageMainRebar.SetListRowData(m_vecRebarData);
-	// m_PageEndType.SetListRowData(m_vecEndTypeData);	//主要获取端部样式中端部属性的设置的新数据
-
-
-	/***********************************给sizekey附加型号******************************************************/
-	auto it = m_vecRebarData.begin();
-	for (; it != m_vecRebarData.end(); it++)
-	{
-		BrString strRebarSize = it->rebarSize;
-		if (strRebarSize != L"")
-		{
-			if (strRebarSize.Find(L"mm") != -1)
-			{
-				strRebarSize.Replace(L"mm", L"");
-			}
-		}
-		else if (XmlManager::s_alltypes.size() > 0)
-		{
-			strRebarSize = XmlManager::s_alltypes[it->rebarType];
-		}
-		strcpy(it->rebarSize, CT2A(strRebarSize));
-		GetDiameterAddType(it->rebarSize, it->rebarType);
-	}
-	/***********************************给sizekey附加型号******************************************************/
-
-	ElementId testid = 0;
-	GetElementXAttribute(eeh.GetElementId(), sizeof(ElementId), testid, ConcreteIDXAttribute, eeh.GetModelRef());
-	vector<double> vecDis;
-
-
-	// 多面联合配筋 || 多板联合配筋
-	if (!m_vvecUpFace.empty() || !m_vvecDownFace.empty())
-	{
-		//multiSlabOrWallRebar(eeh, modelRef);
-
-		std::vector<PIT::ConcreteRebar> frontRebarDatas;
-		std::vector<PIT::ConcreteRebar> backRebarDatas;
-		for (auto it : m_vecRebarData)
-		{
-			if (it.datachange == 0)
-			{
-				frontRebarDatas.push_back(it);
-			}
-			if (it.datachange == 2)
-			{
-				backRebarDatas.push_back(it);
-			}
-		}
-		if (frontRebarDatas.size() > 0)
-		{
-			m_Concrete.isSlabUpFaceUnionRebar = 1;
-			m_Concrete.rebarLevelNum = frontRebarDatas.size();
-			m_vecRebarData = frontRebarDatas;
-			multiDiffThickSlabOrWallRebar(eeh, modelRef);
-		}
-		if (backRebarDatas.size() > 0)
-		{
-			m_Concrete.isSlabUpFaceUnionRebar = 0;
-			m_Concrete.rebarLevelNum = backRebarDatas.size();
-			m_vecRebarData = backRebarDatas;
-			multiDiffThickSlabOrWallRebar(eeh, modelRef);
-		}
-		if (m_FaceRebarPtr)
-		{
-			m_FaceRebarPtr->ClearLines();
-		}
-		return;
-	}
-
-	if (m_selectfaces.size() > 2)
-	{
-		EditElementHandle eehFace1;
-		DPoint3d ptNormal1;
-		DPoint3d ptInFace1;
-		bool ret1 = PIT::ConvertToElement::SubEntityToElement(eehFace1, m_selectfaces[0], modelRef);
-		mdlElmdscr_extractNormal(&ptNormal1, &ptInFace1, eehFace1.GetElementDescrCP(), NULL);
-		for (int i = 1; i < (int)m_selectfaces.size() - 1; i += 2)
-		{
-			EditElementHandle eehFace2, eehFace3;
-			bool ret2 = PIT::ConvertToElement::SubEntityToElement(eehFace2, m_selectfaces[i], modelRef);
-			bool ret3 = PIT::ConvertToElement::SubEntityToElement(eehFace3, m_selectfaces[i + 1], modelRef);
-			if (ret2 && ret3)
-			{
-				DPoint3d ptNormal2, ptNormal3;
-				DPoint3d ptInFace2, ptInFace3;
-				mdlElmdscr_extractNormal(&ptNormal2, &ptInFace2, eehFace2.GetElementDescrCP(), NULL);
-				mdlElmdscr_extractNormal(&ptNormal3, &ptInFace3, eehFace3.GetElementDescrCP(), NULL);
-				if (ptNormal1.IsPerpendicularTo(ptNormal2) && ptNormal1.IsParallelTo(ptNormal3))
-				{
-					//计算第三个面与第一个面的距离
-					DPoint3d ptPro;
-					mdlVec_projectPointToPlane(&ptPro, &ptInFace1, &ptInFace3, &ptNormal3);
-					double dis = ptInFace1.Distance(ptPro);
-					vecDis.push_back(dis);
-				}
-
-				ptNormal1 = ptNormal3;
-				ptInFace1 = ptInFace3;
-			}
-		}
-	}
-
-	ElementId contid;
-	//if (vecDis.size()) // 互相垂直面配筋（3个面及以上) 
-	//{
-	//	perpendicularFaceReabr(vecDis, contid, eeh, modelRef);
-	//}
-	//else
-	{
-		if (this->m_PageMainRebar.GetIsMergeRebar() && m_selectfaces.size() > 1)
-		{
-			// 多面配筋 且 合并钢筋
-			multiFaceInlineRebar(contid, eeh, modelRef);
-		}
-		else
-		{
-			// 单面或多面配筋
-			normalFaceRebar(contid, eeh, modelRef);
-		}
-
-	}
-
-	EditElementHandle eeh2(contid, ACTIVEMODEL);
-	ElementRefP oldRef = eeh2.GetElementRef();
-	mdlElmdscr_setVisible(eeh2.GetElementDescrP(), false);
-	eeh2.ReplaceInModel(oldRef);
-
-	/***********************************给sizekey去除型号再保存到模型中 ******************************************************/
-	auto it2 = m_vecRebarData.begin();
-	for (; it2 != m_vecRebarData.end(); it2++)
-	{
-		BrString strRebarSize = it2->rebarSize;
-		strRebarSize = strRebarSize.Left(strRebarSize.GetLength() - 1);	//删掉型号
-		strcpy(it2->rebarSize, CT2A(strRebarSize));
-	}
-	/***********************************给sizekey去除型号再保存到模型中 ******************************************************/
-
-	SetConcreteXAttribute(contid, ACTIVEMODEL);
-	//SetElementXAttribute(contid, sizeof(PIT::WallRebarInfo), &m_Concrete, WallRebarInfoXAttribute, ACTIVEMODEL);
-	//SetElementXAttribute(contid, m_vecRebarData, vecRebarDataXAttribute, ACTIVEMODEL);
-	SetElementXAttribute(contid, m_vecEndTypeData, vecEndTypeDataXAttribute, ACTIVEMODEL);
-	SetElementXAttribute(_ehOld.GetElementId(), sizeof(ElementId), &contid, ConcreteIDXAttribute, _ehOld.GetModelRef());
-	SetElementXAttribute(contid, g_vecRebarPtsNoHole, vecRebarPointsXAttribute, ACTIVEMODEL);
-	ElementId unionId = -1;
-	GetElementXAttribute(_ehOld.GetElementId(), sizeof(ElementId), unionId, UnionWallIDXAttribute, _ehOld.GetModelRef());
-	if (unionId != -1)
-	{
-		SetElementXAttribute(unionId, sizeof(ElementId), &contid, ConcreteIDXAttribute, ACTIVEMODEL);
-	}
-
-	m_PageMainRebar.DeleteFaceLine();
-
+	ProcessRebarData(false);
+	// 清空预览线
 	if (m_FaceRebarPtr)
 	{
 		m_FaceRebarPtr->ClearLines();

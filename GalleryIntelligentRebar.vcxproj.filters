@@ -22,9 +22,6 @@
     <ClCompile Include="WallRebarAssembly.cpp">
       <Filter>Helper Classes\墙配筋</Filter>
     </ClCompile>
-    <ClCompile Include="SetParam.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
     <ClCompile Include="PITACCRebarAssembly.cpp">
       <Filter>Helper Classes\墙配筋</Filter>
     </ClCompile>
@@ -46,9 +43,6 @@
     <ClCompile Include="CWallRebarListCtrl.cpp">
       <Filter>MFC Classes\墙配筋\Controls</Filter>
     </ClCompile>
-    <ClCompile Include="PITRebarCurve.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
     <ClCompile Include="CSlabRebarDlg.cpp">
       <Filter>MFC Classes\板配筋</Filter>
     </ClCompile>
@@ -63,9 +57,6 @@
     </ClCompile>
     <ClCompile Include="CBreakEllipseWallDlg.cpp">
       <Filter>MFC Classes\墙配筋</Filter>
-    </ClCompile>
-    <ClCompile Include="AssociatedComponent.cpp">
-      <Filter>Helper Classes</Filter>
     </ClCompile>
     <ClCompile Include="CACCDataSetDlg.cpp">
       <Filter>MFC Classes\Controls</Filter>
@@ -88,29 +79,11 @@
     <ClCompile Include="ListCtrlCellEx.cpp">
       <Filter>MFC Classes\Controls</Filter>
     </ClCompile>
-    <ClCompile Include="PITRebarEndType.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="TieRebar.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="PITArcSegment.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="ACCRebarMaker.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="SingleRebarAssembly.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
     <ClCompile Include="GallerySettingsMainRebarPage.cpp">
       <Filter>Functions\参数设置\MFC Classes\Pages</Filter>
     </ClCompile>
     <ClCompile Include="TabController.cpp">
       <Filter>MFC Classes\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="PickElementTool.cpp">
-      <Filter>Helper Classes</Filter>
     </ClCompile>
     <ClCompile Include="GallerySettingsDialog.cpp">
       <Filter>Functions\参数设置\MFC Classes</Filter>
@@ -120,21 +93,6 @@
     </ClCompile>
     <ClCompile Include="CmdGallerySingleWall.cpp">
       <Filter>Functions\单独墙配筋\Cmd</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneralFaceRebarAssembly.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="OBB.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="WallHelper.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="SlabHelper.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="PolygonHelper.cpp">
-      <Filter>Helper Classes</Filter>
     </ClCompile>
     <ClCompile Include="LDSlabRebarAssembly.cpp">
       <Filter>MFC Classes\板配筋\板分层配筋</Filter>
@@ -166,12 +124,6 @@
     <ClCompile Include="StirrupRebar.cpp">
       <Filter>Functions\支墩配筋</Filter>
     </ClCompile>
-    <ClCompile Include="CFacesMainRebarDlg.cpp">
-      <Filter>MFC Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="CFacesRebarDlg.cpp">
-      <Filter>MFC Classes</Filter>
-    </ClCompile>
     <ClCompile Include="PITBimMSCEConvert.cpp">
       <Filter>Utility Files</Filter>
     </ClCompile>
@@ -183,9 +135,6 @@
     </ClCompile>
     <ClCompile Include="CFaceTieRebarToolAssembly.cpp">
       <Filter>Functions\按面拉筋</Filter>
-    </ClCompile>
-    <ClCompile Include="SelectRebarTool.cpp">
-      <Filter>Helper Classes</Filter>
     </ClCompile>
     <ClCompile Include="CEdgeLineRebarDlg.cpp">
       <Filter>MFC Classes\沿边加强筋</Filter>
@@ -204,27 +153,6 @@
     </ClCompile>
     <ClCompile Include="CHoleRebar_ReinforcingDlg.cpp">
       <Filter>MFC Classes\孔洞加强筋界面</Filter>
-    </ClCompile>
-    <ClCompile Include="CHoleRebarListCtrl.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="HoleRebarAssembly.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="CHoleRebar_AddUnionHoleDlg.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="CHoleRebar_StructualDlg.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="CDoorHoleDlg.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="DoorHoleRebarAssembly.cpp">
-      <Filter>Helper Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="URebar.cpp">
-      <Filter>Helper Classes</Filter>
     </ClCompile>
     <ClCompile Include="MakeRebarHelper.cpp">
       <Filter>Helper Classes\配筋函数</Filter>
@@ -260,6 +188,78 @@
     </ClCompile>
     <ClCompile Include="LineDrawingTool.cpp">
       <Filter>MFC Classes\面配筋钢筋端部样式</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesMainRebarDlg.cpp">
+      <Filter>MFC Classes\面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="CFacesRebarDlg.cpp">
+      <Filter>MFC Classes\面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="ACCRebarMaker.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="AssociatedComponent.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="CDoorHoleDlg.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebar_AddUnionHoleDlg.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebar_StructualDlg.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="CHoleRebarListCtrl.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="DoorHoleRebarAssembly.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralFaceRebarAssembly.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="HoleRebarAssembly.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="OBB.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="PickElementTool.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="PITArcSegment.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="PITRebarCurve.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="PITRebarEndType.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonHelper.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectRebarTool.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="SetParam.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleRebarAssembly.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="SlabHelper.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="TieRebar.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="URebar.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClCompile>
+    <ClCompile Include="WallHelper.cpp">
+      <Filter>Helper Classes\UnKnown</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -419,6 +419,12 @@
     <Filter Include="MFC Classes\面配筋钢筋端部样式">
       <UniqueIdentifier>{701f6812-64ac-47b1-957d-994a7720fa7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MFC Classes\面配筋">
+      <UniqueIdentifier>{da44d0da-8977-4c1c-a029-5a807a4f6dea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper Classes\UnKnown">
+      <UniqueIdentifier>{5b2da541-b3c9-4046-b1fc-8ec2a012ca87}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="GalleryIntelligentRebar.mke">
@@ -549,9 +555,6 @@
     <ClInclude Include="WallRebarAssembly.h">
       <Filter>Helper Classes\墙配筋</Filter>
     </ClInclude>
-    <ClInclude Include="SetParam.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
     <ClInclude Include="PITACCRebarAssembly.h">
       <Filter>Helper Classes\墙配筋</Filter>
     </ClInclude>
@@ -576,9 +579,6 @@
     <ClInclude Include="CWallRebarListCtrl.h">
       <Filter>MFC Classes\墙配筋\Controls</Filter>
     </ClInclude>
-    <ClInclude Include="PITRebarCurve.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
     <ClInclude Include="CSlabRebarDlg.h">
       <Filter>MFC Classes\板配筋</Filter>
     </ClInclude>
@@ -593,9 +593,6 @@
     </ClInclude>
     <ClInclude Include="CBreakEllipseWallDlg.h">
       <Filter>MFC Classes\墙配筋</Filter>
-    </ClInclude>
-    <ClInclude Include="AssociatedComponent.h">
-      <Filter>Helper Classes</Filter>
     </ClInclude>
     <ClInclude Include="CACCDataSetDlg.h">
       <Filter>MFC Classes\Controls</Filter>
@@ -618,29 +615,11 @@
     <ClInclude Include="ListCtrlCellEx.h">
       <Filter>MFC Classes\Controls</Filter>
     </ClInclude>
-    <ClInclude Include="PITRebarEndType.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="TieRebar.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="PITArcSegment.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="ACCRebarMaker.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="SingleRebarAssembly.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
     <ClInclude Include="GallerySettingsMainRebarPage.h">
       <Filter>Functions\参数设置\MFC Classes\Pages</Filter>
     </ClInclude>
     <ClInclude Include="TabController.h">
       <Filter>MFC Classes\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="PickElementTool.h">
-      <Filter>Helper Classes</Filter>
     </ClInclude>
     <ClInclude Include="GallerySettingsDialog.h">
       <Filter>Functions\参数设置\MFC Classes</Filter>
@@ -653,21 +632,6 @@
     </ClInclude>
     <ClInclude Include="CmdGallerySingleWall.h">
       <Filter>Functions\单独墙配筋\Cmd</Filter>
-    </ClInclude>
-    <ClInclude Include="GeneralFaceRebarAssembly.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="OBB.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="WallHelper.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="SlabHelper.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="PolygonHelper.h">
-      <Filter>Helper Classes</Filter>
     </ClInclude>
     <ClInclude Include="LDSlabRebarAssembly.h">
       <Filter>MFC Classes\板配筋\板分层配筋</Filter>
@@ -702,12 +666,6 @@
     <ClInclude Include="StirrupRebar.h">
       <Filter>Functions\支墩配筋</Filter>
     </ClInclude>
-    <ClInclude Include="CFacesMainRebarDlg.h">
-      <Filter>MFC Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="CFacesRebarDlg.h">
-      <Filter>MFC Classes</Filter>
-    </ClInclude>
     <ClInclude Include="PITBimMSCEConvert.h">
       <Filter>Utility Files</Filter>
     </ClInclude>
@@ -722,9 +680,6 @@
     </ClInclude>
     <ClInclude Include="CFaceTieRebarToolAssembly.h">
       <Filter>Functions\按面拉筋</Filter>
-    </ClInclude>
-    <ClInclude Include="SelectRebarTool.h">
-      <Filter>Helper Classes</Filter>
     </ClInclude>
     <ClInclude Include="CEdgeLineRebarDlg.h">
       <Filter>MFC Classes\沿边加强筋</Filter>
@@ -743,27 +698,6 @@
     </ClInclude>
     <ClInclude Include="CHoleRebar_ReinforcingDlg.h">
       <Filter>MFC Classes\孔洞加强筋界面</Filter>
-    </ClInclude>
-    <ClInclude Include="CHoleRebarListCtrl.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="HoleRebarAssembly.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="CHoleRebar_AddUnionHoleDlg.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="CHoleRebar_StructualDlg.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="CDoorHoleDlg.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="DoorHoleRebarAssembly.h">
-      <Filter>Helper Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="URebar.h">
-      <Filter>Helper Classes</Filter>
     </ClInclude>
     <ClInclude Include="MakeRebarHelper.h">
       <Filter>Helper Classes\配筋函数</Filter>
@@ -802,6 +736,78 @@
     </ClInclude>
     <ClInclude Include="LineDrawingTool.h">
       <Filter>MFC Classes\面配筋钢筋端部样式</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesMainRebarDlg.h">
+      <Filter>MFC Classes\面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CFacesRebarDlg.h">
+      <Filter>MFC Classes\面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="ACCRebarMaker.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="AssociatedComponent.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="CDoorHoleDlg.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebar_AddUnionHoleDlg.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebar_StructualDlg.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="CHoleRebarListCtrl.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="DoorHoleRebarAssembly.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralFaceRebarAssembly.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="HoleRebarAssembly.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="OBB.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="PickElementTool.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="PITArcSegment.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="PITRebarCurve.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="PITRebarEndType.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonHelper.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectRebarTool.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="SetParam.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="SingleRebarAssembly.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="SlabHelper.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="TieRebar.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="URebar.h">
+      <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="WallHelper.h">
+      <Filter>Helper Classes\UnKnown</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

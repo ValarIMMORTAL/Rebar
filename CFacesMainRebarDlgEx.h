@@ -14,7 +14,7 @@ class CFacesMainRebarDlgEx : public CDialogEx
 #endif
 
 public:
-	CFacesMainRebarDlgEx(CWnd* pParent = nullptr);   // 标准构造函数
+	CFacesMainRebarDlgEx(CWnd* pParent = nullptr); // 标准构造函数
 	virtual ~CFacesMainRebarDlgEx();
 
 	CMainRebarListCtrl m_listMainRebar;
@@ -22,11 +22,11 @@ public:
 	CEdit m_EditSide;
 	CEdit m_EditLevel;
 
-	PIT::DlgData  m_dlgData;			//界面上的保护层等数据
-	C_RebarTemplate	 m_RebarTemplate;	//钢筋模板界面
-	CString m_templateName;				//上一次使用的模板名称
-	void OnBnClickedUpdatadlg();		//刷新界面，参数模板按确认按钮之后调用
-	void Save_templateName();			//保存上一次的模板名称
+	PIT::DlgData m_dlgData; //界面上的保护层等数据
+	C_RebarTemplate m_RebarTemplate; //钢筋模板界面
+	CString m_templateName; //上一次使用的模板名称
+	void OnBnClickedUpdatadlg(); //刷新界面，参数模板按确认按钮之后调用
+	void Save_templateName(); //保存上一次的模板名称
 
 	// 是否规避孔洞设置
 	CButton m_hole_check;
@@ -35,8 +35,8 @@ public:
 
 	bvector<ISubEntityPtr> m_selectfaces;
 
-	vector<CVector3D>			m_vecFaceNormal;
-	vector<ElementId>			m_vecFaceLine;
+	vector<CVector3D> m_vecFaceNormal;
+	vector<ElementId> m_vecFaceLine;
 
 	// 忽略孔洞大小设置
 	CEdit m_mholesize_edit;
@@ -51,18 +51,20 @@ public:
 		m_FaceDlgType = FaceDlgType;
 	}
 
-	void ChangeRebarSizedata(char * rebarSize)
+	void ChangeRebarSizedata(char* rebarSize)
 	{
 		auto it = m_vecRebarData.begin();
 		for (it; it != m_vecRebarData.end(); it++)
 			strcpy(it->rebarSize, rebarSize);
-}
+	}
+
 	void ChangeRebarTypedata(int rebarType)
 	{
 		auto it = m_vecRebarData.begin();
 		for (it; it != m_vecRebarData.end(); it++)
 			it->rebarType = rebarType;
 	}
+
 	void ChangeRebarSpacedata(double rebarSpace)
 	{
 		auto it = m_vecRebarData.begin();
@@ -79,48 +81,53 @@ public:
 
 	void DeleteFaceLine();
 
-	void SavePrt(CDialogEx * Ptr);
+	void SavePrt(CDialogEx* Ptr);
 
-	bool GetIsMergeRebar()
-	{
-		return m_isMergeRebar;
-	}
-	bool GetIsMergeFace()
+	bool GetIsMergeFace() const
 	{
 		return m_isMergeFace;
+	}
+
+	bool GetIsUnionFace() const
+	{
+		return m_isUnionFace;
 	}
 
 	CVector3D GetvecFaceNormal(size_t iIndex);
 
 	PIT::Concrete GetConcreteData();
 	void SetConcreteData(PIT::Concrete concrete) { m_Concrete = concrete; }
-	void SetListRowData(const std::vector<PIT::ConcreteRebar>& vecListData) {
+
+	void SetListRowData(const std::vector<PIT::ConcreteRebar>& vecListData)
+	{
 		m_vecRebarData = vecListData;
 	}
-	void GetListRowData(std::vector<PIT::ConcreteRebar> &vecListData) {
+
+	void GetListRowData(std::vector<PIT::ConcreteRebar>& vecListData)
+	{
 		vecListData = m_vecRebarData;
 	}
 
 protected:
 	virtual BOOL OnInitDialog();
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV 支持
 
 	DECLARE_MESSAGE_MAP()
 
 private:
 	void InitUIData();
-	CDialogEx *			m_FaceDlgPtr;
+	CDialogEx* m_FaceDlgPtr;
 	CToolTipCtrl m_ToolTip;
-	PIT::Concrete	m_Concrete;
+	PIT::Concrete m_Concrete;
 	std::vector<PIT::ConcreteRebar> m_vecRebarData;
 
 	ElementHandle m_ehSel;
 	bool m_isHide;
 
-	int  m_FaceDlgType; // 0: 正常面配筋 1:多板联合配筋
-	bool m_isMergeRebar;
+	int m_FaceDlgType; // 0: 正常面配筋 1:多板联合配筋
 	bool m_isMergeFace; //同板面合并
-	bool m_isAnchorFace;
+	bool m_isAnchorFace; // 多面互锚
+	bool m_isUnionFace; // 多面联合配筋
 
 public:
 	afx_msg void OnBnClickedHoleCheck();

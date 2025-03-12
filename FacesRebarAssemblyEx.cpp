@@ -98,6 +98,51 @@ void FacesRebarAssemblyEx::DrawPreviewLines()
 	}
 }
 
+/**
+ * @brief 反转主筋数据
+ *
+ * 该函数用于反转主筋数据，同时保留每个主筋的级别和方向（如果主筋平行于Y轴）。
+ * 首先从当前对象中弹出主筋数据，然后保存每个主筋的级别和方向。
+ * 接着反转主筋数据的顺序，最后恢复保存的级别和方向信息，并将反转后的数据设置回当前对象。
+ *
+ * @param isParallelToY 一个布尔值，表示主筋是否平行于Y轴。
+ *                      如果为true，则在反转过程中保留主筋的方向信息。
+ */
+void FacesRebarAssemblyEx::ReverseMainRebars(bool isParallelToY)
+{
+    // 从当前对象中弹出主筋数据
+    vector<PIT::ConcreteRebar> mainRebarsData = PopMainRebars();
+
+    // 在反转之前，保存需要保持的数据
+    // 存储每个主筋的级别
+    vector<int> rebarLevels(mainRebarsData.size());
+    // 存储每个主筋的方向
+    vector<int> rebarDirs(mainRebarsData.size());
+    for (size_t i = 0; i < mainRebarsData.size(); ++i) {
+        // 保存每个主筋的级别
+        rebarLevels[i] = mainRebarsData[i].rebarLevel;
+        if (isParallelToY)
+            // 如果主筋平行于Y轴，保存每个主筋的方向
+            rebarDirs[i] = mainRebarsData[i].rebarDir;
+    }
+
+    // 反转整个vector
+    reverse(mainRebarsData.begin(), mainRebarsData.end());
+
+    // 恢复被保存的字段
+    for (size_t i = 0; i < mainRebarsData.size(); ++i) {
+        // 恢复每个主筋的级别
+        mainRebarsData[i].rebarLevel = rebarLevels[i];
+        if (isParallelToY)
+            // 如果主筋平行于Y轴，恢复每个主筋的方向
+            mainRebarsData[i].rebarDir = rebarDirs[i];
+    }
+
+    // 将反转后的数据设置回当前对象
+    this->SetMainRebars(mainRebarsData);
+}
+
+
 void FacesRebarAssemblyEx::ClearLines()
 {
 	if (m_isClearLine)

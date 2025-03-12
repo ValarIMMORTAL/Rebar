@@ -59,23 +59,12 @@ public:
 
 	void SetDlgType(int FaceDlgType){ m_FaceDlgType = FaceDlgType; }
 
-	void multiSlabOrWallRebar(EditElementHandleR eeh, DgnModelRefP modelRef);
-
-	/*
-	* @desc:	多板合并配筋（不等厚处理）
-	* @param[in]	eeh 板元素
-	* @param[in]	modelRef 模型
-	* @author	hzh
-	* @Date:	2022/11/24
-	*/
-	void multiDiffThickSlabOrWallRebar(EditElementHandleR eeh, DgnModelRefP modelRef);
-
-	void perpendicularFaceReabr(vector<double>& vecDis, ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef);
 	//面配经主要函数入口
 	void normalFaceRebar(ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef);
 
-	void multiFaceInlineRebar(ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef);
+	void multiFaceUnionReabr(ElementId& contid, EditElementHandleR eeh, DgnModelRefP modelRef);
 
+	void ProcessRebarData(bool isPreview);
 	void PreviewRebarLines();
 
 	virtual BOOL OnInitDialog();

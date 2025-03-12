@@ -123,6 +123,8 @@
     ],
     "files.encoding": "gb2312",
     "C_Cpp.errorSquiggles": "disabled",
+    "editor.fontSize": 15,
+    "editor.fontVariations": false,
     // "files.autoGuessEncoding": true
     
 }

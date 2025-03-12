@@ -79,26 +79,6 @@ void CFacesMainRebarDlgEx::SetSelectfaces(bvector<ISubEntityPtr>& selectfaces)
 
 void CFacesMainRebarDlgEx::InitUIData()
 {
-	if (m_isHide)
-	{
-		//GetDlgItem(IDC_FaceUnion_CHECK)->ShowWindow(SW_HIDE);
-		// GetDlgItem(IDC_SlabUnion_CHECK)->ShowWindow(SW_HIDE);
-	}
-
-	if (m_FaceDlgType == 1)
-	{
-		// GetDlgItem(IDC_CHECK1)->ShowWindow(SW_HIDE);
-		// GetDlgItem(IDC_CHECK2)->ShowWindow(SW_HIDE);
-	}
-	//此两个功能暂时屏蔽
-	// GetDlgItem(IDC_CHECK2)->ShowWindow(SW_HIDE);
-	// GetDlgItem(IDC_CHECK1)->ShowWindow(SW_HIDE);
-	//end
-	if (!m_isHide && m_selectfaces.size() > 0)
-	{
-		// GetDlgItem(IDC_CHECK2)->ShowWindow(SW_HIDE);
-	}
-	m_isMergeRebar = false;
 	m_isMergeFace = false;
 
 	CString strLevel, strProCover, strSideCover, strMissHoleSize;
@@ -589,11 +569,11 @@ void CFacesMainRebarDlgEx::OnBnClickedFaceunionCheck()
 	CButton* button = (CButton*)GetDlgItem(IDC_FaceUnion_CHECK);
 	if (button->GetCheck())
 	{
-		m_Concrete.isFaceUnionRebar = 1;
+		m_isUnionFace = true;
 	}
 	else
 	{
-		m_Concrete.isFaceUnionRebar = 0;
+		m_isUnionFace = false;
 	}
 }
 
