@@ -68,6 +68,14 @@ DPoint3d FacesRebarAssemblyEx::RangeMidPoint(const DRange3d &range)
 	return point;
 }
 
+DPoint3d FacesRebarAssemblyEx::GetEhCenterPt(ElementHandle eh)
+{
+	DRange3d range;
+	mdlElmdscr_computeRange(&range.low, &range.high, eh.GetElementDescrCP(), nullptr);
+	
+	return RangeMidPoint(range);
+}
+
 void FacesRebarAssemblyEx::DrawPoint(const DPoint3d& point, int color, EditElementHandle& eehPoint, DgnModelRefP modelRef)
 {
 	// 创建点串（包含一个点）

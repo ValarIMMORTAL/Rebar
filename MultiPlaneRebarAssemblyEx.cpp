@@ -953,10 +953,11 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 	for (auto lineSeg : m_vecLineSeg)
 	{
 		// 分配每一面的数据
+		size_t currentIndex = lineSeg.iIndex;
 		m_LineSeg1 = lineSeg.LineSeg1;
 		m_LineSeg2 = lineSeg.LineSeg2;
-		m_face = m_vecFace[lineSeg.iIndex];
-		this->SetfaceNormal(m_vecFaceNormal[lineSeg.iIndex]);
+		m_face = m_vecFace[currentIndex];
+		this->SetfaceNormal(m_vecFaceNormal[currentIndex]);
 		offset = dPositiveCover;
 
 		// 面配筋竖直面配置方式优化，调换层次数据
@@ -971,17 +972,6 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 		{
 			// 初始化当前层的数据
 			PopSetIds().push_back(0);
-			std::vector<PIT::EndType> vecEndType;
-			if (GetvecEndTypes().empty()) // 没有设置端部样式时，使用默认值
-			{
-				EndType endType;
-				memset(&endType, 0, sizeof(endType));
-				vecEndType = { {0, 0, 0}, endType };
-			}
-			else
-			{
-				vecEndType = GetvecEndTypes().at(i);
-			}
 
 			// 获取当前层钢筋的基本参数
 			BrString strRebarSize(GetMainRebars().at(i).rebarSize);
@@ -1000,6 +990,18 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 			LineSegment lineSeg2 = m_LineSeg2;
 			std::vector<CVector3D> vecEndNormal(2);
 			CVector3D endNormal;
+
+			std::vector<PIT::EndType> vecEndType;
+			if (GetvecEndTypes().empty()) // 没有设置端部样式时，使用默认值
+			{
+				EndType endType;
+				memset(&endType, 0, sizeof(endType));
+				vecEndType = { {0, 0, 0}, endType };
+			}
+			else
+			{
+				vecEndType = GetvecEndTypes().at(i);
+			}
 
 			// 计算端部弯钩方向
 			if (!GetvecEndTypes().empty())
@@ -1025,6 +1027,54 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 				double diameterPre = RebarCode::GetBarDiameter(GetMainRebars().at(i - 1).rebarSize, modelRef);
 				offset += diameterPre * 0.5; // 偏移上一层钢筋的半径
 				offset += diameter * 0.5;    // 偏移当前层钢筋的半径
+			}
+
+			// 确定基线并调整端部样式
+			LineSegment baseLine = (rebarDir == 1) ? lineSeg2 : lineSeg1;
+			DPoint3d startPoint = baseLine.GetLineStartPoint();
+			DPoint3d endPoint = baseLine.GetLineEndPoint();
+
+			// 根据索引确定相邻面
+			std::vector<DPoint3d> adjacentCentroids;
+			if (currentIndex == 0) // 第一个面，只与下一个面相邻
+			{
+				if (m_vecFace.size() > 1)
+					adjacentCentroids.push_back(GetEhCenterPt(m_vecFace[1]));
+			}
+			else if (currentIndex == m_vecFace.size() - 1) // 最后一个面，只与前一个面相邻
+			{
+				if (m_vecFace.size() > 1)
+					adjacentCentroids.push_back(GetEhCenterPt(m_vecFace[currentIndex - 1]));
+			}
+			else // 中间面，与前后两个面相邻
+			{
+				adjacentCentroids.push_back(GetEhCenterPt(m_vecFace[currentIndex - 1]));
+				adjacentCentroids.push_back(GetEhCenterPt(m_vecFace[currentIndex + 1]));
+			}
+
+			// 检查基线与相邻面的连通性
+			int startConnected = 0;
+			int endConnected = 0;
+
+			for (const auto& centroid : adjacentCentroids)
+			{
+				double distStart = startPoint.Distance(centroid);
+				double distEnd = endPoint.Distance(centroid);
+				// 起点更近，可能连通
+				if (COMPARE_VALUES_EPS(distStart, distEnd, baseLine.GetLength() / 6) < 0)
+					startConnected++;
+				// 终点更近，可能连通
+				if (COMPARE_VALUES_EPS(distStart, distEnd, baseLine.GetLength() / 6) > 0)
+					endConnected++;
+			}
+
+			// 调整端部样式
+			if (!adjacentCentroids.empty()) // 有相邻面
+			{
+				if (startConnected > 0)
+					vecEndType[0].endType = 0; // 起点端部样式归零
+				if (endConnected > 0)
+					vecEndType[1].endType = 0; // 终点端部样式归零
 			}
 
 			// 根据钢筋方向调整线段位置并生成钢筋
@@ -1131,9 +1181,7 @@ DSegment3d MultiPlaneRebarAssemblyEx::GetNearestSegmentToFace(const bvector<DPoi
 		return DSegment3d::From(points.front(), points.back());
 
 	// 获取中心点
-	DRange3d faceRange;
-	mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, face.GetElementDescrCP(), nullptr);
-	DPoint3d faceCentroid = RangeMidPoint(faceRange);
+	DPoint3d faceCentroid = GetEhCenterPt(face);
 	double minDistance = DBL_MAX;
 	DSegment3d nearestSegment;
 	DPoint3d startPoint = points.front();
@@ -1224,6 +1272,10 @@ void MultiPlaneRebarAssemblyEx::ConnectIntersectingRebars(DgnModelRefP modelRef)
 							closestIdxJ = p;
 						}
 					}
+
+					// 排除可能是无限延伸后得到的交点
+					if (minDistI > segI.Length() * 6 || minDistJ > segJ.Length() * 6)
+						continue;
 
 					// 找到交点，组合钢筋
 					bvector<DPoint3d> combinedPoints;

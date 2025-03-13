@@ -87,6 +87,7 @@ protected:
 	void movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
 	bool IsPointHigherXYZ(const DPoint3d& p1, const DPoint3d& p2);
 	DPoint3d RangeMidPoint(const DRange3d &range);
+	DPoint3d GetEhCenterPt(ElementHandle eh);
 	void DrawPoint(const DPoint3d& point, int color, EditElementHandle& eehPoint, DgnModelRefP modelRef);
 	void DrawPreviewLines();
 	void DrawAllRebars(DgnModelRefP modelRef, RebarSetTagArray& rsetTags);
