@@ -30,6 +30,22 @@ public:
 		CamberedSurface,
 		other,
 	};
+	// 存储每次 MakeRebars 生成的钢筋信息
+	struct RebarSetInfo
+	{
+		ElementHandle face; // 钢筋所属面元素句柄
+		std::vector<PIT::PITRebarCurve> rebarCurves; // 钢筋曲线列表
+		BrString sizeKey; // 钢筋尺寸
+		RebarEndTypes endTypes; // 端部类型
+		double diameter; // 钢筋直径
+		double spacing; // 钢筋间距
+		double adjustedSpacing; // 调整后的间距
+		int numRebar; // 钢筋数量
+		RebarSetP rebarSet; // 钢筋集
+		int level; // 钢筋层级
+		int grade; // 钢筋等级
+		int dataExchange; // 数据交换标识
+	};
 
 	double scalingFactor = 1;
 	BE_DATA_REFER(BeMatrix, Placement) //当前局部坐标原点
@@ -65,10 +81,15 @@ public:
 	virtual ~FacesRebarAssemblyEx();
 
 protected:
+	std::vector<RebarSetInfo> m_rebarSetInfos; // 存储多次 MakeRebars 调用的信息
+
 	void Init();
 	void movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
+	bool IsPointHigherXYZ(const DPoint3d& p1, const DPoint3d& p2);
+	DPoint3d RangeMidPoint(const DRange3d &range);
 	void DrawPoint(const DPoint3d& point, int color, EditElementHandle& eehPoint, DgnModelRefP modelRef);
 	void DrawPreviewLines();
+	void DrawAllRebars(DgnModelRefP modelRef, RebarSetTagArray& rsetTags);
 	void ReverseMainRebars(bool isParallelToY);
 
 protected:

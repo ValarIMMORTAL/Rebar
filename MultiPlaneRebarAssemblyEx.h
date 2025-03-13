@@ -49,7 +49,7 @@ public:
 		double              endOffset,
 		int					level,
 		int					grade,
-		int					DataExchange,
+		int					dataExchange,
 		vector<PIT::EndType> const& vecEndType,	//存储起点端部与终点端部数据
 		vector<CVector3D> const& vecEndNormal,
 		DgnModelRefP        modelRef
@@ -69,6 +69,8 @@ protected:
 	virtual WString GetPathDescriptionEx(ElementHandleCR eh) const override { return L"MultiPlane Rebar"; }
 	virtual bool OnDoubleClick() override;
 	virtual bool Rebuild() override;
+	void ConnectIntersectingRebars(DgnModelRefP modelRef);
+	DSegment3d GetNearestSegmentToFace(const bvector<DPoint3d>& points, ElementHandle face);
 
 public:
 	virtual BentleyStatus GetPresentation(EditElementHandleR eeh, ViewContextR viewContext) override { return SUCCESS; }

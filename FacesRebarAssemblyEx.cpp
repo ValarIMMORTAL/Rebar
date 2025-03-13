@@ -49,6 +49,25 @@ void FacesRebarAssemblyEx::movePoint(DPoint3d vec, DPoint3d& movePt, double disL
 	movePt.Add(vec);
 }
 
+bool FacesRebarAssemblyEx::IsPointHigherXYZ(const DPoint3d& p1, const DPoint3d& p2) {
+	if (p1.x != p2.x)
+		return p1.x > p2.x; // 先比 x
+	if (p1.y != p2.y)
+		return p1.y > p2.y; // 再比 y
+	return p1.z > p2.z;     // 最后比 z
+}
+
+DPoint3d FacesRebarAssemblyEx::RangeMidPoint(const DRange3d &range)
+{
+	DPoint3d point;
+
+	point.x = (range.low.x + range.high.x) / 2.0;
+	point.y = (range.low.y + range.high.y) / 2.0;
+	point.z = (range.low.z + range.high.z) / 2.0;
+
+	return point;
+}
+
 void FacesRebarAssemblyEx::DrawPoint(const DPoint3d& point, int color, EditElementHandle& eehPoint, DgnModelRefP modelRef)
 {
 	// 创建点串（包含一个点）
@@ -97,6 +116,107 @@ void FacesRebarAssemblyEx::DrawPreviewLines()
 		}
 	}
 }
+
+// 统一处理并绘制所有存储的钢筋信息
+void FacesRebarAssemblyEx::DrawAllRebars(DgnModelRefP modelRef, RebarSetTagArray& rsetTags)
+{
+	// 整体处理：过滤被孔洞完全覆盖的钢筋
+	for (auto& info : m_rebarSetInfos)
+	{
+		std::vector<PITRebarCurve> filteredCurves;
+		for (size_t i = 0; i < info.rebarCurves.size(); ++i)
+		{
+			const auto& rebarCurve = info.rebarCurves[i];
+			CPoint3D ptstr, ptend;
+			rebarCurve.GetEndPoints(ptstr, ptend);
+			DPoint3d midPos = ptstr;
+			midPos.Add(ptend);
+			midPos.Scale(0.5);
+
+			if (ISPointInHoles(m_Holeehs, midPos) &&
+				ISPointInHoles(m_Holeehs, ptstr) &&
+				ISPointInHoles(m_Holeehs, ptend))
+			{
+				continue; // 跳过被孔洞完全覆盖的钢筋
+			}
+
+			filteredCurves.push_back(rebarCurve);
+		}
+		info.rebarCurves = std::move(filteredCurves);
+		info.numRebar = info.rebarCurves.size();
+	}
+
+	double uor_per_mm = modelRef->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
+	// 遍历所有存储的钢筋信息并绘制
+	for (size_t idx = 0; idx < m_rebarSetInfos.size(); ++idx)
+	{
+		auto& info = m_rebarSetInfos[idx];
+		if (info.rebarCurves.empty()) continue;
+
+		// 更新钢筋集
+		RebarSetData setData;
+		setData.SetNumber(info.numRebar);
+		setData.SetNominalSpacing(info.spacing / uor_per_mm);
+		setData.SetAverageSpacing(info.adjustedSpacing / uor_per_mm);
+		info.rebarSet->FinishUpdate(setData, modelRef);
+
+		// 配置钢筋符号学属性
+		RebarSymbology symb;
+		string str(info.sizeKey);
+		char ccolar[20] = { 0 };
+		strcpy(ccolar, str.c_str());
+		SetRebarColorBySize(ccolar, symb);
+		symb.SetRebarLevel(TEXT_MAIN_REBAR);
+
+		// 存储预览线信息
+		m_vecRebarCurvePt.push_back(info.rebarCurves);
+
+		// 绘制钢筋
+		int j = 0;
+		for (const auto& rebarCurve : info.rebarCurves)
+		{
+			if (g_FacePreviewButtonsDown) break; // 预览状态下不生成钢筋
+
+			RebarElementP rebarElement = info.rebarSet->AssignRebarElement(j, info.numRebar, symb, modelRef);
+			if (!rebarElement) continue;
+
+			// 设置钢筋形状数据
+			RebarShapeData shape;
+			shape.SetSizeKey(static_cast<LPCTSTR>(info.sizeKey)); // sizeKey 需要从外部传递或存储
+			shape.SetIsStirrup(false);
+			shape.SetLength(rebarCurve.GetLength() / uor_per_mm);
+
+			// 更新钢筋元素
+			rebarElement->Update(rebarCurve, info.diameter, info.endTypes, shape, modelRef, false);
+
+			// 配置钢筋属性
+			ElementId eleid = rebarElement->GetElementId();
+			EditElementHandle tmprebar(eleid, ACTIVEMODEL);
+			std::string slevel = std::to_string(info.level);
+			std::string sType;
+			if (info.dataExchange == 0) sType = "front";
+			else if (info.dataExchange == 1) sType = "midden";
+			else sType = "back";
+
+			ElementRefP oldref = tmprebar.GetElementRef();
+			SetRebarLevelItemTypeValue(tmprebar, slevel, info.grade, sType, ACTIVEMODEL);
+			SetRebarHideData(tmprebar, info.spacing / uor_per_mm, ACTIVEMODEL);
+			tmprebar.ReplaceInModel(oldref);
+
+			j++;
+		}
+
+		RebarSetTag* tag = new RebarSetTag();
+		tag->SetRset(info.rebarSet);
+		tag->SetIsStirrup(false);
+		tag->SetBarSetTag(idx + 1);
+		rsetTags.Add(tag);
+	}
+
+	// 清空临时存储
+	m_rebarSetInfos.clear();
+}
+
 
 /**
  * @brief 反转主筋数据

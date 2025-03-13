@@ -714,7 +714,7 @@ RebarSetTag* MultiPlaneRebarAssemblyEx::MakeRebars
 	double endOffset,
 	int level,
 	int grade,
-	int DataExchange,
+	int dataExchange,
 	vector<PIT::EndType> const& vecEndType, //存储起点端部与终点端部数据
 	vector<CVector3D> const& vecEndNormal,
 	DgnModelRefP modelRef
@@ -868,87 +868,26 @@ RebarSetTag* MultiPlaneRebarAssemblyEx::MakeRebars
 		rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 	}
 
-	numRebar = (int)rebarCurvesNum.size();
+	// 存储钢筋信息
+	RebarSetInfo info;
+	info.face = m_face;
+	info.rebarCurves = std::move(rebarCurvesNum);
+	info.sizeKey = static_cast<LPCTSTR>(sizeKey);
+	info.endTypes = RebarEndTypes{ endTypeStart, endTypeEnd };
+	info.diameter = diameter;
+	info.spacing = spacing;
+	info.adjustedSpacing = adjustedSpacing;
+	info.rebarSet = rebarSet;
+	info.level = level;
+	info.grade = grade;
+	info.dataExchange = dataExchange;
+	m_rebarSetInfos.push_back(std::move(info));
 
-	RebarSymbology symb;
-	string str(sizeKey);
-	char ccolar[20] = {0};
-	strcpy(ccolar, str.c_str());
-	SetRebarColorBySize(ccolar, symb);
-	symb.SetRebarLevel(TEXT_MAIN_REBAR);
-	vector<DSegment3d> vecStartEnd;
-	for (PITRebarCurve rebarCurve : rebarCurvesNum)
-	{
-		CPoint3D ptstr, ptend;
-		rebarCurve.GetEndPoints(ptstr, ptend);
-		DPoint3d midPos = ptstr;
-		midPos.Add(ptend);
-		midPos.Scale(0.5);
-		if (ISPointInHoles(m_Holeehs, midPos))
-		{
-			if (ISPointInHoles(m_Holeehs, ptstr) && ISPointInHoles(m_Holeehs, ptend))
-			{
-				continue;
-			}
-		}
-
-		vecStartEnd.push_back(DSegment3d::From(ptstr, ptend));
-		// 		EditElementHandle eeh;
-		// 		LineHandler::CreateLineElement(eeh, nullptr, DSegment3d::From(ptstr, ptend), true, *ACTIVEMODEL);
-		// 		eeh.AddToModel();
-
-		RebarElementP rebarElement = NULL;
-		if (!g_FacePreviewButtonsDown) //预览标志，预览状态下不要生成钢筋
-		{
-			rebarElement = rebarSet->AssignRebarElement(j, numRebar, symb, modelRef);
-		}
-		if (nullptr != rebarElement)
-		{
-			RebarShapeData shape;
-			shape.SetSizeKey((LPCTSTR)sizeKey);
-			shape.SetIsStirrup(false);
-			shape.SetLength(rebarCurve.GetLength() / uor_per_mm);
-			RebarEndTypes endTypes = {endTypeStart, endTypeEnd};
-			rebarElement->Update(rebarCurve, diameter, endTypes, shape, modelRef, false);
-
-			ElementId eleid = rebarElement->GetElementId();
-			EditElementHandle tmprebar(eleid, ACTIVEMODEL);
-
-			char tlevel[256];
-			sprintf(tlevel, "%d", level);
-			string slevel(tlevel);
-			string Stype;
-			if (DataExchange == 0)
-			{
-				Stype = "front";
-			}
-			else if (DataExchange == 1)
-			{
-				Stype = "midden";
-			}
-			else
-			{
-				Stype = "back";
-			}
-			ElementRefP oldref = tmprebar.GetElementRef();
-			SetRebarLevelItemTypeValue(tmprebar, slevel, grade, Stype, ACTIVEMODEL);
-			SetRebarHideData(tmprebar, spacing / uor_per_mm, ACTIVEMODEL);
-			tmprebar.ReplaceInModel(oldref);
-		}
-
-		j++;
-	}
-
-	m_vecRebarCurvePt.push_back(rebarCurvesNum);
-	m_vecRebarStartEnd.push_back(vecStartEnd);
 	RebarSetData setdata;
-	setdata.SetNumber(numRebar);
+	setdata.SetNumber(rebarCurvesNum.size());
 	setdata.SetNominalSpacing(spacing / uor_per_mm);
 	setdata.SetAverageSpacing(adjustedSpacing / uor_per_mm);
-
-	int ret = -1;
-	ret = rebarSet->FinishUpdate(setdata, modelRef); //返回的是钢筋条数
-
+	int ret = rebarSet->FinishUpdate(setdata, modelRef);	//返回的是钢筋条数
 	RebarSetTag* tag = new RebarSetTag();
 	tag->SetRset(rebarSet);
 	tag->SetIsStirrup(false);
@@ -1110,11 +1049,11 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 			}
 
 			// 保存生成的钢筋标签
-			if (tag)
+			/*if (tag)
 			{
 				tag->SetBarSetTag(i + 1);
 				rsetTags.Add(tag);
-			}
+			}*/
 			vecEndType.clear();
 
 			// 删除当前层的临时钢筋点数据
@@ -1161,8 +1100,12 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 			bool isParallelToY = m_LineSeg1.GetLineVec().IsParallelTo(DVec3d::UnitY());
 			ReverseMainRebars(isParallelToY);
 		}
-
 	}
+
+	// 连接钢筋
+	ConnectIntersectingRebars(modelRef);
+	// 绘制钢筋
+	DrawAllRebars(modelRef, rsetTags);
 
 	for (auto itr = mapRebarPoint.begin(); itr != mapRebarPoint.end(); itr++)
 	{
@@ -1176,6 +1119,147 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 		return (SUCCESS == AddRebarSets(rsetTags));
 	}
 	return true;
+}
+
+// 获取离指定面最近的首尾点组成线段
+DSegment3d MultiPlaneRebarAssemblyEx::GetNearestSegmentToFace(const bvector<DPoint3d>& points, ElementHandle face)
+{
+	if (points.size() < 2)
+		return DSegment3d(); // 无效情况返回空线段
+
+	if (points.size() == 2)
+		return DSegment3d::From(points.front(), points.back());
+
+	// 获取中心点
+	DRange3d faceRange;
+	mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, face.GetElementDescrCP(), nullptr);
+	DPoint3d faceCentroid = RangeMidPoint(faceRange);
+	double minDistance = DBL_MAX;
+	DSegment3d nearestSegment;
+	DPoint3d startPoint = points.front();
+	DPoint3d endPoint = points.back();
+
+	// 计算首尾点到面中心的距离
+	double distStart = startPoint.Distance(faceCentroid);
+	double distEnd = endPoint.Distance(faceCentroid);
+
+	// 选择最近的点对作为线段
+	if (distStart < distEnd)
+	{
+		nearestSegment = DSegment3d::From(startPoint, points[1]);
+	}
+	else
+	{
+		nearestSegment = DSegment3d::From(points[points.size() - 2], endPoint);
+	}
+
+	return nearestSegment;
+}
+
+// 连接不同面但延长后相交的钢筋
+void MultiPlaneRebarAssemblyEx::ConnectIntersectingRebars(DgnModelRefP modelRef)
+{
+	// 遍历所有钢筋集，检测交点并连接
+	for (size_t i = 0; i < m_rebarSetInfos.size(); ++i)
+	{
+		auto& infoI = m_rebarSetInfos[i];
+		if (infoI.face.GetElementDescrCP() != m_vecFace[0].GetElementDescrCP())
+			continue;
+		for (size_t j = i + 1; j < m_rebarSetInfos.size(); ++j)
+		{
+			auto& infoJ = m_rebarSetInfos[j];
+			if (infoI.face.GetElementDescrCP() == infoJ.face.GetElementDescrCP())
+				continue;
+
+			// 判断面之间的关系，保证钢筋线绘制时在坐标系从低到高
+			DRange3d faceRangeI;
+			mdlElmdscr_computeRange(&faceRangeI.low, &faceRangeI.high, infoI.face.GetElementDescrCP(), nullptr);
+			DPoint3d faceCentI = RangeMidPoint(faceRangeI);
+			DRange3d faceRangeJ;
+			mdlElmdscr_computeRange(&faceRangeJ.low, &faceRangeJ.high, infoJ.face.GetElementDescrCP(), nullptr);
+			DPoint3d faceCentJ = RangeMidPoint(faceRangeJ);
+
+			bool isNeedReverse = IsPointHigherXYZ(faceCentI, faceCentJ);
+
+			// 遍历每对钢筋曲线
+			for (size_t k = 0; k < infoI.rebarCurves.size(); ++k)
+			{
+				PITRebarCurve& curveI = infoI.rebarCurves[k];
+				bvector<DPoint3d> pointsI;
+				curveI.GetIps(pointsI); // 获取钢筋I的关键点
+
+				for (size_t m = 0; m < infoJ.rebarCurves.size(); ++m)
+				{
+					PITRebarCurve& curveJ = infoJ.rebarCurves[m];
+					bvector<DPoint3d> pointsJ;
+					curveJ.GetIps(pointsJ); // 获取钢筋J的关键点
+
+					// 选择离目标面最近的两点组成线段检测交点
+					DSegment3d segI = GetNearestSegmentToFace(pointsI, infoJ.face);
+					DSegment3d segJ = GetNearestSegmentToFace(pointsJ, infoI.face);
+
+					// 检测三维交点
+					DPoint3d intersectPoint;
+					int isIntersect = mdlVec_intersect(&intersectPoint, &segI, &segJ);
+					if (isIntersect != SUCCESS)
+						continue;
+					// 移除离交点最近的点
+					size_t closestIdxI = 0, closestIdxJ = 0;
+					double minDistI = DBL_MAX, minDistJ = DBL_MAX;
+					for (size_t p = 0; p < pointsI.size(); ++p)
+					{
+						double dist = pointsI[p].Distance(intersectPoint);
+						if (dist < minDistI)
+						{
+							minDistI = dist;
+							closestIdxI = p;
+						}
+					}
+					for (size_t p = 0; p < pointsJ.size(); ++p)
+					{
+						double dist = pointsJ[p].Distance(intersectPoint);
+						if (dist < minDistJ)
+						{
+							minDistJ = dist;
+							closestIdxJ = p;
+						}
+					}
+
+					// 找到交点，组合钢筋
+					bvector<DPoint3d> combinedPoints;
+					pointsI.erase(pointsI.begin() + closestIdxI);
+					pointsJ.erase(pointsJ.begin() + closestIdxJ);
+
+					if (isNeedReverse)
+					{
+						combinedPoints.insert(combinedPoints.end(), pointsJ.begin(), pointsJ.end());
+						combinedPoints.push_back(intersectPoint);
+						combinedPoints.insert(combinedPoints.end(), pointsI.begin(), pointsI.end());
+					}
+					else
+					{
+						combinedPoints.insert(combinedPoints.end(), pointsI.begin(), pointsI.end());
+						combinedPoints.push_back(intersectPoint);
+						combinedPoints.insert(combinedPoints.end(), pointsJ.begin(), pointsJ.end());
+					}
+
+					// 创建新的 PITRebarCurve
+					PITRebarCurve newCurve;
+					// 生成钢筋顶点数据
+					RebarVertices& vertices = newCurve.PopVertices();
+					double bendRadius = RebarCode::GetPinRadius(infoI.sizeKey, modelRef, false);
+					GetRebarVerticesFromPoints(vertices, combinedPoints, bendRadius);
+
+					infoI.rebarCurves[k] = newCurve;
+
+					// 从 infoJ 中移除被连接的钢筋
+					infoJ.rebarCurves.erase(infoJ.rebarCurves.begin() + m);
+					--m; // 调整索引
+					
+				}
+			}
+		}
+	}
 }
 
 long MultiPlaneRebarAssemblyEx::GetStreamMap(BeStreamMap& map, int typeof /* = 0 */, int versionof /* = -1 */)
