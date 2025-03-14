@@ -34,6 +34,7 @@ public:
 	struct RebarSetInfo
 	{
 		ElementHandle face; // 钢筋所属面元素句柄
+		DVec3d faceNormal; // 所属面法线
 		std::vector<PIT::PITRebarCurve> rebarCurves; // 钢筋曲线列表
 		BrString sizeKey; // 钢筋尺寸
 		RebarEndTypes endTypes; // 端部类型

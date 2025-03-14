@@ -871,6 +871,7 @@ RebarSetTag* MultiPlaneRebarAssemblyEx::MakeRebars
 	// 存储钢筋信息
 	RebarSetInfo info;
 	info.face = m_face;
+	info.faceNormal = this->GetfaceNormal();
 	info.rebarCurves = std::move(rebarCurvesNum);
 	info.sizeKey = static_cast<LPCTSTR>(sizeKey);
 	info.endTypes = RebarEndTypes{ endTypeStart, endTypeEnd };
@@ -1061,10 +1062,10 @@ bool MultiPlaneRebarAssemblyEx::MakeRebars(DgnModelRefP modelRef)
 				double distStart = startPoint.Distance(centroid);
 				double distEnd = endPoint.Distance(centroid);
 				// 起点更近，可能连通
-				if (COMPARE_VALUES_EPS(distStart, distEnd, baseLine.GetLength() / 6) < 0)
+				if (COMPARE_VALUES_EPS(distStart, distEnd, 50 * UOR_PER_MilliMeter) < 0)
 					startConnected++;
 				// 终点更近，可能连通
-				if (COMPARE_VALUES_EPS(distStart, distEnd, baseLine.GetLength() / 6) > 0)
+				if (COMPARE_VALUES_EPS(distStart, distEnd, 50 * UOR_PER_MilliMeter) > 0)
 					endConnected++;
 			}
 
@@ -1204,6 +1205,22 @@ DSegment3d MultiPlaneRebarAssemblyEx::GetNearestSegmentToFace(const bvector<DPoi
 	return nearestSegment;
 }
 
+// 判断线段是否为锚固部分
+bool MultiPlaneRebarAssemblyEx::IsAnchorageSegment(const DSegment3d& segment, ElementHandle face, const RebarEndTypes& endTypes)
+{
+	// 两端均有锚固，不连通
+	if (endTypes.beg.GetType() != RebarEndType::kNone && endTypes.end.GetType() != RebarEndType::kNone)
+		return true;
+
+	DPoint3d facePoint = GetEhCenterPt(face);
+	// 计算首尾点到邻接平面的距离
+	double distStart = segment.point[0].Distance(facePoint);
+	double distEnd = segment.point[1].Distance(facePoint);
+
+	// 如果距离接近，认为是锚固部分
+	return COMPARE_VALUES_EPS(distStart, distEnd, 50 * UOR_PER_MilliMeter) == 0;
+}
+
 // 连接不同面但延长后相交的钢筋
 void MultiPlaneRebarAssemblyEx::ConnectIntersectingRebars(DgnModelRefP modelRef)
 {
@@ -1246,6 +1263,12 @@ void MultiPlaneRebarAssemblyEx::ConnectIntersectingRebars(DgnModelRefP modelRef)
 					DSegment3d segI = GetNearestSegmentToFace(pointsI, infoJ.face);
 					DSegment3d segJ = GetNearestSegmentToFace(pointsJ, infoI.face);
 
+					// 钢筋锚固部分，不参与连通
+					if (IsAnchorageSegment(segI, infoJ.face, infoI.endTypes))
+						continue;
+					if (IsAnchorageSegment(segJ, infoI.face, infoJ.endTypes))
+						continue;
+
 					// 检测三维交点
 					DPoint3d intersectPoint;
 					int isIntersect = mdlVec_intersect(&intersectPoint, &segI, &segJ);
@@ -1274,7 +1297,8 @@ void MultiPlaneRebarAssemblyEx::ConnectIntersectingRebars(DgnModelRefP modelRef)
 					}
 
 					// 排除可能是无限延伸后得到的交点
-					if (minDistI > segI.Length() * 6 || minDistJ > segJ.Length() * 6)
+					// 连接处距离一般不大，目前设定以两层钢筋保护层+两层钢筋直径作为上限
+					if (minDistI > 200 * UOR_PER_MilliMeter || minDistJ > 200 * UOR_PER_MilliMeter)
 						continue;
 
 					// 找到交点，组合钢筋

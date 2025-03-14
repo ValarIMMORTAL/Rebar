@@ -69,6 +69,7 @@ protected:
 	virtual WString GetPathDescriptionEx(ElementHandleCR eh) const override { return L"MultiPlane Rebar"; }
 	virtual bool OnDoubleClick() override;
 	virtual bool Rebuild() override;
+	bool IsAnchorageSegment(const DSegment3d& segment, ElementHandle face, const RebarEndTypes& endTypes);
 	void ConnectIntersectingRebars(DgnModelRefP modelRef);
 	DSegment3d GetNearestSegmentToFace(const bvector<DPoint3d>& points, ElementHandle face);
 
