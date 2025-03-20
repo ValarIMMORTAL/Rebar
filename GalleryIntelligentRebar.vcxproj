@@ -179,6 +179,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ACCRebarMaker.cpp" />
+    <ClCompile Include="ArcWallRebarAssembly.cpp" />
     <ClCompile Include="AssociatedComponent.cpp" />
     <ClCompile Include="BaseRebarAssembly.cpp" />
     <ClCompile Include="BaseRebarDlg.cpp" />
@@ -229,6 +230,7 @@
     <ClCompile Include="DoorHoleRebarAssembly.cpp" />
     <ClCompile Include="EdgeRebarAssembly.cpp" />
     <ClCompile Include="C_RebarTemplate.cpp" />
+    <ClCompile Include="ELLWallRebarAssembly.cpp" />
     <ClCompile Include="FacesRebarAssembly.cpp" />
     <ClCompile Include="FacesRebarAssemblyEx.cpp" />
     <ClCompile Include="GallerySettings.cpp" />
@@ -236,6 +238,7 @@
     <ClCompile Include="GallerySettingsMainRebarPage.cpp" />
     <ClCompile Include="GalleryIntelligentRebar.cpp" />
     <ClCompile Include="GeneralFaceRebarAssembly.cpp" />
+    <ClCompile Include="GWallRebarAssembly.cpp" />
     <ClCompile Include="HoleRebarAssembly.cpp" />
     <ClCompile Include="LDSlabRebarAssembly.cpp" />
     <ClCompile Include="LineDrawingTool.cpp" />
@@ -260,7 +263,9 @@
     <ClCompile Include="SingleRebarAssembly.cpp" />
     <ClCompile Include="SlabHelper.cpp" />
     <ClCompile Include="StairsRebarAssembly.cpp" />
+    <ClCompile Include="STGWallRebarAssembly.cpp" />
     <ClCompile Include="StirrupRebar.cpp" />
+    <ClCompile Include="STWallRebarAssembly.cpp" />
     <ClCompile Include="TabController.cpp" />
     <ClCompile Include="TieRebar.cpp" />
     <ClCompile Include="TieRebarFaceDlg.cpp" />
@@ -323,6 +328,7 @@
     <ClInclude Include="..\CommonId\AllCommonDependencyId.h" />
     <ClInclude Include="..\CommonId\AllCommonXAttribute.h" />
     <ClInclude Include="ACCRebarMaker.h" />
+    <ClInclude Include="ArcWallRebarAssembly.h" />
     <ClInclude Include="AssociatedComponent.h" />
     <ClInclude Include="BaseRebarAssembly.h" />
     <ClInclude Include="BaseRebarDlg.h" />
@@ -370,6 +376,7 @@
     <ClInclude Include="DoorHoleRebarAssembly.h" />
     <ClInclude Include="EdgeRebarAssembly.h" />
     <ClInclude Include="C_RebarTemplate.h" />
+    <ClInclude Include="ELLWallRebarAssembly.h" />
     <ClInclude Include="FacesRebarAssembly.h" />
     <ClInclude Include="FacesRebarAssemblyEx.h" />
     <ClInclude Include="GallerySettings.h" />
@@ -379,6 +386,7 @@
     <ClInclude Include="GalleryIntelligentRebarcmd.h" />
     <ClInclude Include="GalleryIntelligentRebarids.h" />
     <ClInclude Include="GeneralFaceRebarAssembly.h" />
+    <ClInclude Include="GWallRebarAssembly.h" />
     <ClInclude Include="HoleRebarAssembly.h" />
     <ClInclude Include="LDSlabRebarAssembly.h" />
     <ClInclude Include="LineDrawingTool.h" />
@@ -406,7 +414,9 @@
     <ClInclude Include="SingleRebarAssembly.h" />
     <ClInclude Include="SlabHelper.h" />
     <ClInclude Include="StairsRebarAssembly.h" />
+    <ClInclude Include="STGWallRebarAssembly.h" />
     <ClInclude Include="StirrupRebar.h" />
+    <ClInclude Include="STWallRebarAssembly.h" />
     <ClInclude Include="TabController.h" />
     <ClInclude Include="TieRebar.h" />
     <ClInclude Include="TieRebarFaceDlg.h" />

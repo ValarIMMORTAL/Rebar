@@ -5,6 +5,8 @@
 #include "WallRebarAssembly.h"
 #include "HoleRebarAssembly.h"
 #include "BaseRebarAssembly.h"
+#include "STWallRebarAssembly.h"
+
 RebarExtendedElementP RebarRexFactory::Make(BrStringCR rex_name) const
 {
     if(rex_name == Gallery::GeneralFaceRebarAssembly::GetVClassName())

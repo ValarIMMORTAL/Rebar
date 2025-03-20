@@ -6,11 +6,17 @@
 #include <RebarElements.h>
 #include <ElementAttribute.h>
 #include "CWallRebarDlg.h"
+
+#include "ArcWallRebarAssembly.h"
 #include "resource.h"
 #include "WallRebarAssembly.h"
 #include "CommonFile.h"
 #include "ConstantsDef.h"
+#include "ELLWallRebarAssembly.h"
+#include "GWallRebarAssembly.h"
 #include "PickElementTool.h"
+#include "STGWallRebarAssembly.h"
+#include "STWallRebarAssembly.h"
 
 
 namespace _Wallrebar {

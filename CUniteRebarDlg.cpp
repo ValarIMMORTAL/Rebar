@@ -17,6 +17,7 @@
 #include "GallerySettings.h"
 #include "LDSlabRebarAssembly.h"
 #include "PickElementTool.h"
+#include "STWallRebarAssembly.h"
 #include "WallHelper.h"
 
 

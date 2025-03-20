@@ -261,6 +261,21 @@
     <ClCompile Include="WallHelper.cpp">
       <Filter>Helper Classes\UnKnown</Filter>
     </ClCompile>
+    <ClCompile Include="STWallRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="GWallRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="ArcWallRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="ELLWallRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="STGWallRebarAssembly.cpp">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -808,6 +823,21 @@
     </ClInclude>
     <ClInclude Include="WallHelper.h">
       <Filter>Helper Classes\UnKnown</Filter>
+    </ClInclude>
+    <ClInclude Include="STWallRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="GWallRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="ArcWallRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="ELLWallRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="STGWallRebarAssembly.h">
+      <Filter>Helper Classes\墙配筋</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
