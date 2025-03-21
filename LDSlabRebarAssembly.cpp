@@ -2429,7 +2429,7 @@ namespace Gallery
 		}
 		else
 		{
-			start.SetbendLen(startbendLen);
+			start.SetbendLen(startbendLen - startbendRadius);
 			start.SetbendRadius(startbendRadius);
 		}
 		start.SetendNormal(vecEndNormal[0]);
@@ -2444,7 +2444,7 @@ namespace Gallery
 		}
 		else
 		{
-			end.SetbendLen(endbendLen);
+			end.SetbendLen(endbendLen - endbendRadius);
 			end.SetbendRadius(endbendRadius);
 		}
 		end.SetendNormal(vecEndNormal[1]);
@@ -4205,16 +4205,16 @@ namespace Gallery
 		CMatrix3D const rot90 = CMatrix3D::Rotate(PI / 2.0, CVector3D::kYaxis);
 		CMatrix3D   mat, matTb;
 		vector<PIT::EndType> vecEndType;
-		if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
-		{
+		// if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
+		// {
 			EndType endType;
 			memset(&endType, 0, sizeof(endType));
 			vecEndType = { { 0,0,0 },{0,0,0}};
-		}
-		else
-		{
-			vecEndType = GetvvecEndType().at(i);
-		}
+		// }
+		// else
+		// {
+		// 	vecEndType = GetvvecEndType().at(i);
+		// }
 		//内侧面弯钩处理
 		vecEndType[0] = m_insidef.strtype;
 		vecEndType[1] = m_insidef.endtype;
@@ -4338,16 +4338,16 @@ namespace Gallery
 
 		CMatrix3D   mat, matTb;
 		vector<PIT::EndType> vecEndType;
-		if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
-		{
+		// if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
+		// {
 			EndType endType;
 			memset(&endType, 0, sizeof(endType));
 			vecEndType = { { 0,0,0 },{0,0,0}};
-		}
-		else
-		{
-			vecEndType = GetvvecEndType().at(i);
-		}
+		// }
+		// else
+		// {
+		// 	vecEndType = GetvvecEndType().at(i);
+		// }
 		//外侧面弯钩处理
 		vecEndType[0] = m_outsidef.strtype;
 		vecEndType[1] = m_outsidef.endtype;

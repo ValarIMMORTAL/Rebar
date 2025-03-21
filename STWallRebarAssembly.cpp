@@ -1690,7 +1690,7 @@ void STWallRebarAssembly::CalRebarEndTypes(const BarLinesdata & data, BrStringCR
 		lineVec.Normalize();
 		int endType = GetEndType(strVec, lineVec, strEndType);
 		strEndType.SetType(PIT::PITRebarEndType::Type(endType));
-		strEndType.SetbendLen(data.strMG);// -bendRadius - diameter / 2
+		strEndType.SetbendLen(data.strMG - bendRadius);// - diameter / 2
 		strEndType.SetbendRadius(bendRadius);
 		strEndType.SetendNormal(strVec);
 	}
@@ -1700,7 +1700,7 @@ void STWallRebarAssembly::CalRebarEndTypes(const BarLinesdata & data, BrStringCR
 		lineVec.Normalize();
 		int endType = GetEndType(endVec, lineVec, endEndType);
 		endEndType.SetType(PIT::PITRebarEndType::Type(endType));
-		endEndType.SetbendLen(data.endMG); //-bendRadius - diameter / 2
+		endEndType.SetbendLen(data.endMG - bendRadius);//  - diameter / 2
 		endEndType.SetbendRadius(bendRadius);
 		endEndType.SetendNormal(endVec);
 	}

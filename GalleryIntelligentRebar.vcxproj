@@ -184,6 +184,7 @@
     <ClCompile Include="BaseRebarAssembly.cpp" />
     <ClCompile Include="BaseRebarDlg.cpp" />
     <ClCompile Include="CACCDataSetDlg.cpp" />
+    <ClCompile Include="CamberedSurfaceRebarAssembly.cpp" />
     <ClCompile Include="CatchpitMainRebarDlg.cpp" />
     <ClCompile Include="CatchpitRebarDlg.cpp" />
     <ClCompile Include="CBreakEllipseWallDlg.cpp" />
@@ -245,6 +246,7 @@
     <ClCompile Include="ListCtrlCellEx.cpp" />
     <ClCompile Include="ListCtrlEx.cpp" />
     <ClCompile Include="MakeRebarHelper.cpp" />
+    <ClCompile Include="MultiPlaneRebarAssembly.cpp" />
     <ClCompile Include="MultiPlaneRebarAssemblyEx.cpp" />
     <ClCompile Include="MySlabRebarAssembly.cpp" />
     <ClCompile Include="OBB.cpp" />
@@ -255,6 +257,7 @@
     <ClCompile Include="PITRebarCurve.cpp" />
     <ClCompile Include="PITRebarEndType.cpp" />
     <ClCompile Include="PickElementTool.cpp" />
+    <ClCompile Include="PlaneRebarAssembly.cpp" />
     <ClCompile Include="PlaneRebarAssemblyEx.cpp" />
     <ClCompile Include="PolygonHelper.cpp" />
     <ClCompile Include="RebarRexFactory.cpp" />
@@ -333,6 +336,7 @@
     <ClInclude Include="BaseRebarAssembly.h" />
     <ClInclude Include="BaseRebarDlg.h" />
     <ClInclude Include="CACCDataSetDlg.h" />
+    <ClInclude Include="CamberedSurfaceRebarAssembly.h" />
     <ClInclude Include="CatchpitMainRebarDlg.h" />
     <ClInclude Include="CatchpitRebarDlg.h" />
     <ClInclude Include="CBreakEllipseWallDlg.h" />
@@ -393,6 +397,7 @@
     <ClInclude Include="ListCtrlCellEx.h" />
     <ClInclude Include="ListCtrlEx.h" />
     <ClInclude Include="MakeRebarHelper.h" />
+    <ClInclude Include="MultiPlaneRebarAssembly.h" />
     <ClInclude Include="MultiPlaneRebarAssemblyEx.h" />
     <ClInclude Include="MySlabRebarAssembly.h" />
     <ClInclude Include="OBB.h" />
@@ -402,6 +407,7 @@
     <ClInclude Include="PITRebarAssembly.h" />
     <ClInclude Include="PITRebarCurve.h" />
     <ClInclude Include="PITRebarEndType.h" />
+    <ClInclude Include="PlaneRebarAssembly.h" />
     <ClInclude Include="PlaneRebarAssemblyEx.h" />
     <ClInclude Include="PolygonHelper.h" />
     <ClInclude Include="RebarRexFactory.h" />

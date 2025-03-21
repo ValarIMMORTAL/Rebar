@@ -10,6 +10,8 @@
 #include "afxdialogex.h"
 #include "resource.h"
 #include <RebarDetailElement.h>
+
+#include "CamberedSurfaceRebarAssembly.h"
 #include "RebarElements.h"
 #include "CommonFile.h"
 #include "ElementAttribute.h"
@@ -17,6 +19,8 @@
 
 #include "ExtractFacesTool.h"
 #include "ConstantsDef.h"
+#include "MultiPlaneRebarAssembly.h"
+#include "PlaneRebarAssembly.h"
 #include "ScanIntersectTool.h"
 #include "SelectFaceTool.h"
 

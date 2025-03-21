@@ -276,6 +276,15 @@
     <ClCompile Include="STGWallRebarAssembly.cpp">
       <Filter>Helper Classes\墙配筋</Filter>
     </ClCompile>
+    <ClCompile Include="CamberedSurfaceRebarAssembly.cpp">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiPlaneRebarAssembly.cpp">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneRebarAssembly.cpp">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -838,6 +847,15 @@
     </ClInclude>
     <ClInclude Include="STGWallRebarAssembly.h">
       <Filter>Helper Classes\墙配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="CamberedSurfaceRebarAssembly.h">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiPlaneRebarAssembly.h">
+      <Filter>Helper Classes\面配筋</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneRebarAssembly.h">
+      <Filter>Helper Classes\面配筋</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

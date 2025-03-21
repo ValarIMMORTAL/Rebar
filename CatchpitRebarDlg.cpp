@@ -3,6 +3,7 @@
 
 #include "CatchpitRebarDlg.h"
 #include "afxdialogex.h"
+#include "CamberedSurfaceRebarAssembly.h"
 #include "_USTATION.h"
 #include "resource.h"
 #include "CommonFile.h"
@@ -15,6 +16,7 @@
 #include "CModelTool.h"
 #include "CSolidTool.h"
 #include "CElementTool.h"
+#include "PlaneRebarAssembly.h"
 
 // CatchpitRebarDlg 对话框
 
