@@ -44,10 +44,12 @@ private:
 	bool makeRebarCurve_Laption(RebarCurve& rebar, double xPos, double height, double bendRadius,
 		double bendLen, RebarEndTypes const& endType, CVector3D const& endNormal, CMatrix3D const& mat, bool istwin = false);
 	void movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
+	bool Is_Wall(const ElementHandle & element);
+	void AdjustAnchorageLengthInWall(DPoint3d originPt, PIT::PITRebarEndType& rebarEndType, const vector<EditElementHandle*>& alleehs);
 	bool makaRebarCurve(const vector<DPoint3d>& linePts, double extendStrDis, double extendEndDis, double diameter, double strMoveDis, double endMoveDis, bool isInSide,
-		const PIT::PITRebarEndTypes& endTypes, vector<PIT::PITRebarCurve>& rebars,
-		std::vector<EditElementHandle*> upflooreehs, std::vector<EditElementHandle*> downflooreehs, std::vector<EditElementHandle*> Walleehs,
-		std::vector<EditElementHandle*>alleehs);
+	                    const PIT::PITRebarEndTypes& endTypes, vector<PIT::PITRebarCurve>& rebars,
+	                    std::vector<EditElementHandle*> upflooreehs, std::vector<EditElementHandle*> downflooreehs, std::vector<EditElementHandle*> Walleehs,
+	                    std::vector<EditElementHandle*>alleehs);
 
 
 	bool		m_isPushTieRebar; // 是否push进入拉筋的钢筋点中

@@ -552,6 +552,13 @@ bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double
 			JudgeBarLinesLegitimate(nowVec, alleehs, tmpendEndTypes, lineEeh, eeh, end_vector, matrix, endMoveDis, end_extend_lenth, endtemp_point3d, end_Ptr, flag_end);
 		}
 
+		if (!isInSide)
+		{
+			// 墙与墙锚固长度为0.8Lae
+			AdjustAnchorageLengthInWall(strPt, tmpendEndTypes.beg, alleehs);
+			AdjustAnchorageLengthInWall(endPt, tmpendEndTypes.end, alleehs);
+		}
+
 		DPoint3d strPttepm = strPt, endPttepm = endPt;
 
 		GetIntersectPointsWithHoles(tmppts, m_useHoleehs, strPt, endPt, dSideCover, matrix);
@@ -2272,7 +2279,7 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 	//double L0 = 24 * uor_per_mm * 15;//15d
 	//double Lae = 24 * uor_per_mm * 48 * 0.8;//48d
 	double L0 = diameter1 * 15;//15d
-	double Lae = diameter1 * get_lae() * 0.8 / uor_per_mm * 2;//LAE
+	double Lae = diameter1 * get_lae() /** 0.8*/ / uor_per_mm * 2;//LAE
 	double mgDisHol = 0;
 	//if (GetvecDataExchange().at(index) == 0)//外侧面
 	//{
@@ -2532,7 +2539,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 	facenormal.Normalize();
 	DPlane3d plane = DPlane3d::FromOriginAndNormal(cpt, DVec3d::From(facenormal.x, facenormal.y, facenormal.z));
 	double L0 = 24 * uor_per_mm * 15;//15d
-	double Lae = 24 * uor_per_mm * 48 * 0.8;//48d
+	double Lae = 24 * uor_per_mm * 48;// *0.8;//48d
 	//2、计算路径线，首先确认有没有靠在当前墙上面的其他墙体，如果有计算出其他墙体方向，要与路径线垂直，不垂直的过滤掉；
 	//延长路径线，将路径线移动到其他墙体中心位置处，求出路径线与其他墙体线交点，将交点投影到路径线上，并记录map<int,Dpoint3d>,第一个值为离路径线起点距离，第二个为投影点；
 	//根据投影点，计算新的路径线，如果新路径线前起点为投影点，且不为原始路径线的起点或终点，需要延长，延长长度为：侧面保护层*2 + 钢筋直径
@@ -4275,4 +4282,57 @@ void STWallRebarAssembly::JudgeBarLinesLegitimate(const CVector3D  nowVec, vecto
 			tmpendEndTypes.end.SetendNormal(anchored_vec);
 
 	}
+}
+
+/**
+ * @brief 判断给定的元素是否为墙元素
+ *
+ * 该函数通过调用 `GetEleNameAndType` 函数获取元素的名称和类型，
+ * 然后在元素类型中查找是否包含 "WALL" 字符串，若包含则认为该元素是墙元素。
+ *
+ * @param element 待判断的元素句柄
+ * @return bool 如果元素是墙元素返回 true，否则返回 false
+ */
+bool STWallRebarAssembly::Is_Wall(const ElementHandle & element)
+{
+	std::string _name, type;
+	if (!GetEleNameAndType(const_cast<ElementHandleR>(element), _name, type))
+	{
+		return false;
+	}
+	auto result_pos_wall = type.find("WALL");
+	return result_pos_wall != std::string::npos;
+}
+
+/**
+ * @brief 调整墙内钢筋的锚固长度
+ *
+ * 该函数根据钢筋端部的初始位置、方向和当前周围元素，判断钢筋端部是否在墙内。
+ * 如果在墙内，则调整钢筋的锚固长度为0.8Lae。
+ *
+ * @param originPt, 钢筋端点，用于确定钢筋端部的初始位置。
+ * @param rebarEndType 钢筋端部类型，包含初始点、端部方向、弯曲半径和弯曲长度等信息
+ * @param alleehs 周围元素的句柄列表，用于判断钢筋端部是否在墙内
+ */
+void STWallRebarAssembly::AdjustAnchorageLengthInWall(DPoint3d originPt, PIT::PITRebarEndType& rebarEndType,
+	const vector<EditElementHandle*>& alleehs)
+{
+	CVector3D vec = rebarEndType.GetendNormal();
+	vec.Normalize();
+	double length = rebarEndType.GetbendRadius() + rebarEndType.GetbendLen();
+	originPt.SumOf(originPt, vec, length);
+	for (const auto& ele : alleehs)
+	{
+		if (Is_Wall(*ele) && ISPointInElement(ele, originPt))
+		{
+			// 只修改直段钢筋来达成0.8Lae
+			// 由n * a + b = 0.8 * (a + b)推导得到：n = 0.8 - 0.2 * (b / a)
+			double originLen = rebarEndType.GetbendLen();
+			double n = 0.8 - 0.2 * (rebarEndType.GetbendRadius() / originLen);
+			originLen = n * originLen;
+			rebarEndType.SetbendLen(originLen);
+			break;
+		}
+	}
+
 }
