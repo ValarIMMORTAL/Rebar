@@ -730,7 +730,7 @@ void CWallRebarDlg::RefreshWallRebars(ElementId conid, EditElementHandleR eeh)
 void CWallRebarDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	//CDialogEx::OnOK();
+	CDialogEx::OnOK();
 	ElementAgenda tmpagenda;
 	ElementAgenda agenda;
 	agenda.clear();

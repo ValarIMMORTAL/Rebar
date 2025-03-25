@@ -585,7 +585,7 @@ void CSlabRebarDlg::OnBnClickedOk()
 }
 void CSlabRebarDlg::on_Clicke_maker()
 {
-	//CDialogEx::OnOK();
+	CDialogEx::OnOK();
 
 	m_PageMainRebar.getWallSetInfo(m_SlabSetInfo);
 	m_PageMainRebar.GetConcreteData(g_wallRebarInfo.concrete);
