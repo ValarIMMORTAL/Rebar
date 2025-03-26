@@ -1689,7 +1689,9 @@ bool PlaneRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 			EditElementHandle* eehWall = new EditElementHandle(wall.GetElementRef(), wall.GetDgnModelP());
 			m_allEehs.push_back(eehWall);
 		}
-		m_allEehs.push_back(m_pOldElm);
+		EditElementHandle* selfEeh = new EditElementHandle();;
+		selfEeh->Duplicate(testeeh);
+		m_allEehs.push_back(selfEeh);
 
 		RebarSetTagArray rsetTags;
 		m_vecRebarStartEnd.clear();
