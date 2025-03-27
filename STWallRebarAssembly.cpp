@@ -2424,12 +2424,13 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 	}
 	else//如果竖向方向上方没有板，钢筋需要锚入到墙体内部，锚入长度为墙厚 - （前保护层+后保护层）
 	{
-		mgDisstr = m_walldata.thickness - dPositiveCover - dReverseCover - bendRadius - 1.5*diameter1;
-		if (isInsidestr)//在内侧
-		{
-			extendstr = -1 * dPositiveCover - allfdiam;
-		}
-		else
+		mgDisstr = m_walldata.thickness - dPositiveCover - dReverseCover /*- bendRadius*/ - 1.5*diameter1;
+		// 如果竖向上方没有板，则不区分内外侧以及钢筋偏移
+		// if (isInsidestr)//在内侧
+		// {
+		// 	extendstr = -1 * dPositiveCover - allfdiam;
+		// }
+		// else
 		{
 			extendstr = -1 * dPositiveCover;
 		}
@@ -2490,13 +2491,14 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 	}
 	else//如果竖向方向上方没有板，钢筋需要锚入到墙体内部，锚入长度为墙厚 - （前保护层+后保护层）
 	{
-		mgDisend = m_walldata.thickness - dPositiveCover - dReverseCover - bendRadius - 1.5*diameter1;
+		mgDisend = m_walldata.thickness - dPositiveCover - dReverseCover/* - bendRadius*/ - 1.5*diameter1;
 		extendend = 0;
-		if (isInsidestr)//在内侧
-		{
-			extendend = -1 * dPositiveCover - allfdiam;
-		}
-		else
+		// 如果竖向上方没有板，则不区分内外侧以及钢筋偏移
+		// if (isInsidestr)//在内侧
+		// {
+		// 	extendend = -1 * dPositiveCover - allfdiam;
+		// }
+		// else
 		{
 			extendend = -1 * dPositiveCover;
 		}
@@ -2616,51 +2618,49 @@ void STWallRebarAssembly::CalculateBarLinesData(map<int, vector<BarLinesdata>> &
 	m_walldata.vecFontLine[0].GetEndPoint(ptr2);
 	ptr1.Add(ptr2);
 	ptr1.Scale(0.5);
-	DRange3d range;
 	//计算指定元素描述符中元素的范围。
-	bool is_cond = false;
-	//PITCommonTool::CPointTool::DrowOnePoint(ptr1, 1);//红
-	for (auto it : m_walldata.downfloorfaces)//判断vecFontLine是否是外侧线 如果不是则跟内侧线互换
-	{
+	//判断vecFontLine是否是外侧线 如果不是则跟内侧线互换
+	auto CheckAndSwapFrontLine = [&](const vector<MSElementDescrP>& faces) -> bool {
+		// 如果两点距离过大，跳过检查
 		if (abs(ptr1.x - ptr2.x) > 10 * uor_per_mm && abs(ptr1.y - ptr2.y) > 10 * uor_per_mm)
-			break;
-		mdlElmdscr_computeRange(&range.low, &range.high, it, NULL);
-		//mdlElmdscr_add(it);
-		range.low.x = range.low.x + 50 * uor_per_mm;
-		range.low.y = range.low.y + 50 * uor_per_mm;
-		range.high.x = range.high.x - 50 * uor_per_mm;
-		range.high.y = range.high.y - 50 * uor_per_mm;
-		if (range.IsContainedXY(ptr1))
+			return false;
+
+		DRange3d range;
+		const double offset = 50 * uor_per_mm; // 范围偏移量
+
+		for (const auto& face : faces)
 		{
-			m_walldata.vecFontLine[0] = m_walldata.vecBackLine[0];
-			m_walldata.vecBackLine[0] = temp;
-			m_walldata.vecToWall.Negate();
-			is_cond = true;//已经判断成功
-			break;
-		}
-	}
-	if (!is_cond)
-	{
-		for (auto it : m_walldata.upfloorfaces)//判断vecFontLine是否是外侧线 如果不是则跟内侧线互换
-		{
-			if (abs(ptr1.x - ptr2.x) > 10 * uor_per_mm && abs(ptr1.y - ptr2.y) > 10 * uor_per_mm)
-				break;
-			mdlElmdscr_computeRange(&range.low, &range.high, it, NULL);
-			//mdlElmdscr_add(it);
-			range.low.x = range.low.x + 50 * uor_per_mm;
-			range.low.y = range.low.y + 50 * uor_per_mm;
-			range.high.x = range.high.x - 50 * uor_per_mm;
-			range.high.y = range.high.y - 50 * uor_per_mm;
+			// 计算元素范围
+			mdlElmdscr_computeRange(&range.low, &range.high, face, nullptr);
+
+			// 缩小范围，留出 50mm 偏移
+			range.low.x += offset;
+			range.low.y += offset;
+			range.high.x -= offset;
+			range.high.y -= offset;
+
+			// 判断 ptr1 是否在范围内
 			if (range.IsContainedXY(ptr1))
 			{
+				// 交换内外侧线并反转方向
 				m_walldata.vecFontLine[0] = m_walldata.vecBackLine[0];
 				m_walldata.vecBackLine[0] = temp;
 				m_walldata.vecToWall.Negate();
-				is_cond = true;//已经判断成功
-				break;
+				return true; // 已成功处理
 			}
 		}
+		return false;
+	};
+	do
+	{
+		// 先检查 downfloorfaces
+		if (CheckAndSwapFrontLine(m_walldata.downfloorfaces))
+			break;
+
+		// 如果 downfloorfaces 未处理成功，再检查 upfloorfaces
+		CheckAndSwapFrontLine(m_walldata.upfloorfaces);
 	}
+	while (false);
 
 	//计算偏移方向
 	if (m_walldata.vecFontLine.size() == 0) return;
@@ -2777,13 +2777,13 @@ void STWallRebarAssembly::CalculateBarLinesData(map<int, vector<BarLinesdata>> &
 		MSElementDescrP tmppath = GetLines(m_walldata.vecFontLine);
 		GetMovePath(tmppath, movedis, m_walldata.downFace);
 		//计算竖向的线
-		DPoint3d pt1, pt2;
-		mdlElmdscr_extractEndPoints(&pt1, nullptr, &pt2, nullptr, tmppath, ACTIVEMODEL);
+		DPoint3d startP, endP;
+		mdlElmdscr_extractEndPoints(&startP, nullptr, &endP, nullptr, tmppath, ACTIVEMODEL);
 		//PITCommonTool::CPointTool::DrowOneLine(DSegment3d::From(pt1, pt2), 4);//蓝
-		pt2 = pt1;
-		pt2.z = pt2.z + m_walldata.height*uor_per_mm;
+		endP = startP;
+		endP.z = endP.z + m_walldata.height*uor_per_mm;
 		EditElementHandle tlineeeh;
-		LineHandler::CreateLineElement(tlineeeh, nullptr, DSegment3d::From(pt1, pt2), true, *ACTIVEMODEL);
+		LineHandler::CreateLineElement(tlineeeh, nullptr, DSegment3d::From(startP, endP), true, *ACTIVEMODEL);
 		//PITCommonTool::CPointTool::DrowOneLine(DSegment3d::From(pt1, pt2), 3);//绿
 
 		//PITCommonTool::CPointTool::DrowOneLine(m_walldata.vecFontLine[0],1);//红
@@ -3405,7 +3405,9 @@ bool STWallRebarAssembly::AnalyzingWallGeometricData(ElementHandleCR eh)
 	m_doorsholes.clear();
 	EditElementHandle Eleeh;
 	std::vector<EditElementHandle*> Holeehs;
-	EFT::GetSolidElementAndSolidHoles(testeeh, Eleeh, Holeehs);//获取开孔之前的墙体
+	bool result = EFT::GetSolidElementAndSolidHoles(testeeh, Eleeh, Holeehs);//获取开孔之前的墙体
+	if (!result)
+		return false;
 
 	//1、将墙体从参考模型拷贝到当前模型
 	EditElementHandle copyEleeh;

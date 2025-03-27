@@ -757,7 +757,9 @@ void CWallRebarDlg::OnBnClickedOk()
 		{
 			auto tmpehR = tmpagenda[i];
 			std::string name, type;
-			GetEleNameAndType(tmpehR, name, type);
+			// 如果构件没有name和type属性，判定不是配筋构件，跳过
+			if (!GetEleNameAndType(tmpehR, name, type))
+				continue;
 			if ((type == "STWALL") || (type == "GWALL") || (type == "ARCWALL") || (type == "ELLIPSEWALL") || (type == "STGWALL"))
 			{
 				agenda.push_back(tmpehR);

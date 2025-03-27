@@ -125,6 +125,10 @@
     "C_Cpp.errorSquiggles": "disabled",
     "editor.fontSize": 15,
     "editor.fontVariations": false,
+    "marscode.chatLanguage": "cn",
+    "marscode.codeCompletionPro": {
+        "enableCodeCompletionPro": true
+    },
     // "files.autoGuessEncoding": true
     
 }
