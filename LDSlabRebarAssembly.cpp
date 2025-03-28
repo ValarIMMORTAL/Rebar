@@ -1643,13 +1643,9 @@ namespace Gallery
 				Dpoint3d ExtendPt = itr->second;
 				CVector3D NormalVec = tmpendTypes.beg.GetendNormal();
 				NormalVec.Normalize();
-				auto length = tmpendTypes.beg.GetbendLen();
-				CVector3D vec_Up = CVector3D::From(0, 0, 1);
-				CVector3D vec_Down = CVector3D::From(0, 0, -1);
-				if (COMPARE_VALUES_EPS(NormalVec, vec_Up, 0.01) == 0)
-					ExtendPt.z += tmpendTypes.beg.GetbendLen();
-				else if(COMPARE_VALUES_EPS(NormalVec, vec_Down, 0.01) == 0)
-					ExtendPt.z -= tmpendTypes.beg.GetbendLen();
+				auto length = tmpendTypes.beg.GetbendLen() + tmpendTypes.beg.GetbendRadius();
+				// 根据锚固法向量和锚固长度移动
+				ExtendPt.SumOf(ExtendPt, NormalVec, length);
 				auto move_point([&](CVector3D vec, Dpoint3d &point, double length) -> void {
 					vec.Normalize();          // 归一化向量
 					vec.ScaleToLength(length); // 调整向量长度
@@ -1970,17 +1966,10 @@ namespace Gallery
 				Dpoint3d ExtendPt_end = itrplus->second; 
 				CVector3D NormalVec_end = tmpendTypes.end.GetendNormal();
 				NormalVec_end.Normalize();
-				auto length_end = tmpendTypes.end.GetbendLen();
-				CVector3D vec_str_Up = CVector3D::From(0, 0, 1);
-				CVector3D vec_str_Down = CVector3D::From(0, 0, -1);
-
-				//PITCommonTool::CPointTool::DrowOnePoint(ExtendPt_end, 1, 1);//绿
-	
-				if (COMPARE_VALUES_EPS(NormalVec_end, vec_str_Up, 0.01) == 0)
-					ExtendPt_end.z += tmpendTypes.end.GetbendLen();
-				else if (COMPARE_VALUES_EPS(NormalVec_end, vec_str_Down, 0.01) == 0)
-					ExtendPt_end.z -= tmpendTypes.end.GetbendLen();
-
+				auto length_end = tmpendTypes.end.GetbendLen() + tmpendTypes.end.GetbendRadius();
+				// 根据锚固法向量和锚固长度移动
+				ExtendPt_end.SumOf(ExtendPt_end, NormalVec_end, length_end);
+				
 				if (!ISPointInHoles(m_ScanedAllWallsandFloor, ExtendPt_end))//是否端点锚出
 				{
 					Dpoint3d  temp_pt = itrplus->second;
