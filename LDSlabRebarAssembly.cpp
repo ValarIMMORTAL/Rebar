@@ -4205,16 +4205,20 @@ namespace Gallery
 		CMatrix3D const rot90 = CMatrix3D::Rotate(PI / 2.0, CVector3D::kYaxis);
 		CMatrix3D   mat, matTb;
 		vector<PIT::EndType> vecEndType;
-		// if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
-		// {
+		if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
+		{
 			EndType endType;
 			memset(&endType, 0, sizeof(endType));
 			vecEndType = { { 0,0,0 },{0,0,0}};
-		// }
-		// else
-		// {
-		// 	vecEndType = GetvvecEndType().at(i);
-		// }
+		}
+		else if (i < GetvvecEndType().size()) // 避免越界访问
+		{
+			vecEndType = GetvvecEndType()[i];
+		}
+		// 确保 vecEndType 至少有 2 个元素
+		if (vecEndType.size() < 2) {
+			vecEndType.resize(2);
+		}
 		//内侧面弯钩处理
 		vecEndType[0] = m_insidef.strtype;
 		vecEndType[1] = m_insidef.endtype;
@@ -4338,16 +4342,20 @@ namespace Gallery
 
 		CMatrix3D   mat, matTb;
 		vector<PIT::EndType> vecEndType;
-		// if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
-		// {
+		if (GetvvecEndType().empty())		//没有设置端部样式，设置默认值
+		{
 			EndType endType;
 			memset(&endType, 0, sizeof(endType));
 			vecEndType = { { 0,0,0 },{0,0,0}};
-		// }
-		// else
-		// {
-		// 	vecEndType = GetvvecEndType().at(i);
-		// }
+		}
+		else if (i < GetvvecEndType().size()) // 避免越界访问
+		{
+			vecEndType = GetvvecEndType()[i];
+		}
+		// 确保 vecEndType 至少有 2 个元素
+		if (vecEndType.size() < 2) {
+			vecEndType.resize(2);
+		}
 		//外侧面弯钩处理
 		vecEndType[0] = m_outsidef.strtype;
 		vecEndType[1] = m_outsidef.endtype;

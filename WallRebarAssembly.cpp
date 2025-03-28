@@ -1051,8 +1051,19 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 	bool ishaveupfloor = false;//是否有板
 	bool isMedial = false;
 	vector<PIT::ConcreteRebar> vecRebar;
-	std::vector<PIT::ConcreteRebar> test_vecRebarData1;
-	std::vector<PIT::ConcreteRebar> test_vecRebarData2;
+	std::vector<PIT::ConcreteRebar> rebarInsideFace;
+	std::vector<PIT::ConcreteRebar> rebarOutsideFace;
+
+	// 采用路径的起点中点终点判断，任一点在板范围内都算作内侧，vecLine只是路径的1/3长度，所以这里的中点指1/3位置的中点
+	DPoint3d ptPathStr = ptstr;
+	ptPathStr.Add(ptend);
+	ptPathStr.Scale(0.5);
+	DPoint3d ptPathMid = ptPathStr;
+	ptPathMid.Add(vecLine);
+	DPoint3d ptPathEnd = ptPathMid;
+	ptPathEnd.Add(vecLine);
+	ptPathEnd.Add(vecLine);
+
 	for (int i = 0; i < floorfaces.size(); i++)
 	{
 		DRange3d range;
@@ -1062,21 +1073,18 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 		range.low.y = range.low.y - 1;
 		range.high.x = range.high.x + 1;
 		range.high.y = range.high.y + 1;
-		DPoint3d pointStr = ptstr;//改为中点判断
-		pointStr.Add(ptend);
-		pointStr.Scale(0.5);
-		pointStr.Add(vecLine);
+		
 		//测试代码显示当前的判断点的位置
 		//PITCommonTool::CPointTool::DrowOnePoint(pointStr, 1, 1);
 		//PITCommonTool::CPointTool::DrowOnePoint(range.high, 1, 1);
 		//PITCommonTool::CPointTool::DrowOnePoint(range.low, 1, 1);
 
-		if (range.IsContainedXY(pointStr))// && range.IsContainedXY(ptend)
+		if (range.IsContainedXY(ptPathStr) || range.IsContainedXY(ptPathMid) || range.IsContainedXY(ptPathEnd))
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
-			GetElementXAttribute(elIDdata, test_vecRebarData1, RebarInsideFace, ACTIVEMODEL);
-			GetElementXAttribute(elIDdata, test_vecRebarData2, RebarOutsideFace, ACTIVEMODEL);
+			GetElementXAttribute(elIDdata, rebarInsideFace, RebarInsideFace, ACTIVEMODEL);
+			GetElementXAttribute(elIDdata, rebarOutsideFace, RebarOutsideFace, ACTIVEMODEL);
 
 			ishaveupfloor = true;
 			ElementId concreteid = 0;
@@ -1089,29 +1097,36 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 			{
 				GetElementXAttribute(floorRf.at(i).ID, vecRebar, vecRebarDataXAttribute, ACTIVEMODEL);
 			}
-			if (test_vecRebarData1.size() != 0 && test_vecRebarData2.size() != 0 && vecRebar.size() == 2)
+			if (rebarInsideFace.size() != 0 && rebarOutsideFace.size() != 0 && vecRebar.size() == 2)
 			{
 				vecRebar.clear();
-				vecRebar.push_back(test_vecRebarData1[0]);
-				vecRebar.push_back(test_vecRebarData1[1]);
-				vecRebar.push_back(test_vecRebarData2[0]);
-				vecRebar.push_back(test_vecRebarData2[1]);
+				vecRebar.push_back(rebarInsideFace[0]);
+				vecRebar.push_back(rebarInsideFace[1]);
+				vecRebar.push_back(rebarOutsideFace[0]);
+				vecRebar.push_back(rebarOutsideFace[1]);
 			}
 			break;
 		}
 	}
 	if (ishaveupfloor)//如果有板才有可能要往上延伸
 	{
-		DPoint3d movept = ptstr;
+		DPoint3d ptStrMove = ptstr;
 		vecOutwall.Scale(thick*uor_per_mm / 2);
-		movept.Add(vecOutwall);
-		movept.z = 0;
+		ptStrMove.Add(vecOutwall);
+		ptStrMove.z = 0;
 		vecLine.z = 0;
-		movept.Add(vecLine);
+		DPoint3d ptMidMove = ptStrMove;
+		ptMidMove.Add(vecLine);
+		DPoint3d ptEndMove = ptMidMove;
+		ptEndMove.Add(vecLine);
+		ptEndMove.Add(vecLine);
 
-		DPoint3d temp_pt = ptstr;//取2/3
-		temp_pt.Add(vecLine);
-		temp_pt.z = 0;
+		DPoint3d ptPathStrTmp = ptPathStr;
+		ptPathStrTmp.z = 0;
+		DPoint3d ptPathMidTmp = ptPathMid;
+		ptPathMidTmp.z = 0;
+		DPoint3d ptPathEndTmp = ptPathEnd;
+		ptPathEndTmp.z = 0;
 
 		for (int i = 0; i < floorfaces.size(); i++)
 		{
@@ -1123,7 +1138,7 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 			range.low.y = range.low.y - 10;
 			range.high.x = range.high.x + 10;
 			range.high.y = range.high.y + 10;
-			if (range.IsContainedXY(movept))
+			if (range.IsContainedXY(ptStrMove) || range.IsContainedXY(ptMidMove) || range.IsContainedXY(ptEndMove))
 			{
 				//如果判断点在range内，再判断垂线与面是否有交集(把面投影到XOY平面，再判断)
 				MSElementDescrP cdescr = nullptr;
@@ -1132,12 +1147,17 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 				mdlElmdscr_transform(&cdescr, &tran);
 				EditElementHandle teeh(cdescr, true, false, ACTIVEMODEL);
 
-				auto is_InElement = ISPointInElement(&teeh, movept);
-				auto is_InElement2 = ISPointInElement(&teeh, temp_pt);
+				auto is_InElement1 = ISPointInElement(&teeh, ptStrMove);
+				auto is_InElement2 = ISPointInElement(&teeh, ptMidMove);
+				auto is_InElement3 = ISPointInElement(&teeh, ptEndMove);
+				auto is_InElement4 = ISPointInElement(&teeh, ptPathStrTmp);
+				auto is_InElement5 = ISPointInElement(&teeh, ptPathMidTmp);
+				auto is_InElement6 = ISPointInElement(&teeh, ptPathEndTmp);
 
-				if (is_InElement && is_InElement2)
+				if ((is_InElement1 || is_InElement2 || is_InElement3) && (is_InElement4 || is_InElement5 || is_InElement6))
 				{
 					isMedial = true;
+					break;
 				}
 			}
 		}
@@ -1156,7 +1176,7 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 					WallDir = true;
 			}
 			//关联构件配置钢筋数据不为空并且板L1钢筋方向与廊道方向相同需要偏移一个L1钢筋直径
-			if (!vecRebar.empty() && vecRebar.at(0).rebarDir == WallDir && test_vecRebarData1.empty())
+			if (!vecRebar.empty() && vecRebar.at(0).rebarDir == WallDir && rebarInsideFace.empty())
 			{
 			
 				auto it = vecRebar.begin();

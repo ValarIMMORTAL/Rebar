@@ -1383,8 +1383,8 @@ RebarSetTag * STWallRebarAssembly::MakeRebars(ElementId & rebarSetId, BrStringCR
 
 	std::vector<EditElementHandle*> upflooreehs;
 	std::vector<EditElementHandle*> flooreehs;
-	std::vector<EditElementHandle*>Walleehs;
-	std::vector<EditElementHandle*>alleehs;
+	std::vector<EditElementHandle*> Walleehs;
+	std::vector<EditElementHandle*> alleehs;
 	m_around_ele_holeEehs.clear();
 	for (IDandModelref IdMode : m_walldata.floorID)//ÖÐ¼ä°å
 	{
