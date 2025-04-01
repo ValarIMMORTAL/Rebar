@@ -1945,15 +1945,44 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		}
 		else
 		{
+			DVec3d rebarVec = DVec3d::FromZero();
+			if (interPts.size() >= 2)
+				rebarVec.DifferenceOf(interPts[0], interPts[interPts.size() - 1]);
+			rebarVec.Normalize();
+			bool isHorizon = abs(rebarVec.DotProduct(DVec3d::UnitZ())) < 0.1;
+			// 添加水平钢筋延伸到板厚度限制逻辑
+			if (islsay && isInSide && interPts.size() >= 2 && isHorizon) {
+				// 获取楼板厚度
+				double thickness = 0.0;
+				thickness = GetFloorThickness(floorEeh) * UOR_PER_MilliMeter;
+				// 按与起点的距离排序交点
+				std::sort(interPts.begin(), interPts.end(), [&](const DPoint3d& a, const DPoint3d& b) {
+					return COMPARE_VALUES_EPS(strPt.Distance(a), strPt.Distance(b), UOR_PER_MilliMeter) < 0;
+				});
+
+				// 计算相邻交点之间的距离，限制不超过楼板厚度
+				for (size_t i = 0; i < interPts.size() - 1; ++i) {
+					double distBetweenPts = interPts[i].Distance(interPts[i + 1]);
+					if (COMPARE_VALUES_EPS(distBetweenPts, thickness, UOR_PER_MilliMeter) > 0) {
+						// 如果交点间距离超过楼板厚度，调整第二个交点位置，且结束延伸
+						DVec3d direction = interPts[i + 1] - interPts[i];
+						direction.Normalize();
+						direction.ScaleToLength(thickness);
+						interPts[i + 1] = interPts[i];
+						interPts[i + 1].Add(direction);
+						break;
+					}
+				}
+			}
+			double totalDis = strPt.Distance(endPt);
 			for (auto it : interPts)
 			{
 				//PITCommonTool::CPointTool::DrowOnePoint(it, 1, 3);
 				double strDis = strPt.Distance(it);
 				double endDis = endPt.Distance(it);
-				double tatalDis = strPt.Distance(endPt);
 				if (COMPARE_VALUES_EPS(strDis, 50 * UOR_PER_MilliMeter, 1e-6) <= 0 || //起始点与端点极近
 					COMPARE_VALUES_EPS(endDis, 50 * UOR_PER_MilliMeter, 1e-6) <= 0 ||	//终点与端点极近
-					COMPARE_VALUES_EPS(tatalDis, strDis + endDis, 1) == 0 ||//交点在钢筋线中间
+					COMPARE_VALUES_EPS(totalDis, strDis + endDis, 1) == 0 ||//交点在钢筋线中间
 					vecRange.IsContainedXY(it))//点在墙XY平面的范围内
 				{
 					isValid = true;
@@ -2017,6 +2046,30 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		}
 		else
 		{
+			// 处理交点并分配到起点端或终点端
+			auto processIntersectionPoints = [&](DPoint3d point, vector<DPoint3d>& vec_interPts, bool& isRecorded, int& record) -> bool{
+				if (!islsay)
+				{
+					if (!isRecorded)//墙实体且未遇到过板，正常延伸
+						vec_interPts.push_back(point);
+					return false;
+				}
+				if (vec_interPts.size() < 2 || record == 1)//初次遇到板，或新板的另一个交点，正常延伸，需记录为板
+				{
+					vec_interPts.push_back(point);
+					isRecorded = true;
+					return false;
+				}
+				if (!isRecorded)//未遇到过板，正常延伸
+				{
+					if (record == 2)//墙板墙顺序，需要保留板的两个交点，且需记录为板
+						record--;
+					vec_interPts.push_back(point);
+					isRecorded = true;
+					return false;
+				}
+				return true;
+			};
 			for (auto it : interPts)
 			{
 				double strDis = strPt.Distance(it);
@@ -2024,26 +2077,9 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 				allPts.push_back(it);
 				if (COMPARE_VALUES_EPS(strDis, endDis, 1e-6) == -1)
 				{
-					if (!islsay)
-					{
-						if (!isStrRecorded)//墙实体且未遇到过板，正常延伸
-							interStrPts.push_back(it);
+					if (!processIntersectionPoints(it, interStrPts, isStrRecorded, strRecord))
 						continue;
-					}
-					if (interStrPts.size() < 2 || strRecord == 1)//初次遇到板，或新板的另一个交点，正常延伸，需记录为板
-					{
-						interStrPts.push_back(it);
-						isStrRecorded = true;
-						continue;
-					}
-					if (!isStrRecorded)//未遇到过板，正常延伸
-					{
-						if (strRecord == 2)//墙板墙顺序，需要保留板的两个交点，且需记录为板
-							strRecord--;
-						interStrPts.push_back(it);
-						isStrRecorded = true;
-						continue;
-					}
+					
 					// 多次遇到板，选择近的板
 					interPtsSort(interStrPts, endPt);
 					double tempStrDis = strPt.Distance(*interStrPts.end());
@@ -2057,26 +2093,9 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 				}
 				else
 				{
-					if (!islsay)
-					{
-						if (!isEndRecorded)//墙实体且未遇到过板，正常延伸
-							interEndPts.push_back(it);
+					if (!processIntersectionPoints(it, interEndPts, isEndRecorded, endRecord))
 						continue;
-					}
-					if (interEndPts.size() < 2 || endRecord == 1)//初次遇到板，或新板的另一个交点，正常延伸，需记录为板
-					{
-						interEndPts.push_back(it);
-						isEndRecorded = true;
-						continue;
-					}
-					if (!isEndRecorded)//未遇到过板，正常延伸
-					{
-						if (endRecord == 2)//墙板墙顺序，需要保留板的两个交点，且需记录为板
-							endRecord--;
-						interEndPts.push_back(it);
-						isEndRecorded = true;
-						continue;
-					}
+					
 					// 多次遇到板，选择近的板
 					interPtsSort(interEndPts, strPt);
 					double tempEndDis = endPt.Distance(*interEndPts.end());
@@ -2557,6 +2576,7 @@ void STWallRebarAssembly::CalculateUpDownBarLines(vector<BarLinesdata>& barlines
 		barlines.at(i).strMG = mgDisstr;
 		barlines.at(i).endMG = mgDisend;
 		barlines.at(i).holMG = mgDisHol;
+		barlines.at(i).isInSide = isInsidestr && isInsideend;
 		vector<DPoint3d> barpts;//取到所有钢筋线点集合
 		ExtractLineStringPoint(barlines.at(i).path, barpts);
 		if (barpts.size() > 1)
@@ -3260,9 +3280,22 @@ bool STWallRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 	if (m_walldata.downFace == nullptr) return false;
 	map<int, vector<BarLinesdata>> barlines;
 	CalculateBarLinesData(barlines, ACTIVEMODEL);
+	map<int, bool> map_isInside;
+	// 找出同一面中，为内侧的钢筋组
+	for (const auto& it : barlines) 
+	{
+		// 如果有一个isInSide为true，则记录下来
+		for (const auto& bar : it.second)
+		{
+			if (!bar.isInSide)
+				continue;
+			map_isInside[GetvecDataExchange().at(it.first)] = true;
+			break;
+		}
+	}
 	int setCount = 0;
 	m_nowlevel = -1;
-	for (auto it : barlines)
+	for (auto& it : barlines)
 	{
 		m_vecRebarPtsLayer.clear();
 		m_nowlevel++;
@@ -3271,39 +3304,49 @@ bool STWallRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 		setCount++;
 		RebarSetTag* tag = NULL;
 		PopvecSetId().push_back(0);
-		if (GetvecDataExchange().at(it.first) == 0)//外侧面
-		{
-			it.second[0].isInSide = false;
-		}
-		else if (GetvecDataExchange().at(it.first) == 2)//内侧面
-		{
-			it.second[0].isInSide = true;
-		}
-		//判断是否墙全部被板包围
-		DSegment3d temp = m_walldata.vecFontLine[0];
-		DPoint3d ptr1, ptr2;
-		m_walldata.vecFontLine[0].GetStartPoint(ptr1);
-		m_walldata.vecFontLine[0].GetEndPoint(ptr2);
-		ptr1.Add(ptr2);
-		ptr1.Scale(0.5);//中点判断
-		DRange3d range;
-		//计算指定元素描述符中元素的范围。
-		for (auto data : m_walldata.downfloorfaces)//判断vecFontLine是否是外侧 如果不是则跟内侧
-		{
-			if (abs(ptr1.x - ptr2.x) > 10 * uor_per_mm && abs(ptr1.y - ptr2.y) > 10 * uor_per_mm)
-				break;
-			mdlElmdscr_computeRange(&range.low, &range.high, data, NULL);
-			//mdlElmdscr_add(it);
-			range.low.x = range.low.x + 50 * uor_per_mm;
-			range.low.y = range.low.y + 50 * uor_per_mm;
-			range.high.x = range.high.x - 50 * uor_per_mm;
-			range.high.y = range.high.y - 50 * uor_per_mm;
-			if (range.IsContainedXY(ptr1))
-			{
-				it.second[0].isInSide = false;
-				break;
+		// 同一面中，如果有一组成功判定为内侧，则均同步为内侧，并不再采用后续的判定
+		if (map_isInside.find(GetvecDataExchange().at(it.first)) != map_isInside.end()) {
+			for (auto& bar : it.second) {
+				bar.isInSide = true;
 			}
 		}
+		// 没有确定好内外侧时进行这部分判定
+		if (!it.second[0].isInSide)
+		{
+			if (GetvecDataExchange().at(it.first) == 0)//外侧面
+			{
+				it.second[0].isInSide = false;
+			}
+			else if (GetvecDataExchange().at(it.first) == 2)//内侧面
+			{
+				it.second[0].isInSide = true;
+			}
+			//判断是否墙全部被板包围
+			DPoint3d ptr1, ptr2;
+			m_walldata.vecFontLine[0].GetStartPoint(ptr1);
+			m_walldata.vecFontLine[0].GetEndPoint(ptr2);
+			ptr1.Add(ptr2);
+			ptr1.Scale(0.5);//中点判断
+			DRange3d range;
+			//计算指定元素描述符中元素的范围。
+			for (auto data : m_walldata.downfloorfaces)//判断vecFontLine是否是外侧 如果不是则跟内侧
+			{
+				if (abs(ptr1.x - ptr2.x) > 10 * uor_per_mm && abs(ptr1.y - ptr2.y) > 10 * uor_per_mm)
+					break;
+				mdlElmdscr_computeRange(&range.low, &range.high, data, NULL);
+				//mdlElmdscr_add(it);
+				range.low.x = range.low.x + 50 * uor_per_mm;
+				range.low.y = range.low.y + 50 * uor_per_mm;
+				range.high.x = range.high.x - 50 * uor_per_mm;
+				range.high.y = range.high.y - 50 * uor_per_mm;
+				if (range.IsContainedXY(ptr1))
+				{
+					it.second[0].isInSide = false;
+					break;
+				}
+			}
+		}
+		
 		tag = MakeRebars(PopvecSetId().back(), GetvecDirSize().at(it.first), it.second,
 			GetvecStartOffset().at(it.first)*uor_per_mm, GetvecEndOffset().at(it.first)*uor_per_mm,
 			GetvecRebarLevel().at(it.first), GetvecRebarType().at(it.first), ACTIVEMODEL, GetvecRebarLineStyle().at(it.first), GetvecRebarWeight().at(it.first));
