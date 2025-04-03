@@ -1073,7 +1073,8 @@ namespace Gallery
 		PITRebarEndTypes&		endTypes,
 		CMatrix3D const&        mat,
 		bool&                tag,
-		bool isTwin
+		bool isTwin,
+		vector<DPoint3d> vec_ptBoundary
 	)
 	{
 		double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
@@ -1087,7 +1088,6 @@ namespace Gallery
 	// 		endOffset = 0;
 		startPt = CPoint3D::From(xPos, 0.0, -yLen / 2.0);
 		endPt = CPoint3D::From(xPos, 0.0, yLen / 2.0);
-
 
 		Transform trans;
 		mat.AssignTo(trans);
@@ -1173,41 +1173,113 @@ namespace Gallery
 			}
 		}
 
-		// EditElementHandle eeh2;
-		// GetContractibleeeh(eeh2);//获取减去保护层的端部缩小的实体
-
 		double dSideCover = GetSideCover() * uor_per_mm;
-		vector<DPoint3d> tmppts;
 		Transform matrix;
 		GetPlacement().AssignTo(matrix);
-		vector<vector<DPoint3d>> vecPtRebars;
-		vector<DPoint3d> tmpptsTmp;
-		vecPtRebars.clear();
-		tmpptsTmp.clear();
-		if (m_pOldElm != NULL) // 与原实体相交(无孔洞)
-		{
-			GetIntersectPointsWithOldElm(tmpptsTmp, m_pOldElm, pt1[0], pt1[1], dSideCover, matrix);
+		vector<vector<DPoint3d>> rebarSegments;// 钢筋分段
+		vector<DPoint3d> oriIntersectPts;// 原始交点集合
+		vector<DPoint3d> intersectPts;// 交点集合
+		vector<DPoint3d> holesIntersectPts;// 孔洞交点集合
+		rebarSegments.clear();
+		oriIntersectPts.clear();
+		intersectPts.clear();
+		holesIntersectPts.clear();
 
-			if (tmpptsTmp.size() > 1)
+		DVec3d moveVec = DVec3d::FromZero(); // 移动向量
+		// 边界点多于四个，可能是异形板，需要处理部分边缘钢筋
+		if (vec_ptBoundary.size() > 4)
+		{
+			int coverViolationCount = 0; // 记录边缘钢筋违反保护层要求，过于接近的关键点数量
+
+			// 计算钢筋线的方向向量
+			DVec3d rebarDir = pt1[1] - pt1[0];
+			rebarDir.Normalize();
+
+			// 遍历所有边界关键点
+			for (const auto& boundaryPt : vec_ptBoundary)
 			{
-				// 存在交点为两个以上的情况
-				GetIntersectPointsWithSlabRebar(vecPtRebars, tmpptsTmp, pt1[0], pt1[1], m_pOldElm, dSideCover);
+				// 将关键点投影到钢筋线上
+				DPoint3d projectedPt;
+				double outFractionP;
+				mdlVec_projectPointToLine(&projectedPt, &outFractionP, &boundaryPt, &pt1[0], &pt1[1]);
+
+				// 计算关键点与投影点在 XOY 平面上的距离
+				double distXOY = sqrt(pow(boundaryPt.x - projectedPt.x, 2) + pow(boundaryPt.y - projectedPt.y, 2));
+
+				// 检查投影点是否在钢筋线的起止点范围内
+				bool isWithinRange = (COMPARE_VALUES_EPS(outFractionP, 0, 0.1) > 0
+					&& COMPARE_VALUES_EPS(outFractionP, 1, 0.1) < 0);
+
+				// 如果距离小于保护层厚度，且投影点在起止点范围内
+				if (COMPARE_VALUES_EPS(distXOY, dSideCover, 10 * UOR_PER_MilliMeter) < 0 && isWithinRange)
+				{
+					coverViolationCount++;
+					if (coverViolationCount >= 2)
+					{
+						// 计算移动方向：从投影点指向关键点
+						projectedPt.z = boundaryPt.z;
+						moveVec.DifferenceOf(boundaryPt, projectedPt);
+						moveVec.Normalize();
+						break;
+					}
+				}
+			}
+
+			// 边缘钢筋违反保护层要求，过于接近的关键点超过两个
+			if (coverViolationCount >= 2)
+			{
+				if (m_pOldElm != NULL)
+					GetIntersectPointsWithOldElm(oriIntersectPts, m_pOldElm, pt1[0], pt1[1], dSideCover, matrix);
+				// 移动距离：略大于保护层厚度
+				moveVec.ScaleToLength(dSideCover * 1.1);
+				// 移动起止点
+				pt1[0].Add(moveVec);
+				pt1[1].Add(moveVec);
 			}
 		}
 
-		if (tmpptsTmp.size() < 2 && vecPtRebars.size() == 0)
+		if (m_pOldElm != NULL) // 与原实体相交(无孔洞)
+		{
+			GetIntersectPointsWithOldElm(intersectPts, m_pOldElm, pt1[0], pt1[1], dSideCover, matrix);
+			// 修正异形板移动钢筋长度：如果交点范围过长，调整到原始长度
+			if (intersectPts.size() > 1 && oriIntersectPts.size() > 1) {
+				double newLength = intersectPts.front().Distance(intersectPts.back());
+				double oriLength = oriIntersectPts.front().Distance(oriIntersectPts.back());
+				if (COMPARE_VALUES_EPS(newLength, oriLength, 10 * UOR_PER_MilliMeter) > 0)
+				{
+					intersectPts = move(oriIntersectPts);
+					moveVec.Zero();
+				}
+			}
+			if (intersectPts.size() > 1)
+			{
+				// 存在交点为两个以上的情况
+				GetIntersectPointsWithSlabRebar(rebarSegments, intersectPts, pt1[0], pt1[1], m_pOldElm, dSideCover);
+			}
+		}
+
+		if (intersectPts.size() < 2 && rebarSegments.size() == 0)
 		{
 			vector<DPoint3d> vecPt;
 			vecPt.push_back(pt1[0]);
 			vecPt.push_back(pt1[1]);
 
-			vecPtRebars.push_back(vecPt);
+			rebarSegments.push_back(vecPt);
 		}
 
-		for (size_t i = 0; i < vecPtRebars.size(); i++)
+		for (size_t i = 0; i < rebarSegments.size(); i++)
 		{
-			pt1[0] = vecPtRebars.at(i).at(0);
-			pt1[1] = vecPtRebars.at(i).at(1);
+			pt1[0] = rebarSegments.at(i).at(0);
+			pt1[1] = rebarSegments.at(i).at(1);
+			// 如果调整过了起止点，将点回移
+			if (!moveVec.IsZero())
+			{
+				DVec3d backMoveDir = moveVec;
+				backMoveDir.Negate();
+				pt1[0].Add(backMoveDir);
+				pt1[1].Add(backMoveDir);
+			}
+
 			CVector3D  Vec(pt1[0], pt1[1]);
 			CVector3D  nowVec = Vec;
 			CVector3D  nowVec1 = Vec;
@@ -1236,11 +1308,11 @@ namespace Gallery
 				m_vecRebarPtsLayer.push_back(pt1[0]);
 				m_vecRebarPtsLayer.push_back(pt1[1]);
 			}
-			GetIntersectPointsWithHoles(tmppts, m_useHoleehs, pt1[0], pt1[1], dSideCover, matrix);
+			GetIntersectPointsWithHoles(holesIntersectPts, m_useHoleehs, pt1[0], pt1[1], dSideCover, matrix);
 
 			map<int, DPoint3d> map_pts;
 			bool isStr = false;
-			for (DPoint3d pt : tmppts)
+			for (DPoint3d pt : holesIntersectPts)
 			{
 				if (ExtractFacesTool::IsPointInLine(pt, pt1[0], pt1[1], ACTIVEMODEL, isStr))
 				{
@@ -2223,7 +2295,6 @@ namespace Gallery
 		rightSideCov = GetSideCover()*uor_per_mm;
 		allSideCov = leftSideCov + rightSideCov;
 
-
 		if (twinBarInfo.hasTwinbars)	//并筋
 			adjustedXLen = xLen - allSideCov - diameter - diameterTb /*- startOffset - endOffset*/;
 		else
@@ -2404,8 +2475,6 @@ namespace Gallery
 
 			}
 		}
-		
-
 
 		PITRebarEndType start, end;
 		start.SetType((PITRebarEndType::Type)endTypeStart.GetType());
@@ -2450,7 +2519,34 @@ namespace Gallery
 			}
 			
 		}*/
+		
 		PITRebarEndTypes   endTypes = { start, end };
+		// 提取楼板的底面边界关键点
+		vector<DPoint3d> vec_ptBoundary;
+		PITCommonTool::CElementTool::ExtractCellPoints(m_ldfoordata.facedes, vec_ptBoundary);
+
+		// 去重
+		vector<DPoint3d> vec_uniPtBoundary;
+		if (!vec_ptBoundary.empty()) {
+			vec_uniPtBoundary.push_back(vec_ptBoundary[0]); // 保留第一个点
+
+			for (size_t i = 1; i < vec_ptBoundary.size(); ++i) {
+				const DPoint3d& lastPoint = vec_uniPtBoundary.back();
+				const DPoint3d& currentPoint = vec_ptBoundary[i];
+
+				// 比较两个点是否相同
+				if (!lastPoint.IsEqual(currentPoint)) {
+					vec_uniPtBoundary.push_back(currentPoint); // 不相同，保留
+				}
+			}
+		}
+		// 处理闭合多边形重合的起始端
+		if (vec_uniPtBoundary.size() > 1 && vec_uniPtBoundary.front().IsEqual(vec_uniPtBoundary.back())) 
+			vec_uniPtBoundary.pop_back();
+		
+		// 将去重后的点放回 vec_ptBoundary
+		vec_ptBoundary = std::move(vec_uniPtBoundary);
+
 		if (m_isMidFloor && m_Allwalls.size() == 3)
 		{
 			if (m_isIndownWall)
@@ -2498,11 +2594,9 @@ namespace Gallery
 		}
 		for (int i = 0; i < numRebar; i++)//钢筋属性
 		{
-			
-			bool tag;
+			bool tag = true;
 			vector<PITRebarCurve>     rebarCurves;
-			tag = true;
-			makeRebarCurve_G(rebarCurves, xPos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel);
+			makeRebarCurve_G(rebarCurves, xPos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel, vec_ptBoundary);
 			xPos += adjustedSpacing;
 			isTemp = false;
 			if (!tag)
@@ -2548,7 +2642,7 @@ namespace Gallery
 					tmppos = tmppos - inside_Offset - adjustedSpacing;
 					/*double tmppos = xPos;
 					tmppos = tmppos - m_insidef.strval - adjustedSpacing;*/
-					makeRebarCurve_G(rebarCurves, tmppos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel);
+					makeRebarCurve_G(rebarCurves, tmppos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel, vector<DPoint3d>{});
 					rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 				}
 				else if (( i == numRebar - 1 && m_insidef.endval && m_sidetype == SideType::In ) || (i == numRebar - 1 && m_outsidef.endval && m_sidetype == SideType::Out))
@@ -2569,12 +2663,10 @@ namespace Gallery
 					tmppos = tmppos + inside_Offset - adjustedSpacing;
 					/*double tmppos = xPos;
 					tmppos = tmppos + m_insidef.endval - adjustedSpacing;*/
-					makeRebarCurve_G(rebarCurves, tmppos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel);
+					makeRebarCurve_G(rebarCurves, tmppos, width, endTypeStartOffset, endTypEendOffset, endTypes, mat, tag, bTwinbarLevel, vector<DPoint3d>{});
 					rebarCurvesNum.insert(rebarCurvesNum.end(), rebarCurves.begin(), rebarCurves.end());
 				}
 			}
-
-
 		}//rebarset里面rebarelement初步建立完成
 		//钢筋组
 		numRebar = (int)rebarCurvesNum.size();

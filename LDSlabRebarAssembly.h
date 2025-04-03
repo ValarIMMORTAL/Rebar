@@ -264,7 +264,8 @@ namespace Gallery
 			PITRebarEndTypes&		endTypes,
 			CMatrix3D const&        mat,
 			bool&                tag,
-			bool isTwin
+			bool isTwin,
+			vector<DPoint3d> vec_ptBoundary
 		);
 		void CalculateTransform(vector<CVector3D> &vTransform, vector<CVector3D> &vTransformTb, DgnModelRefP modelRef);
 		void ReTransFaces(vector<CVector3D>& vTrans, vector<CVector3D>& vTransTb, int i
