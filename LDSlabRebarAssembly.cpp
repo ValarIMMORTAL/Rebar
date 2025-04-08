@@ -1211,7 +1211,7 @@ namespace Gallery
 					&& COMPARE_VALUES_EPS(outFractionP, 1, 0.1) < 0);
 
 				// 如果距离小于保护层厚度，且投影点在起止点范围内
-				if (COMPARE_VALUES_EPS(distXOY, dSideCover, 10 * UOR_PER_MilliMeter) < 0 && isWithinRange)
+				if (COMPARE_VALUES_EPS(distXOY, dSideCover, 1 * UOR_PER_MilliMeter) < 0 && isWithinRange)
 				{
 					coverViolationCount++;
 					if (coverViolationCount >= 2)
@@ -1245,7 +1245,7 @@ namespace Gallery
 			if (intersectPts.size() > 1 && oriIntersectPts.size() > 1) {
 				double newLength = intersectPts.front().Distance(intersectPts.back());
 				double oriLength = oriIntersectPts.front().Distance(oriIntersectPts.back());
-				if (COMPARE_VALUES_EPS(newLength, oriLength, 10 * UOR_PER_MilliMeter) > 0)
+				if (COMPARE_VALUES_EPS(newLength, oriLength, 1 * UOR_PER_MilliMeter) > 0)
 				{
 					intersectPts = move(oriIntersectPts);
 					moveVec.Zero();

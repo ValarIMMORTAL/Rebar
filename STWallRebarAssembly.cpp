@@ -2082,7 +2082,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 					
 					// 多次遇到板，选择近的板
 					interPtsSort(interStrPts, endPt);
-					double tempStrDis = strPt.Distance(*interStrPts.end());
+					double tempStrDis = strPt.Distance(interStrPts.back());
 					if (COMPARE_VALUES_EPS(strDis, tempStrDis, 1e-6) == -1)//新的交点在更近的板
 					{
 						if (strRecord == 2)//仅在遇到板时清空，需要保留新板的两个交点
@@ -2098,7 +2098,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 					
 					// 多次遇到板，选择近的板
 					interPtsSort(interEndPts, strPt);
-					double tempEndDis = endPt.Distance(*interEndPts.end());
+					double tempEndDis = endPt.Distance(interEndPts.back());
 					if (COMPARE_VALUES_EPS(endDis, tempEndDis, 1e-6) == 1)//新的交点在更近的板
 					{
 						if (endRecord == 2)//仅在遇到板时清空，需要保留新板的两个交点
