@@ -37,10 +37,6 @@ public:
 	};
 
 private:
-	bool makeRebarCurve(vector<PIT::PITRebarCurve>& rebar, double xPos, double height, double startOffset,
-		double endOffset, PIT::PITRebarEndTypes &endType, CMatrix3D const& mat, bool istwin = false);
-	bool makeRebarCurve_Laption(RebarCurve& rebar, double xPos, double height, double bendRadius,
-		double bendLen, RebarEndTypes const& endType, CVector3D const& endNormal, CMatrix3D const& mat, bool istwin = false);
 	void movePoint(DPoint3d vec, DPoint3d& movePt, double disLen, bool bFlag = true);
 	void ExtractBoundaryPoints(MSElementDescrP faceDescr, vector<DPoint3d>& vec_ptBoundary);
 	bool makaRebarCurve(const vector<DPoint3d>& linePts, double extendStrDis, double extendEndDis, double diameter, double strMoveDis, double endMoveDis, bool isInSide,
@@ -58,16 +54,6 @@ protected:
 	virtual bool        Rebuild() override;
 
 protected:
-	/*
-
-	*/
-	RebarSetTag* MakeRebars(ElementId& rebarSetId, BrStringCR sizeKey, double xDir, double height, double spacing,
-		double startOffset, double endOffset, vector<PIT::EndType> const& endType, vector<CVector3D> const& vecEndNormal,
-		CMatrix3D const& mat, const TwinBarSet::TwinBarLevelInfo &twinBarInfo, bool bTwinbarLevel, int level, int grade, int DataExchange, DgnModelRefP modelRef, int rebarLineStyle,
-		int rebarWeight);
-	//	RebarSetTag* MakeRebars_ACC(ElementId& rebarSetId, BrStringCR sizeKey, double xDir, double height, double spacing, double startOffset, double endOffset, vector<PIT::EndType> const& endType, vector<CVector3D> const& vecEndNormal, CMatrix3D const& mat, const TwinBarSet::TwinBarLevelInfo &twinBarInfo, bool bTwinbarLevel, DgnModelRefP modelRef);
-	RebarSetTag* MakeRebars_Laption(ElementId& rebarSetId, BrStringCR sizeKey, double xDir, double height, double spacing, double startOffset, double endOffset, PIT::LapOptions const& lapOptions, vector<PIT::EndType> const& endType, CVector3D const& endNormal, CMatrix3D const& mat, bool bTwinBars, DgnModelRefP modelRef);
-
 	RebarSetTag* MakeRebars(ElementId& rebarSetId, BrStringCR sizeKey, const vector<BarLinesdata>& barLinesData,
 		double strOffset, double endOffset, int level, int grade, DgnModelRefP modelRef, int rebarLineStyle, int rebarWeight);
 
