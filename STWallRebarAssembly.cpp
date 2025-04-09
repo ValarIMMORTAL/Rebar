@@ -17,6 +17,7 @@
 // #include "SelectRebarTool.h"
 #include <RebarHelper.h>
 // #include "HoleRebarAssembly.h"
+#include <CElementTool.h>
 #include <CPointTool.h>
 
 #include "MakeRebarHelper.h"
@@ -247,6 +248,35 @@ void STWallRebarAssembly::movePoint(DPoint3d vec, DPoint3d& movePt, double disLe
 	}
 	vec.ScaleToLength(disLen);
 	movePt.Add(vec);
+}
+
+// 提取面的关键点
+void STWallRebarAssembly::ExtractBoundaryPoints(MSElementDescrP faceDescr, vector<DPoint3d>& vec_ptBoundary) {
+	// 提取面边界关键点
+	PITCommonTool::CElementTool::ExtractCellPoints(faceDescr, vec_ptBoundary);
+
+	// 去重
+	vector<DPoint3d> vec_uniPtBoundary;
+	if (!vec_ptBoundary.empty()) {
+		vec_uniPtBoundary.push_back(vec_ptBoundary[0]); // 保留第一个点
+
+		for (size_t i = 1; i < vec_ptBoundary.size(); ++i) {
+			const DPoint3d& lastPoint = vec_uniPtBoundary.back();
+			const DPoint3d& currentPoint = vec_ptBoundary[i];
+
+			// 比较两个点是否相同
+			if (!lastPoint.IsEqual(currentPoint)) {
+				vec_uniPtBoundary.push_back(currentPoint); // 不相同，保留
+			}
+		}
+	}
+
+	// 处理闭合多边形重合的起始端
+	if (vec_uniPtBoundary.size() > 1 && vec_uniPtBoundary.front().IsEqual(vec_uniPtBoundary.back()))
+		vec_uniPtBoundary.pop_back();
+
+	// 将去重后的点放回 vec_ptBoundary
+	vec_ptBoundary = std::move(vec_uniPtBoundary);
 }
 
 bool STWallRebarAssembly::makaRebarCurve(const vector<DPoint3d>& linePts, double extendStrDis, double extendEndDis,
@@ -1950,16 +1980,16 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 				rebarVec.DifferenceOf(interPts[0], interPts[interPts.size() - 1]);
 			rebarVec.Normalize();
 			bool isHorizon = abs(rebarVec.DotProduct(DVec3d::UnitZ())) < 0.1;
+			// 获取楼板厚度
+			double thickness = GetFloorThickness(floorEeh) * UOR_PER_MilliMeter;
+			double dSideCover = GetSideCover() * UOR_PER_MilliMeter;
+			// 按与起点的距离排序交点
+			std::sort(interPts.begin(), interPts.end(), [&](const DPoint3d& a, const DPoint3d& b) {
+				return COMPARE_VALUES_EPS(strPt.Distance(a), strPt.Distance(b), UOR_PER_MilliMeter) < 0;
+			});
+
 			// 添加水平钢筋延伸到板厚度限制逻辑
 			if (islsay && isInSide && interPts.size() >= 2 && isHorizon) {
-				// 获取楼板厚度
-				double thickness = 0.0;
-				thickness = GetFloorThickness(floorEeh) * UOR_PER_MilliMeter;
-				// 按与起点的距离排序交点
-				std::sort(interPts.begin(), interPts.end(), [&](const DPoint3d& a, const DPoint3d& b) {
-					return COMPARE_VALUES_EPS(strPt.Distance(a), strPt.Distance(b), UOR_PER_MilliMeter) < 0;
-				});
-
 				// 计算相邻交点之间的距离，限制不超过楼板厚度
 				for (size_t i = 0; i < interPts.size() - 1; ++i) {
 					double distBetweenPts = interPts[i].Distance(interPts[i + 1]);
@@ -1970,6 +2000,55 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 						direction.ScaleToLength(thickness);
 						interPts[i + 1] = interPts[i];
 						interPts[i + 1].Add(direction);
+						break;
+					}
+				}
+			}
+			if (islsay && !isInSide && interPts.size() >= 2 && isHorizon)
+			{
+				// 提取板的所有关键点
+				vector<DPoint3d> vec_ptBoundary;
+				vector<EditElementHandle*> allFaces;
+				PITCommonTool::CFaceTool::GetElementAllFaces(floorEeh, allFaces);
+				for (auto facePtr : allFaces)
+				{
+					if (!facePtr || !facePtr->IsValid())
+						continue;
+
+					EditElementHandle& faceEeh = *facePtr;
+					MSElementDescrP faceDescr = faceEeh.GetElementDescrP();
+					if (!faceDescr)
+						continue;
+
+					vector<DPoint3d> faceBoundary;
+					ExtractBoundaryPoints(faceDescr, faceBoundary);
+					vec_ptBoundary.insert(vec_ptBoundary.end(), faceBoundary.begin(), faceBoundary.end());
+				}
+				
+				for (DPoint3d boundaryPt : vec_ptBoundary)
+				{
+					// 将关键点投影到钢筋线上
+					DPoint3d projectedPt;
+					double outFractionP;
+					mdlVec_projectPointToLine(&projectedPt, &outFractionP, &boundaryPt, &interPts.front(), &interPts.back());
+
+					// 计算关键点与投影点在Z方向上的距离
+					double distZ = abs(boundaryPt.z - projectedPt.z);
+
+					// 检查投影点是否在钢筋线的起止点范围内
+					bool isWithinRange = (COMPARE_VALUES(outFractionP, 0) >= 0
+						&& COMPARE_VALUES(outFractionP, 1) <= 0);
+
+					// 如果距离小于保护层厚度，且投影点在起止点范围内，调整第二个交点位置，且结束延伸。
+					// 如果投影点于关键点实际距离过大，可能是孔洞之类的影响，只考虑一定范围内的关键点
+					if (COMPARE_VALUES_EPS(distZ, dSideCover, 1 * UOR_PER_MilliMeter) < 0 && isWithinRange
+						&& COMPARE_VALUES(boundaryPt.Distance(projectedPt), 3 * dSideCover) < 0)
+					{
+						DVec3d direction = interPts[1] - interPts[0];
+						direction.Normalize();
+						direction.ScaleToLength(thickness);
+						interPts[1] = interPts[0];
+						interPts[1].Add(direction);
 						break;
 					}
 				}

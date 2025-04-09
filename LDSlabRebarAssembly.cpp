@@ -1207,8 +1207,8 @@ namespace Gallery
 				double distXOY = sqrt(pow(boundaryPt.x - projectedPt.x, 2) + pow(boundaryPt.y - projectedPt.y, 2));
 
 				// 检查投影点是否在钢筋线的起止点范围内
-				bool isWithinRange = (COMPARE_VALUES_EPS(outFractionP, 0, 0.1) > 0
-					&& COMPARE_VALUES_EPS(outFractionP, 1, 0.1) < 0);
+				bool isWithinRange = (COMPARE_VALUES(outFractionP, 0) >= 0
+					&& COMPARE_VALUES(outFractionP, 1) <= 0);
 
 				// 如果距离小于保护层厚度，且投影点在起止点范围内
 				if (COMPARE_VALUES_EPS(distXOY, dSideCover, 1 * UOR_PER_MilliMeter) < 0 && isWithinRange)
