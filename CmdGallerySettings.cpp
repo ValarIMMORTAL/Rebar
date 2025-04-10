@@ -213,4 +213,10 @@ namespace Gallery
 		}
 	}
 
+	//ÄÚÔ²Íâ·½Åä½î
+	void cmd_CircleAndSquare_Settings(WCharCP unparsed)
+	{
+		
+	}
+
 }

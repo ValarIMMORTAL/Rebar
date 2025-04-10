@@ -461,16 +461,27 @@
 #define IDD_DIALOG_Catchpit_MainRebar   1419
 #define IDC_TAB_FacesRebarEx            1419
 #define IDD_DIALOG_CatchpitRebar        1420
+#define IDC_EDIT_Side                   1420
 #define IDD_DIALOG_FacesRebarEx         1421
+#define IDC_EDIT_Front                  1421
 #define IDD_DIALOG_FacesRebar_MainRebarEx 1422
+#define IDC_EDIT_HSpacing               1422
+#define IDD_DIALOG_CircleAndSquare      1423
+#define IDC_EDIT_PSpacing               1423
+#define IDC_EDIT_CSpacing               1424
+#define IDC_EDIT_PAngle                 1425
+#define IDC_COMBO_HDiameter             1426
+#define IDC_COMBO_HGrade                1427
+#define IDC_COMBO_CDiameter             1428
+#define IDC_COMBO_CGrade                1429
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1421
+#define _APS_NEXT_RESOURCE_VALUE        1425
 #define _APS_NEXT_COMMAND_VALUE         1365
-#define _APS_NEXT_CONTROL_VALUE         1420
+#define _APS_NEXT_CONTROL_VALUE         1430
 #define _APS_NEXT_SYMED_VALUE           1367
 #endif
 #endif

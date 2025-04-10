@@ -55,6 +55,7 @@ DllMdlApp DLLAPP_REBARSDKEXAMPLE =
 #define CT_EdageRebar 13
 #define CT_COMBINE_WALL 14
 #define CT_FaceRebarEx 15
+
 /*----------------------------------------------------------------------+
 |                                                                       |
 |   Command Tables                                                      |
@@ -117,5 +118,7 @@ CommandTable CT_GALLERY =
 	{14, CT_NONE, INHERIT,DEF, "CatchpitRebar"},
 	//自适应面配筋
 	{15, CT_FaceRebarEx, INHERIT,DEF, "FaceRebarEx"},
+	//内圆外方配筋
+	{16, CT_NONE, INHERIT,DEF, "CircleAndSquareRebar"},
 	//复制一行修改可以编译通过，自己写编译报错
 };

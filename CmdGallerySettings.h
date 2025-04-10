@@ -26,4 +26,7 @@ namespace Gallery
 	//集水坑配筋
 	void cmd_gallery_Catchpit(WCharCP unparsed);
 
+	//内圆外方配筋
+	void cmd_CircleAndSquare_Settings(WCharCP unparsed);
+
 }

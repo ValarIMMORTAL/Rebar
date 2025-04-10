@@ -553,6 +553,7 @@ static MdlCommandNumber s_commandNumbers[] =
 	{(CmdHandler)Gallery::HoleReinForcingRebarSetting, CMD_LDREBAR_GALLERY_HOLEREINFORCINGREBAR },//孔洞加强筋
 	{(CmdHandler)DeleteProstheses, CMD_LDREBAR_EDIT_DELETEPROSTHESES }, //删除面配筋假体
 	{(CmdHandler)Gallery::cmd_gallery_Catchpit, CMD_LDREBAR_GALLERY_CATCHPITREBAR },//集水坑配筋
+	{(CmdHandler)Gallery::cmd_CircleAndSquare_Settings, CMD_LDREBAR_GALLERY_CIRCLEANDSQUAREREBAR },//单个内圆外方配筋
 	{NULL, 0}
 };
 
