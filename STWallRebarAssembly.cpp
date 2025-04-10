@@ -958,25 +958,24 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 
 	//2.把最小和最大点投影到钢筋线上
 	DPoint3d minProPt = minPt, maxProPt = maxPt;
-	mdlVec_projectPointToLine(&minProPt, nullptr, &minPt, &strPt, &endPt);
-	mdlVec_projectPointToLine(&maxProPt, nullptr, &maxPt, &strPt, &endPt);
+	double fractionMin = 0, fractionMax = 0;
+	mdlVec_projectPointToLine(&minProPt, &fractionMin, &minPt, &strPt, &endPt);
+	mdlVec_projectPointToLine(&maxProPt, &fractionMax, &maxPt, &strPt, &endPt);
 
 	//3.根据到投影点的距离计算钢筋线延长距离
-	double strMinDis = strPt.Distance(minProPt);
-	double endMinDis = endPt.Distance(minProPt);
-	double strMaxDis = strPt.Distance(maxProPt);
-	double endMaxDis = endPt.Distance(maxProPt);
 	double strMoveDis = 0, endMoveDis = 0;
-	if (COMPARE_VALUES_EPS(strMinDis, endMinDis, 1e-6) == -1)
-	{
-		strMoveDis = strMinDis;
-		endMoveDis = endMaxDis;
-	}
-	else
-	{
-		strMoveDis = strMaxDis;
-		endMoveDis = endMinDis;
-	}
+	// fraction < 0 代表投影点在线段外的 `str` 延长线上
+	// fraction > 1 代表投影点在线段外的 `end` 延长线上
+	if (COMPARE_VALUES_EPS(fractionMin, 0, 1e-6) < 0)
+		strMoveDis = max(strMoveDis, strPt.Distance(minProPt));
+	else if (COMPARE_VALUES_EPS(fractionMin, 1, 1e-6) > 0)
+		endMoveDis = max(endMoveDis, endPt.Distance(minProPt));
+
+	if (COMPARE_VALUES_EPS(fractionMax, 1, 1e-6) > 0)
+		endMoveDis = max(endMoveDis, endPt.Distance(maxProPt));
+	else if (COMPARE_VALUES_EPS(fractionMax, 0, 1e-6) < 0)
+		strMoveDis = max(strMoveDis, strPt.Distance(maxProPt));
+
 
 	//4.延长钢筋线
 	DPoint3d newStrPt = strPt, newEndPt = endPt;
@@ -2474,11 +2473,7 @@ void STWallRebarAssembly::CalculateUseHoles(DgnModelRefP modelRef)
 	{
 		UnionIntersectHoles(m_useHoleehs, m_Holeehs);
 	}
-
-
-
 }
-
 
 bool STWallRebarAssembly::MakeRebars(DgnModelRefP modelRef)
 {
