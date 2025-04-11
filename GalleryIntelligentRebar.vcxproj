@@ -200,6 +200,7 @@
     <ClCompile Include="CHoleRebar_AddUnionHoleDlg.cpp" />
     <ClCompile Include="CHoleRebar_ReinforcingDlg.cpp" />
     <ClCompile Include="CHoleRebar_StructualDlg.cpp" />
+    <ClCompile Include="CircleAndSquare.cpp" />
     <ClCompile Include="CListCtrlBtn.cpp" />
     <ClCompile Include="CListCtrlCheckBox.cpp" />
     <ClCompile Include="CmdGallerySettings.cpp" />
@@ -352,6 +353,7 @@
     <ClInclude Include="CHoleRebar_AddUnionHoleDlg.h" />
     <ClInclude Include="CHoleRebar_ReinforcingDlg.h" />
     <ClInclude Include="CHoleRebar_StructualDlg.h" />
+    <ClInclude Include="CircleAndSquare.h" />
     <ClInclude Include="CListCtrlBtn.h" />
     <ClInclude Include="CListCtrlCheckBox.h" />
     <ClInclude Include="CmdGallerySettings.h" />

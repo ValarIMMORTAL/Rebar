@@ -3177,6 +3177,174 @@ namespace Gallery
 		}
 		return false;
 	}
+
+	/*
+	* @desc:       判断范围 A 是否在指定方向上包含范围 B
+	* @param[in]    rangeA 范围 A
+	* @param[in]    rangeB 范围 B
+	* @param[in]    direction 比较方向，使用 DVec3d 表示（例如 DVec3d::UnitX() 表示 X 方向）
+	* @return       true 如果范围 A 包含范围 B，否则 false
+	*/
+	bool LDSlabRebarAssembly::IsRangeContained(const DRange3d& rangeA, const DRange3d& rangeB, DVec3d direction)
+	{
+		double lowA, highA, lowB, highB;
+		if (direction.IsEqual(DVec3d::UnitX()))
+		{
+			lowA = rangeA.low.x;
+			highA = rangeA.high.x;
+			lowB = rangeB.low.x;
+			highB = rangeB.high.x;
+		}
+		else if (direction.IsEqual(DVec3d::UnitY()))
+		{
+			lowA = rangeA.low.y;
+			highA = rangeA.high.y;
+			lowB = rangeB.low.y;
+			highB = rangeB.high.y;
+		}
+		else if (direction.IsEqual(DVec3d::UnitZ()))
+		{
+			lowA = rangeA.low.z;
+			highA = rangeA.high.z;
+			lowB = rangeB.low.z;
+			highB = rangeB.high.z;
+		}
+		else
+		{
+			return false;
+		}
+
+		return COMPARE_VALUES_EPS(lowA, lowB, EPS) <= 0 &&
+			COMPARE_VALUES_EPS(highA, highB, EPS) >= 0;
+	}
+	/*
+	* @desc:       检查跨度和比例条件，判断是否满足排除条件
+	*              X 方向：检查 X 跨度和 Z 跨度比例；Z 方向：检查 Z 跨度和 X 跨度比例；Y 方向：无额外条件
+	* @param[in]    rangeA 范围 A（包含范围 B）
+	* @param[in]    rangeB 范围 B（被包含）
+	* @param[in]    direction 比较方向，使用 DVec3d 表示（例如 DVec3d::UnitX() 表示 X 方向）
+	* @return       true 如果满足跨度和比例条件，否则 false
+	*/
+	bool LDSlabRebarAssembly::CheckSpanAndRatio(const DRange3d& rangeA, const DRange3d& rangeB, DVec3d direction)
+	{
+		if (direction.IsEqual(DVec3d::UnitY()))
+		{
+			return true; // Y 方向无额外条件
+		}
+
+		// 计算主要方向的跨度
+		double spanA, spanB;
+		if (direction.IsEqual(DVec3d::UnitX()))
+		{
+			spanA = rangeA.high.x - rangeA.low.x;
+			spanB = rangeB.high.x - rangeB.low.x;
+		}
+		else // Z 方向
+		{
+			spanA = rangeA.high.z - rangeA.low.z;
+			spanB = rangeB.high.z - rangeB.low.z;
+		}
+
+		// 跨度条件：范围 A 的跨度需大于范围 B
+		bool spanCondition = COMPARE_VALUES_EPS(spanA, spanB, EPS) > 0;
+		if (!spanCondition)
+		{
+			return false;
+		}
+
+		// 计算次要方向的跨度和比例
+		double spanASecondary, spanBSecondary;
+		if (direction.IsEqual(DVec3d::UnitX()))
+		{
+			spanASecondary = rangeA.high.z - rangeA.low.z; // Z 方向
+			spanBSecondary = rangeB.high.z - rangeB.low.z;
+		}
+		else // Z 方向
+		{
+			spanASecondary = rangeA.high.x - rangeA.low.x; // X 方向
+			spanBSecondary = rangeB.high.x - rangeB.low.x;
+		}
+
+		// 比例条件：范围 B 的次要方向跨度占范围 A 的比例需小于 80%
+		bool ratioCondition = (spanASecondary > EPS) &&
+			(COMPARE_VALUES_EPS(spanBSecondary / spanASecondary, 0.8, EPS) < 0);
+
+		return ratioCondition;
+	}
+
+	void LDSlabRebarAssembly::FilterContainedWalls(vector<MSElementDescrP>& wallDescrs, DVec3d direction)
+	{
+		if (wallDescrs.size() <= 1)
+		{
+			return; // 少于两个墙面，无需比较
+		}
+
+		// 验证方向
+		bool isXDirection = direction.IsEqual(DVec3d::UnitX());
+		bool isYDirection = direction.IsEqual(DVec3d::UnitY());
+		bool isZDirection = direction.IsEqual(DVec3d::UnitZ());
+		if (!isXDirection && !isYDirection && !isZDirection)
+		{
+			return; // 无效方向
+		}
+
+		// 存储每个墙面的范围
+		vector<pair<DRange3d, MSElementDescrP>> wallRanges;
+		for (const auto& descr : wallDescrs)
+		{
+			DRange3d faceRange;
+			mdlElmdscr_computeRange(&faceRange.low, &faceRange.high, descr, nullptr);
+			wallRanges.emplace_back(faceRange, descr);
+		}
+
+		// 标记需要排除的墙面
+		vector<bool> toRemove(wallDescrs.size(), false);
+
+		// 比较每对墙面，检查指定方向的包含关系
+		for (size_t i = 0; i < wallRanges.size(); i++)
+		{
+			if (toRemove[i])
+			{
+				continue; // 已标记为排除，跳过
+			}
+
+			const DRange3d& rangeI = wallRanges[i].first;
+			for (size_t j = i + 1; j < wallRanges.size(); j++)
+			{
+				if (toRemove[j])
+				{
+					continue; // 已标记为排除，跳过
+				}
+
+				const DRange3d& rangeJ = wallRanges[j].first;
+
+				// 检查包含关系和跨度条件
+				if (IsRangeContained(rangeI, rangeJ, direction) && CheckSpanAndRatio(rangeI, rangeJ, direction))
+				{
+					toRemove[j] = true; // 墙 J 被墙 I 包含
+				}
+				else if (IsRangeContained(rangeJ, rangeI, direction) && CheckSpanAndRatio(rangeJ, rangeI, direction))
+				{
+					toRemove[i] = true; // 墙 I 被墙 J 包含
+					break; // 墙 I 被排除，无需继续比较
+				}
+			}
+		}
+
+		// 从 wallDescrs 中移除被标记为排除的墙面
+		vector<MSElementDescrP> filteredDescrs;
+		for (size_t i = 0; i < wallDescrs.size(); i++)
+		{
+			if (!toRemove[i])
+			{
+				filteredDescrs.push_back(wallDescrs[i]);
+			}
+		}
+
+		// 更新 wallDescrs
+		wallDescrs = std::move(filteredDescrs);
+	}
+
 	void LDSlabRebarAssembly::CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 		MSElementDescrP tmpupfaces[40],
 		MSElementDescrP tmpdownfaces[40],
@@ -3714,12 +3882,12 @@ namespace Gallery
 	void LDSlabRebarAssembly::CalculateOutSideData(MSElementDescrP face/*当前配筋面*/,
 		MSElementDescrP tmpupfaces[40],
 		MSElementDescrP tmpdownfaces[40],
-		int i,
+		int index,
 		DVec3d rebarVec,double& dis_x,double& dis_y)
 	{
 		m_outsidef.ClearData();
 		double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
-		WString strSize1 = GetvecDirSize().at(i);
+		WString strSize1 = GetvecDirSize().at(index);
 		if (strSize1.find(L"mm") != WString::npos)
 		{
 			strSize1.ReplaceAll(L"mm", L"");
@@ -3728,8 +3896,8 @@ namespace Gallery
 		setlocale(LC_CTYPE, "");
 		char *p = new char[len];
 		wcstombs(p, strSize1.c_str(), len);
-		string tmpstr(p);
-		string str_d = tmpstr.substr(0, 2);
+		string basicString(p);
+		string str_d = basicString.substr(0, 2);
 		double La0_d = stod(str_d);
 		delete[] p;
 
@@ -3755,9 +3923,9 @@ namespace Gallery
 	   {
 		   LaE = 15 * lae_d;
 	   }
-	   if (i-1>=0)
+	   if (index-1>=0)
 	   {
-		   WString  strSize = GetvecDirSize().at(i-1);
+		   WString  strSize = GetvecDirSize().at(index-1);
 		   if (strSize.find(L"mm") != WString::npos)
 		   {
 			   strSize.ReplaceAll(L"mm", L"");
@@ -3816,7 +3984,7 @@ namespace Gallery
 		}
 		//m_outsidef.calLen = diameterPre;
 		DVec3d tmpVec = DVec3d::From(1, 0, 0);
-		if (GetvecDir().at(i) == 1)	//纵向钢筋,局部坐标系Z方向
+		if (GetvecDir().at(index) == 1)	//纵向钢筋,局部坐标系Z方向
 		{
 			tmpVec = DVec3d::From(0, 0, 1);
 			//中间位置钢筋线,计算两端是否有垂直钢筋
@@ -3879,7 +4047,7 @@ namespace Gallery
 			}
 			if (m_ldfoordata.downnum > 0)//顶部外侧面
 			{
-				if (i == 2 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+				if (index == 2 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
 				{
 					//if (GetvecDir().at(0) == 1)
 						diameterPre = 0;
@@ -3902,7 +4070,7 @@ namespace Gallery
 			}
 			else if (m_ldfoordata.upnum > 0)//底部外侧面
 			{
-				if (i == 1 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+				if (index == 1 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
 				{
 					//if (GetvecDir().at(0) == 1)
 						diameterPre = 0;
@@ -3932,6 +4100,8 @@ namespace Gallery
 			tmpqj[(int)minP.x] = (int)maxP.x;//大面区间
 			tmpqj[(int)maxP.x] = 0;//大面区间
 			vector<MSElementDescrP> parafaces;//平行墙
+			// 把重叠且包含的墙中较小的墙去除
+			FilterContainedWalls(tmpdescrs, DVec3d::UnitX());
 			for (int i = 0; i < tmpdescrs.size(); i++)
 			{
 				/*过滤一些墙*/
@@ -4011,7 +4181,7 @@ namespace Gallery
 					if (abs(itr->first - minP.x) > 100 && parafaces.size() > 0)//不是起始区间值
 					{
 						m_outsidef.pos[m_outsidef.posnum].addstr = true;
-						if (i == 1 || i == 2)//非外侧钢筋
+						if (index == 1 || index == 2)//非外侧钢筋
 						{
 							m_outsidef.pos[m_outsidef.posnum].strval = GetSideCover()*uor_per_mm/* * 2*/ + 2 * diameter;
 						}
@@ -4023,7 +4193,7 @@ namespace Gallery
 					if (abs(itrnex->first - maxP.x) > 100 && parafaces.size() > 0)//不是终止区间值
 					{
 						m_outsidef.pos[m_outsidef.posnum].addend = true;
-						if (i == 1 || i == 2)//非外侧钢筋
+						if (index == 1 || index == 2)//非外侧钢筋
 						{
 							m_outsidef.pos[m_outsidef.posnum].endval = GetSideCover()*uor_per_mm/* * 2*/ + 2 * diameter;
 						}
@@ -4073,7 +4243,6 @@ namespace Gallery
 				break;
 			}
 			}
-
 			//起始位置钢筋线，计算起始位置是否有平行墙
 			DPoint3d firstr = midpos;
 			firstr.z = firstr.z - m_ldfoordata.Ylenth / 2 + GetSideCover()*uor_per_mm;
@@ -4101,7 +4270,7 @@ namespace Gallery
 			}
 			if (m_ldfoordata.downnum > 0)//顶部外侧面
 			{
-				if (i == 2 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+				if (index == 2 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
 				{
 					//if (GetvecDir().at(0) == 1)
 						diameterPre = 0;
@@ -4124,7 +4293,7 @@ namespace Gallery
 			}
 			else if (m_ldfoordata.upnum > 0)//底部外侧面
 			{
-				if (i == 1 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
+				if (index == 1 && (m_outsidef.Verstr || m_outsidef.Verend))//如果前面还有钢筋层，且有和钢筋线垂直的墙，钢筋长度左右都减少一个钢筋直径
 				{
 					//if (GetvecDir().at(0) == 1)
 						diameterPre = 0;
@@ -4231,7 +4400,7 @@ namespace Gallery
 					m_outsidef.pos[m_outsidef.posnum].end = itrnex->first;
 					if (abs(itr->first - minP.z) > 100 && parafaces.size() > 0)//不是起始区间值
 					{
-						if (i == 1 || i == 2)//非外侧钢筋
+						if (index == 1 || index == 2)//非外侧钢筋
 						{
 							m_outsidef.pos[m_outsidef.posnum].strval = GetSideCover()*uor_per_mm/* * 2*/ + 2 * diameter;
 						}
@@ -4242,7 +4411,7 @@ namespace Gallery
 					}
 					if (abs(itrnex->first - maxP.z) > 100 && parafaces.size() > 0)//不是终止区间值
 					{
-						if (i == 1 || i == 2)//非外侧钢筋
+						if (index == 1 || index == 2)//非外侧钢筋
 						{
 							m_outsidef.pos[m_outsidef.posnum].endval = GetSideCover()*uor_per_mm/* * 2*/ + 2 * diameter;
 						}

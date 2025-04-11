@@ -1,13 +1,13 @@
 ﻿// CircleAndSquare.cpp: 实现文件
 //
+#include "_USTATION.h"
+#include "resource.h"
 #include "GalleryIntelligentRebar.h"
 #include "CircleAndSquare.h"
 #include "afxdialogex.h"
 //
 #include "CommonFile.h"
 #include "ConstantsDef.h"
-#include "_USTATION.h"
-#include "resource.h"
 
 
 // CircleAndSquare 对话框

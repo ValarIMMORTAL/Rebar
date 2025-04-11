@@ -191,7 +191,7 @@ namespace Gallery
 		void CalculateOutSideData(MSElementDescrP face/*当前配筋面*/,
 			MSElementDescrP tmpupfaces[40],
 			MSElementDescrP tmpdownfaces[40],
-			int i,
+			int index,
 			DVec3d rebarVec, double& dis_x, double& dis_y);
 		void CalculateInSideData(MSElementDescrP face/*当前配筋面*/,
 			MSElementDescrP tmpupfaces[40],
@@ -377,6 +377,36 @@ namespace Gallery
 		//double m_adjustedSpacing;
 
 		//RebarSetP   m_rebarSet = nullptr;
+	private:
+		/*
+		* @desc:       判断范围 A 是否在指定方向上包含范围 B
+		* @param[in]    rangeA 范围 A
+		* @param[in]    rangeB 范围 B
+		* @param[in]    direction 比较方向，使用 DVec3d 表示（例如 DVec3d::UnitX() 表示 X 方向）
+		* @return       true 如果范围 A 包含范围 B，否则 false
+		* @author       LiuSilei
+		* @Date:        2025/4/11
+		*/
+		bool LDSlabRebarAssembly::IsRangeContained(const DRange3d& rangeA, const DRange3d& rangeB, DVec3d direction);
+		/*
+		* @desc:       检查跨度和比例条件，判断是否满足排除条件
+		*              X 方向：检查 X 跨度和 Z 跨度比例；Z 方向：检查 Z 跨度和 X 跨度比例；Y 方向：无额外条件
+		* @param[in]    rangeA 范围 A（包含范围 B）
+		* @param[in]    rangeB 范围 B（被包含）
+		* @param[in]    direction 比较方向，使用 DVec3d 表示（例如 DVec3d::UnitX() 表示 X 方向）
+		* @return       true 如果满足跨度和比例条件，否则 false
+		* @author       LiuSilei
+		* @Date:        2025/4/11
+		*/
+		bool LDSlabRebarAssembly::CheckSpanAndRatio(const DRange3d& rangeA, const DRange3d& rangeB, DVec3d direction);
+		/*
+		* @desc:       过滤某个方向上被其他墙完全包含的墙面。根据指定方向（X、Y 或 Z）比较墙面的范围，移除被完全包含的墙面
+		* @param[in,out] wallDescrs 墙面描述符列表，输入时包含所有墙面，输出时移除被包含的墙面
+		* @param[in]    direction 比较方向，使用 DVec3d 表示（例如 DVec3d::UnitX() 表示 X 方向）
+		* @author       LiuSilei
+		* @Date:        2025/4/11
+		*/
+		void FilterContainedWalls(vector<MSElementDescrP>& wallDescrs, DVec3d direction);
 	};
 }
 

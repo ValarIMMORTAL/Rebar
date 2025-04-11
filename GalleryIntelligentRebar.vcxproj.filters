@@ -285,6 +285,7 @@
     <ClCompile Include="PlaneRebarAssembly.cpp">
       <Filter>Helper Classes\面配筋</Filter>
     </ClCompile>
+    <ClCompile Include="CircleAndSquare.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Make Files">
@@ -857,5 +858,6 @@
     <ClInclude Include="PlaneRebarAssembly.h">
       <Filter>Helper Classes\面配筋</Filter>
     </ClInclude>
+    <ClInclude Include="CircleAndSquare.h" />
   </ItemGroup>
 </Project>
