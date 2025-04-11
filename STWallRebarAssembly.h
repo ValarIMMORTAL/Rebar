@@ -142,6 +142,16 @@ public:
 		, const Transform matrix, double MoveDis, double lenth, DPoint3d &Point, DPoint3d &Point2, int &type_Flag);
 
 	/*
+	* @desc:       处理板的关键点投影和交点调整。提取板的所有关键点，将其投影到钢筋线上，根据投影点与关键点的位置关系调整交点位置
+	* @param[in]  floorEeh 楼板的编辑元素句柄，用于获取楼板的相关信息
+	* @param[in]  interPts 钢筋线与楼板的交点集合，可能会根据处理结果进行调整
+	* @param[in]  dSideCover 侧面保护层厚度，用于判断投影点与关键点的距离是否满足条件
+	* @param[in]  thickness 楼板厚度，用于调整交点位置
+	* @param[in]  isUpBoard 是否为顶板
+	* @author     LiuSilei
+	* @Date:      2025/4/10
+	*/
+	void ProcessBoardKeyPoints(EditElementHandle& floorEeh, vector<DPoint3d>& interPts, double dSideCover, double thickness, bool isUpBoard);
 
 	/*
 	* @desc:		根据顶底板重新计算伸缩距离

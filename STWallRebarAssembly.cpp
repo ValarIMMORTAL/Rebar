@@ -891,6 +891,63 @@ void STWallRebarAssembly::CalRebarEndTypes(const BarLinesdata & data, BrStringCR
 	pitRebarEndTypes = { strEndType,endEndType };
 }
 
+void STWallRebarAssembly::ProcessBoardKeyPoints(EditElementHandle& floorEeh, vector<DPoint3d>& interPts, double dSideCover, double thickness, bool isUpBoard)
+{
+	// 提取板的所有关键点
+	vector<DPoint3d> vec_ptBoundary;
+	vector<EditElementHandle*> allFaces;
+	PITCommonTool::CFaceTool::GetElementAllFaces(floorEeh, allFaces);
+	for (auto facePtr : allFaces)
+	{
+		if (!facePtr || !facePtr->IsValid())
+			continue;
+
+		EditElementHandle& faceEeh = *facePtr;
+		MSElementDescrP faceDescr = faceEeh.GetElementDescrP();
+		if (!faceDescr)
+			continue;
+
+		vector<DPoint3d> faceBoundary;
+		ExtractBoundaryPoints(faceDescr, faceBoundary);
+		vec_ptBoundary.insert(vec_ptBoundary.end(), faceBoundary.begin(), faceBoundary.end());
+	}
+
+	for (DPoint3d boundaryPt : vec_ptBoundary)
+	{
+		// 将关键点投影到钢筋线上
+		DPoint3d projectedPt;
+		double outFractionP;
+		mdlVec_projectPointToLine(&projectedPt, &outFractionP, &boundaryPt, &interPts.front(), &interPts.back());
+
+		// 计算关键点与投影点在Z方向上的距离
+		double distZ = boundaryPt.z - projectedPt.z;
+
+		// 顶板的低位钢筋和底板的高位钢筋不限制延伸
+		if (isUpBoard && COMPARE_VALUES(distZ, 0) < 0
+			|| !isUpBoard && COMPARE_VALUES(distZ, 0) > 0)
+			continue;
+		distZ = abs(distZ);
+
+		// 检查投影点是否在钢筋线的起止点范围内
+		bool isWithinRange = (COMPARE_VALUES(outFractionP, 0) >= 0
+			&& COMPARE_VALUES(outFractionP, 1) <= 0);
+
+		// 如果距离小于保护层厚度，且投影点在起止点范围内，调整第二个交点位置，且结束延伸。
+		// 如果投影点于关键点实际距离过大，可能是孔洞之类的影响，只考虑一定范围内的关键点
+		if (COMPARE_VALUES_EPS(distZ, dSideCover, 1 * UOR_PER_MilliMeter) < 0 && isWithinRange
+			&& COMPARE_VALUES(boundaryPt.Distance(projectedPt), 3 * dSideCover) < 0)
+		{
+			DVec3d direction = interPts[1] - interPts[0];
+			direction.Normalize();
+			direction.ScaleToLength(thickness);
+			interPts[1] = interPts[0];
+			interPts[1].Add(direction);
+			break;
+		}
+	}
+	FreeAll(allFaces);
+}
+
 /*
 * @desc:		根据顶底板重新计算伸缩距离
 * @param[in]	strPt 钢筋线起点
@@ -995,7 +1052,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	int  numAnchors = 0;//锚入次数判断标准
 	bool isStrRecorded = false; // 标志起点是否遇到板
 	bool isEndRecorded = false; // 标志终点是否遇到板
-	auto calInterPts = [&](IDandModelref floor, bool islsay = true) {
+	auto calInterPts = [&](IDandModelref floor, bool isBoard = true, bool isUpBoard = false) {
 		EditElementHandle floorEeh(floor.ID, floor.tModel);
 		if (!floorEeh.IsValid())
 			return;
@@ -1009,7 +1066,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		strVec.Normalize();
 		int strRecord = 2; // 遇到板的交点计数
 		int endRecord = 2; // 遇到板的交点计数
-		if (islsay)
+		if (isBoard)
 		{
 			if ((COMPARE_VALUES_EPS(lowPt.z, wallLowPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == 1 && //板最低点在墙之间
 				COMPARE_VALUES_EPS(highPt.z, wallHighPt.z + 50 * UOR_PER_MilliMeter, 1e-6) == -1) &&
@@ -1131,7 +1188,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 			});
 
 			// 添加水平钢筋延伸到板厚度限制逻辑
-			if (islsay && isInSide && interPts.size() >= 2 && isHorizon) {
+			if (isBoard && isInSide && interPts.size() >= 2 && isHorizon) {
 				// 计算相邻交点之间的距离，限制不超过楼板厚度
 				for (size_t i = 0; i < interPts.size() - 1; ++i) {
 					double distBetweenPts = interPts[i].Distance(interPts[i + 1]);
@@ -1146,54 +1203,10 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 					}
 				}
 			}
-			if (islsay && !isInSide && interPts.size() >= 2 && isHorizon)
+			if (isBoard && !isInSide && interPts.size() >= 2 && isHorizon)
 			{
-				// 提取板的所有关键点
-				vector<DPoint3d> vec_ptBoundary;
-				vector<EditElementHandle*> allFaces;
-				PITCommonTool::CFaceTool::GetElementAllFaces(floorEeh, allFaces);
-				for (auto facePtr : allFaces)
-				{
-					if (!facePtr || !facePtr->IsValid())
-						continue;
-
-					EditElementHandle& faceEeh = *facePtr;
-					MSElementDescrP faceDescr = faceEeh.GetElementDescrP();
-					if (!faceDescr)
-						continue;
-
-					vector<DPoint3d> faceBoundary;
-					ExtractBoundaryPoints(faceDescr, faceBoundary);
-					vec_ptBoundary.insert(vec_ptBoundary.end(), faceBoundary.begin(), faceBoundary.end());
-				}
-				
-				for (DPoint3d boundaryPt : vec_ptBoundary)
-				{
-					// 将关键点投影到钢筋线上
-					DPoint3d projectedPt;
-					double outFractionP;
-					mdlVec_projectPointToLine(&projectedPt, &outFractionP, &boundaryPt, &interPts.front(), &interPts.back());
-
-					// 计算关键点与投影点在Z方向上的距离
-					double distZ = abs(boundaryPt.z - projectedPt.z);
-
-					// 检查投影点是否在钢筋线的起止点范围内
-					bool isWithinRange = (COMPARE_VALUES(outFractionP, 0) >= 0
-						&& COMPARE_VALUES(outFractionP, 1) <= 0);
-
-					// 如果距离小于保护层厚度，且投影点在起止点范围内，调整第二个交点位置，且结束延伸。
-					// 如果投影点于关键点实际距离过大，可能是孔洞之类的影响，只考虑一定范围内的关键点
-					if (COMPARE_VALUES_EPS(distZ, dSideCover, 1 * UOR_PER_MilliMeter) < 0 && isWithinRange
-						&& COMPARE_VALUES(boundaryPt.Distance(projectedPt), 3 * dSideCover) < 0)
-					{
-						DVec3d direction = interPts[1] - interPts[0];
-						direction.Normalize();
-						direction.ScaleToLength(thickness);
-						interPts[1] = interPts[0];
-						interPts[1].Add(direction);
-						break;
-					}
-				}
+				// 处理板的关键点投影和交点调整
+				ProcessBoardKeyPoints(floorEeh, interPts, dSideCover, thickness, isUpBoard);
 			}
 			double totalDis = strPt.Distance(endPt);
 			for (auto it : interPts)
@@ -1212,7 +1225,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 				// 新增条件：检查交点是否接近 interStrPts 或 interEndPts。此为判断锚入点是否可以跨实体
 				// 检查交点是否接近起点端的交点集合
 				for (auto strPtInters : interStrPts) {
-					if (islsay && COMPARE_VALUES_EPS(strPtInters.Distance(it), 50 * UOR_PER_MilliMeter, 1e-6) <= 0) {
+					if (isBoard && COMPARE_VALUES_EPS(strPtInters.Distance(it), 50 * UOR_PER_MilliMeter, 1e-6) <= 0) {
 						isValid = true;
 						break;
 					}
@@ -1224,7 +1237,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 
 				// 检查交点是否接近终点端的交点集合
 				for (auto endPtInters : interEndPts) {
-					if (islsay && COMPARE_VALUES_EPS(endPtInters.Distance(it), 50 * UOR_PER_MilliMeter, 1e-6) <= 0) {
+					if (isBoard && COMPARE_VALUES_EPS(endPtInters.Distance(it), 50 * UOR_PER_MilliMeter, 1e-6) <= 0) {
 						isValid = true;
 						break;
 					}
@@ -1269,7 +1282,7 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		{
 			// 处理交点并分配到起点端或终点端
 			auto processIntersectionPoints = [&](DPoint3d point, vector<DPoint3d>& vec_interPts, bool& isRecorded, int& record) -> bool{
-				if (!islsay)
+				if (!isBoard)
 				{
 					if (!isRecorded)//墙实体且未遇到过板，正常延伸
 						vec_interPts.push_back(point);
@@ -1337,11 +1350,11 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	strVec.Normalize();
 	for (auto it : m_walldata.upfloorID)
 	{
-		calInterPts(it);
+		calInterPts(it, true, true);
 	}
 	for (auto it : m_walldata.downfloorID)
 	{
-		calInterPts(it);
+		calInterPts(it, true, false);
 	}
 	if (!((COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) == 0) && isInSide))//过滤掉竖向内侧钢筋
 	{
@@ -1361,11 +1374,11 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 	//墙后可能还需要延伸至板
 	for (auto it : m_walldata.upfloorID)
 	{
-		calInterPts(it);
+		calInterPts(it, true, true);
 	}
 	for (auto it : m_walldata.downfloorID)
 	{
-		calInterPts(it);
+		calInterPts(it, true, false);
 	}
 
 	interPtsSort(interStrPts, endPt);
