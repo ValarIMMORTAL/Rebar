@@ -1248,6 +1248,10 @@ namespace Gallery
 				if (COMPARE_VALUES_EPS(newLength, oriLength, 1 * UOR_PER_MilliMeter) > 0)
 				{
 					intersectPts = move(oriIntersectPts);
+					moveVec.Negate();
+					// ÒÆ¶¯ÆðÖ¹µã
+					pt1[0].Add(moveVec);
+					pt1[1].Add(moveVec);
 					moveVec.Zero();
 				}
 			}

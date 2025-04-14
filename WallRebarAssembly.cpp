@@ -932,7 +932,14 @@ void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, v
 		temp.Scale(0.5);
 		temp.Add(vecLine);
 		//PITCommonTool::CPointTool::DrowOnePoint(temp, 1, 3);//绿
-		if (range.IsContainedXY(temp) || range.IsContainedXY(ptstr) || range.IsContainedXY(ptend))
+		// 统计在板范围内的点的数量
+		int pointsInRange = 0;
+		if (range.IsContainedXY(temp)) pointsInRange++;
+		if (range.IsContainedXY(ptstr)) pointsInRange++;
+		if (range.IsContainedXY(ptend)) pointsInRange++;
+
+		// 至少两个点在当前板的范围内
+		if (pointsInRange >= 2)
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -1079,7 +1086,14 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 		//PITCommonTool::CPointTool::DrowOnePoint(range.high, 1, 1);
 		//PITCommonTool::CPointTool::DrowOnePoint(range.low, 1, 1);
 
-		if (range.IsContainedXY(ptPathStr) || range.IsContainedXY(ptPathMid) || range.IsContainedXY(ptPathEnd))
+		// 统计在板范围内的点的数量
+		int pointsInRange = 0;
+		if (range.IsContainedXY(ptPathStr)) pointsInRange++;
+		if (range.IsContainedXY(ptPathMid)) pointsInRange++;
+		if (range.IsContainedXY(ptPathEnd)) pointsInRange++;
+
+		// 至少两个点在当前板的范围内
+		if (pointsInRange >= 2)
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -1138,7 +1152,15 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 			range.low.y = range.low.y - 10;
 			range.high.x = range.high.x + 10;
 			range.high.y = range.high.y + 10;
-			if (range.IsContainedXY(ptStrMove) || range.IsContainedXY(ptMidMove) || range.IsContainedXY(ptEndMove))
+
+			// 统计在板范围内的点的数量
+			int pointsInRange = 0;
+			if (range.IsContainedXY(ptStrMove)) pointsInRange++;
+			if (range.IsContainedXY(ptMidMove)) pointsInRange++;
+			if (range.IsContainedXY(ptEndMove)) pointsInRange++;
+
+			// 至少两个点在当前板的范围内
+			if (pointsInRange >= 2)
 			{
 				//如果判断点在range内，再判断垂线与面是否有交集(把面投影到XOY平面，再判断)
 				MSElementDescrP cdescr = nullptr;
@@ -1147,14 +1169,18 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 				mdlElmdscr_transform(&cdescr, &tran);
 				EditElementHandle teeh(cdescr, true, false, ACTIVEMODEL);
 
-				auto is_InElement1 = ISPointInElement(&teeh, ptStrMove);
-				auto is_InElement2 = ISPointInElement(&teeh, ptMidMove);
-				auto is_InElement3 = ISPointInElement(&teeh, ptEndMove);
-				auto is_InElement4 = ISPointInElement(&teeh, ptPathStrTmp);
-				auto is_InElement5 = ISPointInElement(&teeh, ptPathMidTmp);
-				auto is_InElement6 = ISPointInElement(&teeh, ptPathEndTmp);
+				// 统计在元素内的点的数量
+				int ptMoveCounts = 0;
+				int ptPathTmpCounts = 0;
+				if (ISPointInElement(&teeh, ptStrMove)) ptMoveCounts++;
+				if (ISPointInElement(&teeh, ptMidMove))	ptMoveCounts++;
+				if (ISPointInElement(&teeh, ptEndMove))	ptMoveCounts++;
+				if (ISPointInElement(&teeh, ptPathStrTmp)) ptPathTmpCounts++;
+				if (ISPointInElement(&teeh, ptPathMidTmp)) ptPathTmpCounts++;
+				if (ISPointInElement(&teeh, ptPathEndTmp)) ptPathTmpCounts++;
 
-				if ((is_InElement1 || is_InElement2 || is_InElement3) && (is_InElement4 || is_InElement5 || is_InElement6))
+				// 至少两个点在当前板的范围内
+				if (ptMoveCounts >= 2 && ptPathTmpCounts >= 2)
 				{
 					isMedial = true;
 					break;
