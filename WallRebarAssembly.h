@@ -176,6 +176,8 @@ protected:
 	void GetCutPathLines(vector<WallRebarAssembly::BarLinesdata>& barlines, double sidespacing, double diameter,
 		MSElementDescrP& path, vector<MSElementDescrP>& cutWallfaces, MSElementDescrP downface, double height);
 	void GetMovePath(MSElementDescrP& pathline, double movedis, MSElementDescrP downface);
+	void GeneratePathPoints(const DPoint3d& ptStr, const DPoint3d& ptEnd, int numPoints, vector<DPoint3d>& points);
+	int CountPointsInElement(EditElementHandleP eeh, const vector<DPoint3d>& points);
 	void ExtendLineString(MSElementDescrP& linedescr, double dis);
 	MSElementDescrP GetLines(vector<DSegment3d>& lines);
 protected:

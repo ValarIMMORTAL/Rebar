@@ -909,37 +909,105 @@ void WallRebarAssembly::GetMovePath(MSElementDescrP& pathline, double movedis, M
 	//6、将线转换到原来的位置
 	//mdlElmdscr_add(pathline);
 }
+
+/*
+ * @desc:       沿着路径生成均匀分布的点
+ * @param[in]    ptStr 路径起点
+ * @param[in]    ptEnd 路径终点
+ * @param[in]    numPoints 生成的点数量
+ * @param[out]   points 生成的路径点列表
+ */
+void WallRebarAssembly::GeneratePathPoints(const DPoint3d& ptStr, const DPoint3d& ptEnd, int numPoints, vector<DPoint3d>& points)
+{
+	points.clear();
+	if (numPoints <= 0) return;
+
+	// 计算路径向量
+	DVec3d pathVec = DVec3d::FromZero();
+	pathVec.DifferenceOf(ptEnd, ptStr);
+	pathVec.Scale(1.0 / (numPoints - 1));
+	DPoint3d point = ptStr;
+
+	// 均匀分布点
+	for (int i = 0; i < numPoints; i++)
+	{
+		points.push_back(point);
+		point.SumOf(point, pathVec);
+	}
+}
+
+/*
+ * @desc:       统计路径点在板元素内的数量（投影到 XY 平面后判断）
+ * @param[in]    eeh 板元素
+ * @param[in]    points 路径点列表
+ * @return       在板元素内的点数量
+ */
+int WallRebarAssembly::CountPointsInElement(EditElementHandleP eeh, const vector<DPoint3d>& points)
+{
+	if (!eeh->IsValid() || points.empty()) return 0;
+
+	// 统计在元素内的点数量
+	int pointsInElement = 0;
+	for (const auto& point : points)
+	{
+		DPoint3d projPoint = point;
+		projPoint.z = 0; // 投影到 XY 平面
+		if (ISPointInElement(eeh, projPoint))
+		{
+			pointsInElement++;
+		}
+	}
+
+	return pointsInElement;
+}
+
 //延长垂线通过上下板
 void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref>& floorRf, DPoint3d& ptstr, DPoint3d& ptend, DPoint3d& vecLine, double thick, double& Dimr, DPoint3d vecOutwall)
 {
+	DPoint3d zeropt = DPoint3d::From(0, 0, 0);
+	DPoint3d tmpvecZ = DPoint3d::From(0, 0, 1);
+	Transform tran;			//构造投影矩阵
+	mdlTMatrix_computeFlattenTransform(&tran, &zeropt, &tmpvecZ);
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
+	double eps = uor_per_mm;
 	bool ishaveupfloor = false;
 	bool isMedial = false;//是否是内侧
+
+	DPoint3d ptPathStr = ptstr;//由起点终点判断改为中点判断
+	ptPathStr.Add(ptend);
+	ptPathStr.Scale(0.5);
+	DPoint3d ptPathEnd = ptPathStr;
+	ptPathEnd.Add(vecLine);
+	ptPathEnd.Add(vecLine);
+	ptPathEnd.Add(vecLine);
+	// 生成路径点
+	int numPoints = 20;
+	int minPointsInRange = 10;
+	vector<DPoint3d> pathPoints;
+	GeneratePathPoints(ptPathStr, ptPathEnd, numPoints, pathPoints);
 
 	for (int i = 0; i < floorfaces.size(); i++)
 	{
 		DRange3d range;
 		//计算指定元素描述符中元素的范围。
 		mdlElmdscr_computeRange(&range.low, &range.high, floorfaces.at(i), NULL);
-		range.low.x = range.low.x - 1;
-		range.low.y = range.low.y - 1;
-		range.high.x = range.high.x + 1;
-		range.high.y = range.high.y + 1;
-		//PITCommonTool::CPointTool::DrowOnePoint(ptstr,1,3);//绿
-		//PITCommonTool::CPointTool::DrowOnePoint(ptend, 1, 3);//绿
-		DPoint3d temp = ptstr;//由起点终点判断改为中点判断
-		temp.Add(ptend);
-		temp.Scale(0.5);
-		temp.Add(vecLine);
-		//PITCommonTool::CPointTool::DrowOnePoint(temp, 1, 3);//绿
-		// 统计在板范围内的点的数量
+		range.low.x = range.low.x - eps;
+		range.low.y = range.low.y - eps;
+		range.high.x = range.high.x + eps;
+		range.high.y = range.high.y + eps;
+		
+		// 统计在板范围内的点数量
 		int pointsInRange = 0;
-		if (range.IsContainedXY(temp)) pointsInRange++;
-		if (range.IsContainedXY(ptstr)) pointsInRange++;
-		if (range.IsContainedXY(ptend)) pointsInRange++;
+		for (const auto& point : pathPoints)
+		{
+			if (range.IsContainedXY(point))
+			{
+				pointsInRange++;
+			}
+		}
 
-		// 至少两个点在当前板的范围内
-		if (pointsInRange >= 2)
+		// 如果足够多的点在范围内，认为路径与板相关联
+		if (pointsInRange >= minPointsInRange)
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -1003,36 +1071,68 @@ void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, v
 	}
 	if (ishaveupfloor)//如果有上顶板才有可能要往上延伸点
 	{
-		DPoint3d movept = ptstr;
-		vecOutwall.Scale(thick*uor_per_mm / 2);
-		movept.Add(vecOutwall);
-		vecLine.Scale(0.1);
-		movept.Add(vecLine);
+		// 移动路径点（沿墙体外侧方向移动半个墙厚）
+		vector<DPoint3d> movedPoints;
+		vecOutwall.Scale(thick * uor_per_mm / 2);
+		for (const auto& point : pathPoints)
+		{
+			DPoint3d movedPoint = point;
+			movedPoint.Add(vecOutwall);
+			movedPoints.push_back(movedPoint);
+		}
+
+		// 投影原始路径点到 XY 平面
+		vector<DPoint3d> projPoints;
+		for (const auto& point : pathPoints)
+		{
+			DPoint3d projPoint = point;
+			projPoint.z = 0;
+			projPoints.push_back(projPoint);
+		}
+
 		//PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 4);//蓝
 		for (int i = 0; i < floorfaces.size(); i++)
 		{
 			DRange3d range;
 			//计算指定元素描述符中元素的范围。
 			mdlElmdscr_computeRange(&range.low, &range.high, floorfaces.at(i), NULL);
-			EditElementHandle shapeEeh(floorfaces.at(i), false, false, ACTIVEMODEL); //这个必须是封闭面，创建时若有isClosed参数设为true就是封闭面
-			CurveVectorPtr curvePtr = ICurvePathQuery::ElementToCurveVector(shapeEeh); //转换面
-			CurveVector::InOutClassification pos1 = curvePtr->PointInOnOutXY(movept); //点和面的关系
-			range.low.x = range.low.x - 1;
-			range.low.y = range.low.y - 1;
-			range.high.x = range.high.x + 1;
-			range.high.y = range.high.y + 1;
+			// EditElementHandle shapeEeh(floorfaces.at(i), false, false, ACTIVEMODEL); //这个必须是封闭面，创建时若有isClosed参数设为true就是封闭面
+			// CurveVectorPtr curvePtr = ICurvePathQuery::ElementToCurveVector(shapeEeh); //转换面
+			//CurveVector::InOutClassification pos1 = curvePtr->PointInOnOutXY(movedPoints[0]); //点和面的关系
+			range.low.x = range.low.x - eps;
+			range.low.y = range.low.y - eps;
+			range.high.x = range.high.x + eps;
+			range.high.y = range.high.y + eps;
 
-			//测试代码显示当前的判断点的位置
-           // PITCommonTool::CPointTool::DrowOnePoint(movept, 1, 1);//红
-           // PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 2);//黄
-			if (movept.z < range.low.z)
+			// 统计移动后的点在范围内的数量
+			int pointsInRangeMoved = 0;
+			for (const auto& point : movedPoints)
 			{
-				movept.z += thick * uor_per_mm;
+				if (range.IsContainedXY(point))
+				{
+					pointsInRangeMoved++;
+				}
 			}
-			if (range.IsContainedXY(movept)) //&& range.IsContainedXY(ptstr))//CurveVector::INOUT_On == pos1 || CurveVector::INOUT_In == pos1)//range.IsContainedXY(movept)
+			// 如果足够多的移动点在范围内，进一步判断元素包含
+			if (pointsInRangeMoved >= minPointsInRange)
 			{
-				isMedial = true;//内侧面
-				break;
+				//如果判断点在range内，再判断垂线与面是否有交集(把面投影到XOY平面，再判断)
+				MSElementDescrP cdescr = nullptr;
+				mdlElmdscr_duplicate(&cdescr, floorfaces.at(i));
+				//将面投影到XOY平面
+				mdlElmdscr_transform(&cdescr, &tran);
+				EditElementHandle teeh(cdescr, true, false, ACTIVEMODEL);
+
+				// 统计移动后的点和原始点在投影元素内的数量
+				int movedPointsInElement = CountPointsInElement(&teeh, movedPoints);
+				int projPointsInElement = CountPointsInElement(&teeh, projPoints);
+
+				// 如果两组点都在元素内，认为在内侧
+				if (movedPointsInElement >= minPointsInRange && projPointsInElement >= minPointsInRange)
+				{
+					isMedial = true;
+					break;
+				}
 			}
 		}
 		if (!isMedial)//外侧面
@@ -1041,11 +1141,11 @@ void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, v
 			vectmp.Normalize();
 			vectmp.Scale(thick*uor_per_mm);
 			ptstr.Add(vectmp);
-			//PITCommonTool::CPointTool::DrowOnePoint(ptstr, 1, 3);//绿
 		}
 
 	}
 }
+
 //计算当前起始侧是否有板，如果有是在内侧还是在外侧
 bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& floorfaces, vector<IDandModelref>& floorRf, DPoint3d& ptstr, DPoint3d& ptend, DPoint3d& vecLine, double thick,
 	DPoint3d vecOutwall, bool& isInside, double& diameter)
@@ -1055,45 +1155,49 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 	Transform tran;			//构造投影矩阵
 	mdlTMatrix_computeFlattenTransform(&tran, &zeropt, &tmpvecZ);
 	double uor_per_mm = ACTIVEMODEL->GetModelInfoCP()->GetUorPerMeter() / 1000.0;
+	double eps = uor_per_mm;
 	bool ishaveupfloor = false;//是否有板
 	bool isMedial = false;
 	vector<PIT::ConcreteRebar> vecRebar;
 	std::vector<PIT::ConcreteRebar> rebarInsideFace;
 	std::vector<PIT::ConcreteRebar> rebarOutsideFace;
 
-	// 采用路径的起点中点终点判断，任一点在板范围内都算作内侧，vecLine只是路径的1/3长度，所以这里的中点指1/3位置的中点
+	// 采用路径的起点中点终点判断，任一点在板范围内都算作内侧，vecLine只是路径的1/3长度
 	DPoint3d ptPathStr = ptstr;
 	ptPathStr.Add(ptend);
 	ptPathStr.Scale(0.5);
-	DPoint3d ptPathMid = ptPathStr;
-	ptPathMid.Add(vecLine);
-	DPoint3d ptPathEnd = ptPathMid;
+	DPoint3d ptPathEnd = ptPathStr;
 	ptPathEnd.Add(vecLine);
 	ptPathEnd.Add(vecLine);
+	ptPathEnd.Add(vecLine);
+	// 生成路径点
+	int numPoints = 20;
+	int minPointsInRange = 10;
+	vector<DPoint3d> pathPoints;
+	GeneratePathPoints(ptPathStr, ptPathEnd, numPoints, pathPoints);
 
 	for (int i = 0; i < floorfaces.size(); i++)
 	{
 		DRange3d range;
 		//计算指定元素描述符中元素的范围。
 		mdlElmdscr_computeRange(&range.low, &range.high, floorfaces.at(i), NULL);
-		range.low.x = range.low.x - 1;
-		range.low.y = range.low.y - 1;
-		range.high.x = range.high.x + 1;
-		range.high.y = range.high.y + 1;
-		
-		//测试代码显示当前的判断点的位置
-		//PITCommonTool::CPointTool::DrowOnePoint(pointStr, 1, 1);
-		//PITCommonTool::CPointTool::DrowOnePoint(range.high, 1, 1);
-		//PITCommonTool::CPointTool::DrowOnePoint(range.low, 1, 1);
+		range.low.x = range.low.x - eps;
+		range.low.y = range.low.y - eps;
+		range.high.x = range.high.x + eps;
+		range.high.y = range.high.y + eps;
 
-		// 统计在板范围内的点的数量
+		// 统计在板范围内的点数量
 		int pointsInRange = 0;
-		if (range.IsContainedXY(ptPathStr)) pointsInRange++;
-		if (range.IsContainedXY(ptPathMid)) pointsInRange++;
-		if (range.IsContainedXY(ptPathEnd)) pointsInRange++;
+		for (const auto& point : pathPoints)
+		{
+			if (range.IsContainedXY(point))
+			{
+				pointsInRange++;
+			}
+		}
 
-		// 至少两个点在当前板的范围内
-		if (pointsInRange >= 2)
+		// 如果足够多的点在范围内，认为路径与板相关联
+		if (pointsInRange >= minPointsInRange)
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -1124,43 +1228,48 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 	}
 	if (ishaveupfloor)//如果有板才有可能要往上延伸
 	{
-		DPoint3d ptStrMove = ptstr;
-		vecOutwall.Scale(thick*uor_per_mm / 2);
-		ptStrMove.Add(vecOutwall);
-		ptStrMove.z = 0;
-		vecLine.z = 0;
-		DPoint3d ptMidMove = ptStrMove;
-		ptMidMove.Add(vecLine);
-		DPoint3d ptEndMove = ptMidMove;
-		ptEndMove.Add(vecLine);
-		ptEndMove.Add(vecLine);
+		// 移动路径点（沿墙体外侧方向移动半个墙厚）
+		vector<DPoint3d> movedPoints;
+		vecOutwall.Scale(thick * uor_per_mm / 2);
+		for (const auto& point : pathPoints)
+		{
+			DPoint3d movedPoint = point;
+			movedPoint.Add(vecOutwall);
+			movedPoint.z = 0; // 投影到 XY 平面
+			movedPoints.push_back(movedPoint);
+		}
 
-		DPoint3d ptPathStrTmp = ptPathStr;
-		ptPathStrTmp.z = 0;
-		DPoint3d ptPathMidTmp = ptPathMid;
-		ptPathMidTmp.z = 0;
-		DPoint3d ptPathEndTmp = ptPathEnd;
-		ptPathEndTmp.z = 0;
+		// 投影原始路径点到 XY 平面
+		vector<DPoint3d> projPoints;
+		for (const auto& point : pathPoints)
+		{
+			DPoint3d projPoint = point;
+			projPoint.z = 0;
+			projPoints.push_back(projPoint);
+		}
 
 		for (int i = 0; i < floorfaces.size(); i++)
 		{
-			//mdlElmdscr_add(floorfaces.at(i));
 			DRange3d range;
 			//计算指定元素描述符中元素的范围。
 			mdlElmdscr_computeRange(&range.low, &range.high, floorfaces.at(i), NULL);
-			range.low.x = range.low.x - 10;
-			range.low.y = range.low.y - 10;
-			range.high.x = range.high.x + 10;
-			range.high.y = range.high.y + 10;
+			range.low.x = range.low.x - eps;
+			range.low.y = range.low.y - eps;
+			range.high.x = range.high.x + eps;
+			range.high.y = range.high.y + eps;
 
-			// 统计在板范围内的点的数量
-			int pointsInRange = 0;
-			if (range.IsContainedXY(ptStrMove)) pointsInRange++;
-			if (range.IsContainedXY(ptMidMove)) pointsInRange++;
-			if (range.IsContainedXY(ptEndMove)) pointsInRange++;
+			// 统计移动后的点在范围内的数量
+            int pointsInRangeMoved = 0;
+            for (const auto& point : movedPoints)
+            {
+                if (range.IsContainedXY(point))
+                {
+                    pointsInRangeMoved++;
+                }
+            }
 
-			// 至少两个点在当前板的范围内
-			if (pointsInRange >= 2)
+            // 如果足够多的移动点在范围内，进一步判断元素包含
+            if (pointsInRangeMoved >= minPointsInRange)
 			{
 				//如果判断点在range内，再判断垂线与面是否有交集(把面投影到XOY平面，再判断)
 				MSElementDescrP cdescr = nullptr;
@@ -1169,18 +1278,12 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 				mdlElmdscr_transform(&cdescr, &tran);
 				EditElementHandle teeh(cdescr, true, false, ACTIVEMODEL);
 
-				// 统计在元素内的点的数量
-				int ptMoveCounts = 0;
-				int ptPathTmpCounts = 0;
-				if (ISPointInElement(&teeh, ptStrMove)) ptMoveCounts++;
-				if (ISPointInElement(&teeh, ptMidMove))	ptMoveCounts++;
-				if (ISPointInElement(&teeh, ptEndMove))	ptMoveCounts++;
-				if (ISPointInElement(&teeh, ptPathStrTmp)) ptPathTmpCounts++;
-				if (ISPointInElement(&teeh, ptPathMidTmp)) ptPathTmpCounts++;
-				if (ISPointInElement(&teeh, ptPathEndTmp)) ptPathTmpCounts++;
+				// 统计移动后的点和原始点在投影元素内的数量
+				int movedPointsInElement = CountPointsInElement(&teeh, movedPoints);
+				int projPointsInElement = CountPointsInElement(&teeh, projPoints);
 
-				// 至少两个点在当前板的范围内
-				if (ptMoveCounts >= 2 && ptPathTmpCounts >= 2)
+				// 如果两组点都在元素内，认为在内侧
+				if (movedPointsInElement >= minPointsInRange && projPointsInElement >= minPointsInRange)
 				{
 					isMedial = true;
 					break;
