@@ -1058,8 +1058,8 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 			return;
 
 		//5.1.1 过滤不在墙范围内的板		
-		DPoint3d lowPt = { 0,0,0 }, highPt = { 0,0,0 };
-		mdlElmdscr_computeRange(&lowPt, &highPt, floorEeh.GetElementDescrP(), nullptr);
+		DPoint3d floorLowPt = { 0,0,0 }, floorHighPt = { 0,0,0 };
+		mdlElmdscr_computeRange(&floorLowPt, &floorHighPt, floorEeh.GetElementDescrP(), nullptr);
 		DRange3d  vecRange;
 		vecRange.low = wallLowPt;
 		vecRange.high = wallHighPt;
@@ -1068,25 +1068,26 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		int endRecord = 2; // 遇到板的交点计数
 		if (isBoard)
 		{
-			if ((COMPARE_VALUES_EPS(lowPt.z, wallLowPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == 1 && //板最低点在墙之间
-				COMPARE_VALUES_EPS(highPt.z, wallHighPt.z + 50 * UOR_PER_MilliMeter, 1e-6) == -1) &&
-				COMPARE_VALUES_EPS(wallHighPt.z, highPt.z, 1e-6) == 0) //板最高点在墙之间
+			//delete at 2025年4月17日15:37:22 解决异形梯形墙9BGZ9Y31VB钢筋不延伸到板，注释
+			/*if ((COMPARE_VALUES_EPS(floorLowPt.z, wallLowPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == 1 && //板最低点在墙之间
+				COMPARE_VALUES_EPS(floorHighPt.z, wallHighPt.z + 50 * UOR_PER_MilliMeter, 1e-6) == -1) &&
+				COMPARE_VALUES_EPS(wallHighPt.z, floorHighPt.z, 1e-6) == 0) //板最高点在墙之间
 			{
-				if (vecRange.IsContainedXY(lowPt) && wallLowPt.DistanceXY(lowPt) > 10 && COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) != 0) //板最低点不在墙范围,板最高点不在墙范围
+				if (vecRange.IsContainedXY(floorLowPt) && wallLowPt.DistanceXY(floorLowPt) > 10 && COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) != 0) //板最低点不在墙范围,板最高点不在墙范围
 				{
 					return;
 				}
 
-				if (vecRange.IsContainedXY(highPt) && wallHighPt.DistanceXY(highPt) > 10 && COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) != 0) //板最低点不在墙范围,板最高点不在墙范围
+				if (vecRange.IsContainedXY(floorHighPt) && wallHighPt.DistanceXY(floorHighPt) > 10 && COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) != 0) //板最低点不在墙范围,板最高点不在墙范围
 				{
 					return;
 				}
-			}
+			}*/
 			MSElementDescrP have_intersect = nullptr;//实体和面相交
 			if (!PITCommonTool::CSolidTool::SolidBoolWithFace(have_intersect, wallEeh.GetElementDescrP(), floorEeh.GetElementDescrP(), BOOLOPERATION::BOOLOPERATION_INTERSECT)
-				&& COMPARE_VALUES_EPS(lowPt.z, wallHighPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == -1
-				&& COMPARE_VALUES_EPS(highPt.z, wallHighPt.z, 1e-6) == 1
-				&& highPt.z - wallHighPt.z < 55 * UOR_PER_MilliMeter)//如果板的最低点在墙之间但板的最高点不在墙之间且板和墙不相接
+				&& COMPARE_VALUES_EPS(floorLowPt.z, wallHighPt.z - 50 * UOR_PER_MilliMeter, 1e-6) == -1
+				&& COMPARE_VALUES_EPS(floorHighPt.z, wallHighPt.z, 1e-6) == 1
+				&& floorHighPt.z - wallHighPt.z < 55 * UOR_PER_MilliMeter)//如果板的最低点在墙之间但板的最高点不在墙之间且板和墙不相接
 			{
 				return;
 			}
@@ -1097,17 +1098,17 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		PITCommonTool::CPointTool::DrowOnePoint(highPt, 1, 2);*/
 
 
-		if ((COMPARE_VALUES_EPS(lowPt.z, wallLowPt.z + 80 * UOR_PER_MilliMeter, 1e-6) == -1 ||
-			COMPARE_VALUES_EPS(lowPt.z, wallHighPt.z - 80 * UOR_PER_MilliMeter, 1e-6) == 1) && //板最低点不在墙之间
-			(COMPARE_VALUES_EPS(highPt.z, wallLowPt.z + 80 * UOR_PER_MilliMeter, 1e-6) == -1 ||
-				COMPARE_VALUES_EPS(highPt.z, wallHighPt.z - 80 * UOR_PER_MilliMeter, 1e-6) == 1) &&//板最高点不在墙之间
+		if ((COMPARE_VALUES_EPS(floorLowPt.z, wallLowPt.z + 80 * UOR_PER_MilliMeter, 1e-6) == -1 ||
+			COMPARE_VALUES_EPS(floorLowPt.z, wallHighPt.z - 80 * UOR_PER_MilliMeter, 1e-6) == 1) && //板最低点不在墙之间
+			(COMPARE_VALUES_EPS(floorHighPt.z, wallLowPt.z + 80 * UOR_PER_MilliMeter, 1e-6) == -1 ||
+				COMPARE_VALUES_EPS(floorHighPt.z, wallHighPt.z - 80 * UOR_PER_MilliMeter, 1e-6) == 1) &&//板最高点不在墙之间
 			COMPARE_VALUES_EPS(abs(strVec.z), 1, 1e-6) != 0)//钢筋线方向Z不为1
 		{
 
 			//5.1.1 得到这个板的包围盒投影到钢筋线上的点
-			DPoint3d floorMinProPt = lowPt, floorMaxProPt = highPt;
-			mdlVec_projectPointToLine(&floorMinProPt, nullptr, &lowPt, &strPt, &endPt);
-			mdlVec_projectPointToLine(&floorMaxProPt, nullptr, &highPt, &strPt, &endPt);
+			DPoint3d floorMinProPt = floorLowPt, floorMaxProPt = floorHighPt;
+			mdlVec_projectPointToLine(&floorMinProPt, nullptr, &floorLowPt, &strPt, &endPt);
+			mdlVec_projectPointToLine(&floorMaxProPt, nullptr, &floorHighPt, &strPt, &endPt);
 			//5.1.2 计算板线的方向和钢筋线方向关系，得到板线在钢筋线方向上的起始和终点
 			DPoint3d floorStrPt = floorMinProPt, floorEndPt = floorMaxProPt;
 			DVec3d vec1 = strPt - endPt; vec1.Normalize();
@@ -1127,30 +1128,24 @@ void STWallRebarAssembly::ReCalExtendDisByTopDownFloor(const DPoint3d & strPt, c
 		}
 		//5.2 计算与板交点
 		vector<DPoint3d> interPts;
-		//PITCommonTool::CPointTool::DrowOneLine(newStrPt, newEndPt, 1);
-		//GetIntersectPointsWithOldElm(interPts, &floorEeh, newStrPt, newEndPt);
-		//5.1.2 过滤不在墙范围内的墙
-		//计算指定元素描述符中元素的范围。
-		DPoint3d range_data_low = { 0,0,0 }, range_data_high = { 0,0,0 };
-		EditElementHandle wallEeh(GetSelectedElement(), GetSelectedModel());//获取选择model的参数范围
-		DPoint3d wallLowPt = { 0,0,0 }, wallHighPt = { 0,0,0 };
-		mdlElmdscr_computeRange(&wallLowPt, &wallHighPt, wallEeh.GetElementDescrP(), nullptr);
+		DPoint3d combinedWallLowPt = wallLowPt, combinedWallHighPt = wallHighPt;
 		for (int i = 0; i < m_walldata.cutWallfaces.size(); i++)//对周围的墙的底面进行筛选
 		{
-			DPoint3d wallLow_Pt = { 0,0,0 }, wallHigh_Pt = { 0,0,0 };
-			EditElementHandle wall_Eeh(m_walldata.wallID[i].ID, m_walldata.wallID[i].tModel);
-			mdlElmdscr_computeRange(&wallLow_Pt, &wallHigh_Pt, wall_Eeh.GetElementDescrP(), nullptr);//获取选择周围墙的参数范围
+			DPoint3d nearbyWallLowPt = { 0,0,0 }, nearbyWallHighPt = { 0,0,0 };
+			EditElementHandle nearbyWallEeh(m_walldata.wallID[i].ID, m_walldata.wallID[i].tModel);
+			mdlElmdscr_computeRange(&nearbyWallLowPt, &nearbyWallHighPt, nearbyWallEeh.GetElementDescrP(), nullptr);
 
-			if (COMPARE_VALUES(wallLow_Pt.z, wallLowPt.z) == 1 && COMPARE_VALUES(wallHigh_Pt.z, wallHighPt.z) == -1)//如果周围墙在选择墙的range范围内
+			if (COMPARE_VALUES(nearbyWallLowPt.z, wallLowPt.z) == 1 && COMPARE_VALUES(nearbyWallHighPt.z, wallHighPt.z) == -1)
 			{
-				range_data_low = wallLow_Pt;
-				range_data_high = wallHigh_Pt;
+				combinedWallLowPt = nearbyWallLowPt;
+				combinedWallHighPt = nearbyWallHighPt;
 			}
+
 			//判断是否需要单次判断，如果周围墙在选择墙的range范围内，对周围的板只需要锚入一次，不可以多次锚入
-			if ((numAnchors != 2 && (COMPARE_VALUES(strPt.z, range_data_low.z) == 1 && COMPARE_VALUES(endPt.z, range_data_low.z) == 1)
-				&& (COMPARE_VALUES(strPt.z, range_data_high.z) == -1 && COMPARE_VALUES(endPt.z, range_data_high.z) == -1)) ||
-				(numAnchors != 2 && (COMPARE_VALUES(strPt.x, range_data_low.x) == 1 && COMPARE_VALUES(endPt.x, range_data_low.x) == 1)
-					&& (COMPARE_VALUES(strPt.x, range_data_high.x) == -1 && COMPARE_VALUES(endPt.x, range_data_high.x) == -1)))
+			if ((numAnchors != 2 && (COMPARE_VALUES(strPt.z, combinedWallLowPt.z) == 1 && COMPARE_VALUES(endPt.z, combinedWallLowPt.z) == 1) &&
+				(COMPARE_VALUES(strPt.z, combinedWallHighPt.z) == -1 && COMPARE_VALUES(endPt.z, combinedWallHighPt.z) == -1)) ||
+				(numAnchors != 2 && (COMPARE_VALUES(strPt.x, combinedWallLowPt.x) == 1 && COMPARE_VALUES(endPt.x, combinedWallLowPt.x) == 1) &&
+				(COMPARE_VALUES(strPt.x, combinedWallHighPt.x) == -1 && COMPARE_VALUES(endPt.x, combinedWallHighPt.x) == -1)))
 			{
 				numAnchors = 1;
 			}
@@ -1488,10 +1483,10 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 		DPoint3d temp = Tmept1;
 		pt1.z -= D2;
 		temp.z = temp.z - diameter + D2;
-		EditElementHandle tmpeeh;
-		LineHandler::CreateLineElement(tmpeeh, nullptr, DSegment3d::From(pt1, temp), true, *ACTIVEMODEL);
-		MSElementDescrP tmppath = tmpeeh.ExtractElementDescr();
-		allpaths.push_back(tmppath);
+		EditElementHandle tmpEehDown;
+		LineHandler::CreateLineElement(tmpEehDown, nullptr, DSegment3d::From(pt1, temp), true, *ACTIVEMODEL);
+		MSElementDescrP tmpPathDown = tmpEehDown.ExtractElementDescr();
+		allpaths.push_back(tmpPathDown);
 	}
 	//中间
 	EditElementHandle tmpeeh;
@@ -1504,10 +1499,10 @@ void STWallRebarAssembly::CalculateLeftRightBarLines(vector<BarLinesdata>& barli
 		DPoint3d temp = Tmeppt2;
 		pt2.z += D1;
 		temp.z = temp.z + diameter - D1;
-		EditElementHandle tmpeeh;
-		LineHandler::CreateLineElement(tmpeeh, nullptr, DSegment3d::From(temp, pt2), true, *ACTIVEMODEL);
-		MSElementDescrP tmppath = tmpeeh.ExtractElementDescr();
-		allpaths.push_back(tmppath);
+		EditElementHandle tmpEehUp;
+		LineHandler::CreateLineElement(tmpEehUp, nullptr, DSegment3d::From(temp, pt2), true, *ACTIVEMODEL);
+		MSElementDescrP tmpPathUp = tmpEehUp.ExtractElementDescr();
+		allpaths.push_back(tmpPathUp);
 	}
 	//tmpeeh.AddToModel();
 	//2、计算钢筋线长度和锚固长度、锚固方向

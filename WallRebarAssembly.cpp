@@ -1007,7 +1007,7 @@ void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, v
 		}
 
 		// 如果足够多的点在范围内，认为路径与板相关联
-		if (pointsInRange >= minPointsInRange)
+		if (pointsInRange > minPointsInRange)
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -1114,7 +1114,7 @@ void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, v
 				}
 			}
 			// 如果足够多的移动点在范围内，进一步判断元素包含
-			if (pointsInRangeMoved >= minPointsInRange)
+			if (pointsInRangeMoved > minPointsInRange)
 			{
 				//如果判断点在range内，再判断垂线与面是否有交集(把面投影到XOY平面，再判断)
 				MSElementDescrP cdescr = nullptr;
@@ -1128,7 +1128,7 @@ void WallRebarAssembly::ExtendLineByFloor(vector<MSElementDescrP>& floorfaces, v
 				int projPointsInElement = CountPointsInElement(&teeh, projPoints);
 
 				// 如果两组点都在元素内，认为在内侧
-				if (movedPointsInElement >= minPointsInRange && projPointsInElement >= minPointsInRange)
+				if (movedPointsInElement > minPointsInRange && projPointsInElement > minPointsInRange)
 				{
 					isMedial = true;
 					break;
@@ -1197,7 +1197,7 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 		}
 
 		// 如果足够多的点在范围内，认为路径与板相关联
-		if (pointsInRange >= minPointsInRange)
+		if (pointsInRange > minPointsInRange)
 		{
 			ElementId elIDdata = 0;
 			GetElementXAttribute(floorRf.at(i).ID, sizeof(ElementId), elIDdata, ConcreteIDXAttribute, floorRf.at(i).tModel);
@@ -1269,7 +1269,7 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
             }
 
             // 如果足够多的移动点在范围内，进一步判断元素包含
-            if (pointsInRangeMoved >= minPointsInRange)
+            if (pointsInRangeMoved > minPointsInRange)
 			{
 				//如果判断点在range内，再判断垂线与面是否有交集(把面投影到XOY平面，再判断)
 				MSElementDescrP cdescr = nullptr;
@@ -1283,7 +1283,7 @@ bool WallRebarAssembly::CalculateBarLineDataByFloor(vector<MSElementDescrP>& flo
 				int projPointsInElement = CountPointsInElement(&teeh, projPoints);
 
 				// 如果两组点都在元素内，认为在内侧
-				if (movedPointsInElement >= minPointsInRange && projPointsInElement >= minPointsInRange)
+				if (movedPointsInElement > minPointsInRange && projPointsInElement > minPointsInRange)
 				{
 					isMedial = true;
 					break;
